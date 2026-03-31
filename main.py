@@ -1,7 +1,10 @@
 """
-Leo — Coinbase Predictions Arbitrage Bot
+Leo — Kalshi / Coinbase Predictions Arbitrage Bot
 
 Entry point. Runs the main scan/trade loop with a Rich terminal UI.
+
+Coinbase Predictions is powered by Kalshi (launched Jan 28, 2026,
+all 50 US states). We connect to the Kalshi API directly.
 """
 
 import asyncio
@@ -10,14 +13,14 @@ import signal
 import sys
 from datetime import datetime, timezone
 
+from rich.columns import Columns
 from rich.console import Console
 from rich.live import Live
-from rich.table import Table
 from rich.panel import Panel
-from rich.columns import Columns
+from rich.table import Table
 from rich import box
 
-from api_clients.coinbase_predictions import CoinbasePredictionsClient
+from api_clients.kalshi_client import KalshiClient
 from arbitrage import ArbitrageDetector, ArbOpportunity
 from config import config
 from storage import Storage
@@ -26,48 +29,66 @@ from trader import Trader
 logging.basicConfig(
     level=config.log_level,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[logging.FileHandler("data/leo.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler("data/leo.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger("leo.main")
 console = Console()
 
 
-def build_ui(opportunities: list[ArbOpportunity], stats: dict, scan_count: int) -> Panel:
-    mode = "[bold red]LIVE[/]" if not config.dry_run else "[bold yellow]DRY RUN[/]"
+def build_ui(
+    opportunities: list[ArbOpportunity],
+    stats: dict,
+    scan_count: int,
+) -> Panel:
+    mode = (
+        "[bold red]LIVE[/]"
+        if not config.dry_run
+        else "[bold yellow]DRY RUN[/]"
+    )
 
-    # Opportunities table
     opp_table = Table(
-        "Market", "Type", "YES Ask", "NO Ask", "Sum", "Net Profit", "Resolves",
+        "Market", "YES bid", "NO bid", "Sum", "Net Profit", "Closes",
         box=box.SIMPLE_HEAD,
         title="Active Opportunities",
         title_style="bold cyan",
     )
     for opp in opportunities[:10]:
-        total = (opp.leg_yes or 0) + (opp.leg_no or 0)
-        hours = (opp.resolves_at - datetime.now(timezone.utc)).total_seconds() / 3600
+        total = opp.yes_bid + opp.no_bid
+        hours = (
+            (opp.close_time - datetime.now(timezone.utc)).total_seconds()
+            / 3600
+        )
         opp_table.add_row(
-            opp.question[:40] + ("…" if len(opp.question) > 40 else ""),
-            opp.arb_type,
-            f"{opp.leg_yes:.3f}" if opp.leg_yes else "—",
-            f"{opp.leg_no:.3f}" if opp.leg_no else "—",
-            f"[green]{total:.3f}[/]",
+            opp.market_id[:35] + ("…" if len(opp.market_id) > 35 else ""),
+            f"{opp.yes_bid:.3f}",
+            f"{opp.no_bid:.3f}",
+            f"[green]{total:.4f}[/]",
             f"[bold green]{opp.net_profit_pct:.2%}[/]",
             f"{hours:.1f}h",
         )
 
-    # Stats panel
     stats_table = Table(box=box.SIMPLE, show_header=False)
     stats_table.add_column(style="dim")
     stats_table.add_column()
     stats_table.add_row("Mode", mode)
     stats_table.add_row("Scans", str(scan_count))
     stats_table.add_row("Total Trades", str(stats.get("total_trades", 0)))
-    stats_table.add_row("Deployed", f"${stats.get('total_deployed_usd') or 0:.2f}")
-    stats_table.add_row("Est. P&L", f"${stats.get('estimated_pnl_usd') or 0:.2f}")
+    stats_table.add_row(
+        "Contracts", str(stats.get("total_contracts") or 0)
+    )
+    stats_table.add_row(
+        "Est. P&L", f"${stats.get('estimated_pnl_usd') or 0:.2f}"
+    )
 
     return Panel(
         Columns([opp_table, stats_table]),
-        title=f"[bold]Leo — Coinbase Predictions Arb[/bold]  {datetime.now().strftime('%H:%M:%S')}",
+        title=(
+            "[bold]Leo — Kalshi / Coinbase Predictions Arb[/bold]  "
+            + datetime.now().strftime("%H:%M:%S")
+        ),
         border_style="cyan",
     )
 
@@ -76,20 +97,23 @@ async def run():
     storage = Storage(config.storage)
     detector = ArbitrageDetector(config.arbitrage)
 
-    if not config.coinbase.api_key:
-        console.print("[bold red]COINBASE_API_KEY not set — running in scan-only mode[/]")
+    if not config.kalshi.key_id:
+        console.print(
+            "[bold yellow]KALSHI_KEY_ID not set — "
+            "running in scan-only / dry-run mode[/]"
+        )
 
     scan_count = 0
     current_opps: list[ArbOpportunity] = []
 
-    async with CoinbasePredictionsClient(config.coinbase) as client:
+    async with KalshiClient(config.kalshi) as client:
         trader = Trader(config, client, storage)
 
         async def scan_loop():
             nonlocal scan_count, current_opps
             while True:
                 try:
-                    markets = await client.get_markets()
+                    markets = await client.get_all_markets()
                     opps = detector.scan(markets)
                     current_opps = opps
                     scan_count += 1
@@ -114,7 +138,9 @@ async def run():
         async def ui_loop(live: Live):
             while True:
                 stats = storage.get_pnl_summary()
-                live.update(build_ui(current_opps, stats, scan_count))
+                live.update(
+                    build_ui(current_opps, stats, scan_count)
+                )
                 await asyncio.sleep(1)
 
         with Live(console=console, refresh_per_second=1) as live:
@@ -129,7 +155,10 @@ def main():
     signal.signal(signal.SIGINT, _shutdown)
     signal.signal(signal.SIGTERM, _shutdown)
 
-    console.print("[bold cyan]Starting Leo — Coinbase Predictions Arbitrage Bot[/]")
+    console.print(
+        "[bold cyan]Starting Leo — "
+        "Kalshi / Coinbase Predictions Arbitrage Bot[/]"
+    )
     asyncio.run(run())
 
 

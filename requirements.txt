@@ -1,3 +1,5 @@
 aiohttp>=3.9.0
 rich>=13.7.0
 python-dotenv>=1.0.0
+PyJWT>=2.8.0                  # ES256 JWT signing for CDP API auth
+cryptography>=42.0.0          # EC key support for PyJWT

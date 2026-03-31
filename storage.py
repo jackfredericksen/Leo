@@ -4,7 +4,7 @@ SQLite storage for Leo — trades, opportunities, and P&L tracking.
 
 import sqlite3
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 
 from config import StorageConfig
@@ -30,9 +30,9 @@ class Storage:
                     market_id       TEXT NOT NULL,
                     question        TEXT,
                     arb_type        TEXT,
-                    leg_yes_price   REAL,
-                    leg_no_price    REAL,
-                    size_usd        REAL,
+                    yes_price       REAL,
+                    no_price        REAL,
+                    contracts       INTEGER,
                     net_profit_pct  REAL,
                     dry_run         INTEGER DEFAULT 1,
                     status          TEXT,
@@ -42,14 +42,14 @@ class Storage:
                 );
 
                 CREATE TABLE IF NOT EXISTS opportunities (
-                    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                    market_id       TEXT NOT NULL,
-                    question        TEXT,
-                    arb_type        TEXT,
+                    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                    market_id        TEXT NOT NULL,
+                    question         TEXT,
+                    arb_type         TEXT,
                     gross_profit_pct REAL,
-                    net_profit_pct  REAL,
-                    acted_on        INTEGER DEFAULT 0,
-                    detected_at     TEXT
+                    net_profit_pct   REAL,
+                    acted_on         INTEGER DEFAULT 0,
+                    detected_at      TEXT
                 );
             """)
 
@@ -58,49 +58,60 @@ class Storage:
         market_id: str,
         question: str,
         arb_type: str,
-        leg_yes_price: Optional[float],
-        leg_no_price: Optional[float],
-        size_usd: float,
+        yes_price: float,
+        no_price: float,
+        contracts: int,
         net_profit_pct: float,
         dry_run: bool,
         status: str,
-        yes_order_id: str = None,
-        no_order_id: str = None,
+        yes_order_id: Optional[str] = None,
+        no_order_id: Optional[str] = None,
     ):
         with self._connect() as conn:
             conn.execute(
                 """
                 INSERT INTO trades
-                (market_id, question, arb_type, leg_yes_price, leg_no_price,
-                 size_usd, net_profit_pct, dry_run, status, yes_order_id, no_order_id)
+                (market_id, question, arb_type, yes_price, no_price,
+                 contracts, net_profit_pct, dry_run, status,
+                 yes_order_id, no_order_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    market_id, question, arb_type, leg_yes_price, leg_no_price,
-                    size_usd, net_profit_pct, int(dry_run), status,
+                    market_id, question, arb_type, yes_price, no_price,
+                    contracts, net_profit_pct, int(dry_run), status,
                     yes_order_id, no_order_id,
                 ),
             )
 
-    def log_opportunity(self, market_id: str, question: str, arb_type: str,
-                        gross_pct: float, net_pct: float, acted_on: bool,
-                        detected_at: datetime):
+    def log_opportunity(
+        self,
+        market_id: str,
+        question: str,
+        arb_type: str,
+        gross_pct: float,
+        net_pct: float,
+        acted_on: bool,
+        detected_at: datetime,
+    ):
         with self._connect() as conn:
             conn.execute(
                 """
                 INSERT INTO opportunities
-                (market_id, question, arb_type, gross_profit_pct, net_profit_pct,
-                 acted_on, detected_at)
+                (market_id, question, arb_type, gross_profit_pct,
+                 net_profit_pct, acted_on, detected_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (market_id, question, arb_type, gross_pct, net_pct,
-                 int(acted_on), detected_at.isoformat()),
+                (
+                    market_id, question, arb_type, gross_pct, net_pct,
+                    int(acted_on), detected_at.isoformat(),
+                ),
             )
 
     def get_recent_trades(self, limit: int = 50) -> list[sqlite3.Row]:
         with self._connect() as conn:
             return conn.execute(
-                "SELECT * FROM trades ORDER BY created_at DESC LIMIT ?", (limit,)
+                "SELECT * FROM trades ORDER BY created_at DESC LIMIT ?",
+                (limit,),
             ).fetchall()
 
     def get_pnl_summary(self) -> dict:
@@ -108,9 +119,13 @@ class Storage:
             row = conn.execute("""
                 SELECT
                     COUNT(*) as total_trades,
-                    SUM(CASE WHEN dry_run=0 THEN size_usd ELSE 0 END) as total_deployed_usd,
+                    SUM(contracts) as total_contracts,
                     AVG(net_profit_pct) as avg_net_profit_pct,
-                    SUM(CASE WHEN dry_run=0 THEN size_usd * net_profit_pct ELSE 0 END) as estimated_pnl_usd
+                    SUM(
+                        CASE WHEN dry_run=0
+                        THEN contracts * yes_price * net_profit_pct
+                        ELSE 0 END
+                    ) as estimated_pnl_usd
                 FROM trades
                 WHERE status IN ('placed', 'simulated')
             """).fetchone()
