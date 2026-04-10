@@ -1,5 +1,8 @@
 aiohttp>=3.9.0
 rich>=13.7.0
 python-dotenv>=1.0.0
-PyJWT>=2.8.0                  # ES256 JWT signing for CDP API auth
-cryptography>=42.0.0          # EC key support for PyJWT
+cryptography>=42.0.0      # RSA-PSS signing for Kalshi auth
+newsapi-python>=0.2.7     # NewsAPI (set NEWS_API_KEY)
+anthropic>=0.40.0         # LLM signal (set ANTHROPIC_API_KEY, LLM_ENABLED=true)
+fastapi>=0.110.0          # Web dashboard
+uvicorn[standard]>=0.29.0 # ASGI server for FastAPI

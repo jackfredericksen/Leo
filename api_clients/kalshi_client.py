@@ -16,7 +16,6 @@ Docs: https://docs.kalshi.com
 
 import asyncio
 import base64
-import hashlib
 import json
 import logging
 import time
@@ -52,6 +51,10 @@ class Market:
     close_time: datetime    # Market resolution time
     status: str             # "open" | "closed" | "settled"
     result: Optional[str] = None  # "yes" | "no" | None
+    floor_strike: Optional[float] = None   # lower bound for range/above markets
+    cap_strike: Optional[float] = None     # upper bound for range markets
+    subtitle_yes: str = ""  # e.g. "above 72,500" or "70,000 to 74,999"
+    subtitle_no: str = ""
 
 
 @dataclass
@@ -107,14 +110,14 @@ class KalshiClient:
       - private_key: RSA PEM (shown once at creation — save it!)
     """
 
-    REST_BASE = "https://api.kalshi.com/trade-api/v2"
-    WS_BASE = "wss://api.kalshi.com/trade-api/ws/v2"
+    REST_BASE = "https://api.elections.kalshi.com/trade-api/v2"
+    WS_BASE = "wss://api.elections.kalshi.com/trade-api/ws/v2"
     DEMO_BASE = "https://demo-api.kalshi.co/trade-api/v2"
 
     def __init__(self, cfg: KalshiConfig):
         self.cfg = cfg
         self._session: Optional[aiohttp.ClientSession] = None
-        self._private_key = self._load_private_key(cfg.private_key_pem)
+        self._private_key = self._load_private_key(cfg.private_key_pem) if cfg.private_key_pem.strip() else None
         self._base = self.DEMO_BASE if cfg.use_demo else self.REST_BASE
 
     def _load_private_key(self, pem: str):
@@ -130,6 +133,9 @@ class KalshiClient:
         Path must NOT include query parameters.
         Timestamp is in milliseconds.
         """
+        if self._private_key is None:
+            raise RuntimeError("No Kalshi private key — cannot make authenticated requests")
+
         ts_ms = str(int(time.time() * 1000))
         message = f"{ts_ms}{method.upper()}{path}".encode()
 
@@ -160,10 +166,17 @@ class KalshiClient:
 
     async def _get(self, path: str, params: dict = None) -> dict:
         url = f"{self._base}{path}"
-        headers = self._sign("GET", path)
-        async with self._session.get(url, headers=headers, params=params) as resp:
-            resp.raise_for_status()
-            return await resp.json()
+        headers = self._sign("GET", path) if self._private_key else {"Content-Type": "application/json"}
+        for attempt in range(4):
+            async with self._session.get(url, headers=headers, params=params) as resp:
+                if resp.status == 429:
+                    wait = 2 ** attempt
+                    logger.debug(f"Rate limited on {path}, retrying in {wait}s")
+                    await asyncio.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                return await resp.json()
+        raise RuntimeError(f"Rate limit exceeded after retries: {path}")
 
     async def _post(self, path: str, body: dict) -> dict:
         url = f"{self._base}{path}"
@@ -211,14 +224,32 @@ class KalshiClient:
         markets = [self._parse_market(m) for m in data.get("markets", [])]
         return markets, data.get("cursor")
 
-    async def get_all_markets(self, status: str = "open") -> list[Market]:
-        """Fetch all markets across all pages."""
-        markets, cursor = await self.get_markets(status=status)
-        while cursor:
-            more, cursor = await self.get_markets(status=status, cursor=cursor)
-            markets.extend(more)
-            await asyncio.sleep(0.1)  # be polite to the rate limiter
-        return markets
+    async def get_all_markets(self, status: str = "open", max_pages: int = 10) -> list[Market]:
+        """
+        Fetch real binary markets via the events endpoint (nested markets).
+        The /markets endpoint returns mostly MVE parlay markets; /events gives
+        the standard single-question binary markets with real two-sided prices.
+        """
+        all_markets: list[Market] = []
+        cursor = None
+        for _ in range(max_pages):
+            params: dict = {"limit": 200, "with_nested_markets": "true"}
+            if status:
+                params["status"] = status
+            if cursor:
+                params["cursor"] = cursor
+            data = await self._get("/events", params=params)
+            for event in data.get("events", []):
+                for m in (event.get("markets") or []):
+                    try:
+                        all_markets.append(self._parse_market(m))
+                    except Exception:
+                        pass
+            cursor = data.get("cursor")
+            if not cursor:
+                break
+            await asyncio.sleep(0.5)
+        return all_markets
 
     async def get_market(self, ticker: str) -> Market:
         data = await self._get(f"/markets/{ticker}")
@@ -320,21 +351,33 @@ class KalshiClient:
     # ------------------------------------------------------------------ #
 
     def _parse_market(self, m: dict) -> Market:
-        # Prices come back as decimal strings in dollars (e.g. "0.42")
-        yes_bid = float(m.get("yes_bid", 0) or 0)
-        yes_ask_raw = m.get("yes_ask")
-        no_bid = float(m.get("no_bid", 0) or 0)
-        no_ask_raw = m.get("no_ask")
+        # API returns prices as decimal dollar strings in *_dollars fields
+        # e.g. "yes_bid_dollars": "0.42"  (old API used "yes_bid")
+        def _p(key_new: str, key_old: str) -> float:
+            v = m.get(key_new) or m.get(key_old) or 0
+            return float(v) if v else 0.0
+
+        yes_bid = _p("yes_bid_dollars", "yes_bid")
+        no_bid  = _p("no_bid_dollars",  "no_bid")
+        yes_ask_raw = m.get("yes_ask_dollars") or m.get("yes_ask")
+        no_ask_raw  = m.get("no_ask_dollars")  or m.get("no_ask")
 
         # Derive asks from the binary identity if not present
         yes_ask = float(yes_ask_raw) if yes_ask_raw else round(1.0 - no_bid, 4)
-        no_ask = float(no_ask_raw) if no_ask_raw else round(1.0 - yes_bid, 4)
+        no_ask  = float(no_ask_raw)  if no_ask_raw  else round(1.0 - yes_bid, 4)
 
         yes_mid = (yes_bid + yes_ask) / 2
-        no_mid = (no_bid + no_ask) / 2
+        no_mid  = (no_bid  + no_ask)  / 2
 
         close_raw = m.get("close_time") or m.get("latest_expiration_time", "")
-        close_time = datetime.fromtimestamp(close_raw, tz=timezone.utc) if isinstance(close_raw, (int, float)) else datetime.fromisoformat(str(close_raw).replace("Z", "+00:00"))
+        close_time = (
+            datetime.fromtimestamp(close_raw, tz=timezone.utc)
+            if isinstance(close_raw, (int, float))
+            else datetime.fromisoformat(str(close_raw).replace("Z", "+00:00"))
+        )
+
+        floor_s = m.get("floor_strike")
+        cap_s = m.get("cap_strike")
 
         return Market(
             market_id=m["ticker"],
@@ -346,14 +389,18 @@ class KalshiClient:
             no_ask=no_ask,
             yes_price=round(yes_mid, 4),
             no_price=round(no_mid, 4),
-            volume=float(m.get("volume", 0) or 0),
-            volume_24h=float(m.get("volume_24h", 0) or 0),
-            liquidity_usd=float(m.get("liquidity", 0) or 0),
-            open_interest=float(m.get("open_interest", 0) or 0),
-            last_price=float(m.get("last_price", yes_mid) or yes_mid),
+            volume=float(m.get("volume_fp") or m.get("volume") or 0),
+            volume_24h=float(m.get("volume_24h_fp") or m.get("volume_24h") or 0),
+            liquidity_usd=float(m.get("liquidity_dollars") or m.get("liquidity") or 0),
+            open_interest=float(m.get("open_interest_fp") or m.get("open_interest") or 0),
+            last_price=float(m.get("last_price_dollars") or m.get("last_price") or yes_mid or 0),
             close_time=close_time,
             status=m.get("status", "open"),
             result=m.get("result"),
+            floor_strike=float(floor_s) if floor_s is not None else None,
+            cap_strike=float(cap_s) if cap_s is not None else None,
+            subtitle_yes=m.get("yes_sub_title") or "",
+            subtitle_no=m.get("no_sub_title") or "",
         )
 
     @staticmethod

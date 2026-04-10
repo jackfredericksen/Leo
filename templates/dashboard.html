@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leo — Kalshi Trading Bot</title>
+<style>
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161b22;
+    --border:   #30363d;
+    --text:     #e6edf3;
+    --muted:    #8b949e;
+    --cyan:     #39d0d8;
+    --green:    #3fb950;
+    --red:      #f85149;
+    --yellow:   #d29922;
+    --blue:     #58a6ff;
+    --purple:   #bc8cff;
+    --orange:   #ffa657;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--cyan);
+    letter-spacing: 0.5px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-live   { background: #1a0000; color: var(--red);    border: 1px solid var(--red); }
+  .badge-dry    { background: #1a1200; color: var(--yellow); border: 1px solid var(--yellow); }
+  .badge-conn   { background: #001a0a; color: var(--green);  border: 1px solid var(--green); }
+  .badge-disc   { background: #1a0000; color: var(--red);    border: 1px solid var(--red); }
+  #last-update  { color: var(--muted); font-size: 11px; }
+
+  /* ── Nav tabs ── */
+  nav {
+    display: flex;
+    gap: 2px;
+    padding: 10px 20px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    transition: color 0.15s, background 0.15s;
+    border: 1px solid transparent;
+    border-bottom: none;
+    position: relative;
+    bottom: -1px;
+  }
+  .tab:hover { color: var(--text); background: var(--bg); }
+  .tab.active {
+    color: var(--text);
+    background: var(--bg);
+    border-color: var(--border);
+  }
+  .tab .count {
+    display: inline-block;
+    background: var(--border);
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10px;
+    margin-left: 5px;
+  }
+  .tab.active .count { background: var(--cyan); color: var(--bg); }
+
+  /* ── Layout ── */
+  main { padding: 16px 20px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Stat cards row ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .stat-card .label {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 4px;
+  }
+  .stat-card .value {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .stat-card .sub {
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 2px;
+  }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+  .neu { color: var(--text); }
+  .cyan { color: var(--cyan); }
+
+  /* ── Tables ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .panel-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-header .title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .panel-header .subtitle { color: var(--muted); font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.2);
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .market-id {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--cyan);
+  }
+  .question { color: var(--muted); font-size: 11px; }
+  .empty-row td { color: var(--muted); font-style: italic; text-align: center; padding: 20px; }
+
+  /* ── Edge pills ── */
+  .edge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .edge-pos { background: rgba(63,185,80,0.15); color: var(--green); }
+  .edge-neg { background: rgba(248,81,73,0.15); color: var(--red); }
+  .side-yes { color: var(--green); font-weight: 600; }
+  .side-no  { color: var(--red);   font-weight: 600; }
+
+  /* ── Source tags ── */
+  .source-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--border);
+    color: var(--muted);
+  }
+  .src-sports    { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .src-fedwatch  { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .src-fred      { background: rgba(255,166,87,0.15); color: var(--orange); }
+  .src-weather   { background: rgba(57,208,216,0.15); color: var(--cyan); }
+  .src-crypto    { background: rgba(188,140,255,0.15); color: var(--purple); }
+  .src-news      { background: rgba(63,185,80,0.15);  color: var(--green); }
+  .src-llm       { background: rgba(248,81,73,0.15);  color: var(--red); }
+  .src-poly      { background: rgba(88,166,255,0.15); color: var(--blue); }
+
+  /* ── Grid for overview page ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Activity dot ── */
+  .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-red    { background: var(--red); }
+
+  /* ── Scan counters strip ── */
+  .scan-strip {
+    display: flex;
+    gap: 20px;
+    padding: 8px 14px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .scan-strip span { white-space: nowrap; }
+  .scan-strip strong { color: var(--text); }
+
+  /* ── Tooltip for reasoning ── */
+  .has-tooltip { cursor: help; border-bottom: 1px dashed var(--border); }
+
+  /* ── Trade status ── */
+  .status-placed    { color: var(--green); }
+  .status-simulated { color: var(--yellow); }
+  .status-failed    { color: var(--red); }
+
+  /* ── P&L bar ── */
+  .pnl-bar-wrap {
+    background: var(--border);
+    border-radius: 4px;
+    height: 4px;
+    width: 80px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+  .pnl-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s;
+  }
+  .pnl-bar-pos { background: var(--green); }
+  .pnl-bar-neg { background: var(--red); }
+
+  /* ── Scrollable table container ── */
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="dot dot-green" id="conn-dot"></span>Leo — Kalshi Bot</h1>
+  <div class="header-right">
+    <span id="mode-badge" class="badge badge-dry">DRY RUN</span>
+    <span id="conn-badge" class="badge badge-disc">CONNECTING</span>
+    <span id="last-update">—</span>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" data-page="overview">Overview <span class="count" id="tab-arb-count">0</span></div>
+  <div class="tab" data-page="signals">Signals <span class="count" id="tab-sig-count">0</span></div>
+  <div class="tab" data-page="cross">Cross-Platform <span class="count" id="tab-cross-count">0</span></div>
+  <div class="tab" data-page="portfolio">Portfolio <span class="count" id="tab-pos-count">0</span></div>
+  <div class="tab" data-page="trades">Trade Log <span class="count" id="tab-trade-count">0</span></div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════ OVERVIEW ═══ -->
+<div class="page active" id="page-overview">
+
+  <div class="stat-row" id="stat-row">
+    <div class="stat-card">
+      <div class="label">Balance</div>
+      <div class="value cyan" id="stat-balance">—</div>
+      <div class="sub">account equity</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Unrealized P&amp;L</div>
+      <div class="value" id="stat-unreal">—</div>
+      <div class="sub">mark-to-market</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Realized P&amp;L</div>
+      <div class="value" id="stat-real">—</div>
+      <div class="sub">from settled markets</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Open Positions</div>
+      <div class="value neu" id="stat-positions">—</div>
+      <div class="sub">markets held</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Markets Live</div>
+      <div class="value neu" id="stat-markets">—</div>
+      <div class="sub">open on Kalshi</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Whale Signals</div>
+      <div class="value" id="stat-whale" style="color:var(--orange)">—</div>
+      <div class="sub">total detected</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="scan-strip" id="scan-strip">
+      <span>Arb scans: <strong id="sc-arb">0</strong></span>
+      <span>MM scans: <strong id="sc-mm">0</strong></span>
+      <span>Corr scans: <strong id="sc-corr">0</strong></span>
+      <span>Signal scans: <strong id="sc-signal">0</strong></span>
+      <span>Cross scans: <strong id="sc-cross">0</strong></span>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title" style="color:var(--cyan)">Overround Arb</span>
+        <span class="subtitle">YES_bid + NO_bid &gt; 1</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>Market</th><th>Sum</th><th>Net%</th><th>Closes</th>
+          </tr></thead>
+          <tbody id="arb-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="title" style="color:var(--purple)">Correlated Arb</span>
+        <span class="subtitle">logical mispricing</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>Market</th><th>Relation</th><th>Edge</th><th>Side</th>
+          </tr></thead>
+          <tbody id="corr-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ SIGNALS ═══ -->
+<div class="page" id="page-signals">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="title" style="color:var(--yellow)">Signal Arb — All Sources</span>
+      <span class="subtitle">external data vs Kalshi price</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Market</th>
+          <th>Question</th>
+          <th>Source</th>
+          <th>Market%</th>
+          <th>Model%</th>
+          <th>Edge</th>
+          <th>Side</th>
+          <th>Size $</th>
+        </tr></thead>
+        <tbody id="signal-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ CROSS-PLATFORM ═══ -->
+<div class="page" id="page-cross">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="title" style="color:var(--blue)">Cross-Platform — Kalshi vs Polymarket</span>
+      <span class="subtitle">price divergences</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Kalshi Market</th>
+          <th>Question</th>
+          <th>Buy</th>
+          <th>Sell</th>
+          <th>Net%</th>
+          <th>Type</th>
+        </tr></thead>
+        <tbody id="cross-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ PORTFOLIO ═══ -->
+<div class="page" id="page-portfolio">
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">Balance</div>
+      <div class="value cyan" id="port-balance">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Unrealized P&amp;L</div>
+      <div class="value" id="port-unreal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Realized P&amp;L</div>
+      <div class="value" id="port-real">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total P&amp;L</div>
+      <div class="value" id="port-total">—</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <span class="title">Open Positions</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Market</th>
+          <th>Question</th>
+          <th>Side</th>
+          <th>Contracts</th>
+          <th>Avg Entry</th>
+          <th>Current Mid</th>
+          <th>Unrealized P&amp;L</th>
+          <th>Closes</th>
+        </tr></thead>
+        <tbody id="positions-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ TRADE LOG ═══ -->
+<div class="page" id="page-trades">
+  <div class="panel">
+    <div class="panel-header">
+      <span class="title">Trade Log</span>
+      <span class="subtitle">last 50 trades</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>#</th>
+          <th>Market</th>
+          <th>Question</th>
+          <th>Type</th>
+          <th>YES%</th>
+          <th>NO%</th>
+          <th>Contracts</th>
+          <th>Net%</th>
+          <th>Mode</th>
+          <th>Status</th>
+          <th>Time</th>
+        </tr></thead>
+        <tbody id="trades-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ── Tab switching ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
+  });
+});
+
+// ── Formatting helpers ─────────────────────────────────────────────────────
+function fmt$(v) {
+  if (v == null) return '—';
+  const abs = Math.abs(v);
+  const s = abs >= 1000 ? '$' + (abs/1000).toFixed(1) + 'k' : '$' + abs.toFixed(2);
+  return (v < 0 ? '-' : '') + s;
+}
+function fmtPct(v) {
+  if (v == null) return '—';
+  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+}
+function pnlClass(v) {
+  return v > 0 ? 'pos' : v < 0 ? 'neg' : 'neu';
+}
+function edgeClass(v) {
+  return v > 0 ? 'edge edge-pos' : 'edge edge-neg';
+}
+function sourceClass(src) {
+  if (!src) return 'source-tag';
+  const s = src.toLowerCase();
+  if (s.includes('sport')) return 'source-tag src-sports';
+  if (s.includes('fed'))   return 'source-tag src-fedwatch';
+  if (s.includes('fred'))  return 'source-tag src-fred';
+  if (s.includes('weather')) return 'source-tag src-weather';
+  if (s.includes('crypto') || s.includes('lognormal')) return 'source-tag src-crypto';
+  if (s.includes('news'))  return 'source-tag src-news';
+  if (s.includes('llm'))   return 'source-tag src-llm';
+  if (s.includes('poly'))  return 'source-tag src-poly';
+  return 'source-tag';
+}
+function truncate(s, n) {
+  return s && s.length > n ? s.slice(0, n) + '…' : (s || '');
+}
+function emptyRow(cols, msg) {
+  return `<tr class="empty-row"><td colspan="${cols}">${msg || 'No data yet'}</td></tr>`;
+}
+
+// ── Renderers ──────────────────────────────────────────────────────────────
+function renderArb(opps) {
+  const tb = document.getElementById('arb-tbody');
+  if (!opps || !opps.length) { tb.innerHTML = emptyRow(4, 'No overround arb found'); return; }
+  tb.innerHTML = opps.map(o => `
+    <tr>
+      <td><span class="market-id">${truncate(o.market_id, 32)}</span></td>
+      <td><span class="${o.sum > 1.04 ? 'pos' : 'cyan'}">${o.sum.toFixed(4)}</span></td>
+      <td><span class="${edgeClass(o.net_pct)}">${fmtPct(o.net_pct)}</span></td>
+      <td style="color:var(--muted)">${o.hours_left}h</td>
+    </tr>`).join('');
+  document.getElementById('tab-arb-count').textContent = opps.length;
+}
+
+function renderCorr(opps) {
+  const tb = document.getElementById('corr-tbody');
+  if (!opps || !opps.length) { tb.innerHTML = emptyRow(4, 'No correlated arb found'); return; }
+  tb.innerHTML = opps.map(o => `
+    <tr>
+      <td><span class="market-id">${truncate(o.market_id, 28)}</span></td>
+      <td style="color:var(--purple);font-size:10px">${o.relation}</td>
+      <td><span class="${edgeClass(o.edge_pct)}">${fmtPct(o.edge_pct)}</span></td>
+      <td class="${o.side === 'YES' ? 'side-yes' : 'side-no'}">${o.side}</td>
+    </tr>`).join('');
+}
+
+function renderSignals(opps) {
+  const tb = document.getElementById('signal-tbody');
+  document.getElementById('tab-sig-count').textContent = opps ? opps.length : 0;
+  if (!opps || !opps.length) { tb.innerHTML = emptyRow(8, 'No signal opportunities'); return; }
+  tb.innerHTML = opps.map(o => {
+    const reasoning = o.reasoning ? ` title="${o.reasoning.replace(/"/g,"'")}"` : '';
+    return `
+    <tr>
+      <td><span class="market-id">${truncate(o.market_id, 28)}</span></td>
+      <td><span class="question"${reasoning}${o.reasoning ? ' class="has-tooltip"' : ''}>${truncate(o.question, 50)}</span></td>
+      <td><span class="${sourceClass(o.source)}">${o.source}</span></td>
+      <td style="color:var(--muted)">${o.market_prob.toFixed(1)}%</td>
+      <td>${o.model_prob.toFixed(1)}%</td>
+      <td><span class="${edgeClass(o.edge_pct)}">${fmtPct(o.edge_pct)}</span></td>
+      <td class="${o.side === 'YES' ? 'side-yes' : 'side-no'}">${o.side}</td>
+      <td style="color:var(--text)">${o.size > 0 ? fmt$(o.size) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCross(opps) {
+  const tb = document.getElementById('cross-tbody');
+  document.getElementById('tab-cross-count').textContent = opps ? opps.length : 0;
+  if (!opps || !opps.length) { tb.innerHTML = emptyRow(6, 'No cross-platform divergences'); return; }
+  tb.innerHTML = opps.map(o => `
+    <tr>
+      <td><span class="market-id">${truncate(o.kalshi_id, 28)}</span></td>
+      <td><span class="question">${truncate(o.question, 45)}</span></td>
+      <td style="color:var(--cyan)">${o.buy_platform.toUpperCase()} @ ${o.buy_price}¢</td>
+      <td style="color:var(--orange)">${o.sell_platform.toUpperCase()} @ ${o.sell_price}¢</td>
+      <td><span class="${edgeClass(o.net_pct)}">${fmtPct(o.net_pct)}</span></td>
+      <td style="color:var(--muted);font-size:10px">${o.signal_only ? 'signal' : 'arb'}</td>
+    </tr>`).join('');
+}
+
+function renderPortfolio(p) {
+  if (!p) return;
+  document.getElementById('port-balance').textContent = fmt$(p.balance);
+  document.getElementById('port-unreal').className = 'value ' + pnlClass(p.unrealized_pnl);
+  document.getElementById('port-unreal').textContent = fmt$(p.unrealized_pnl);
+  document.getElementById('port-real').className = 'value ' + pnlClass(p.realized_pnl);
+  document.getElementById('port-real').textContent = fmt$(p.realized_pnl);
+  document.getElementById('port-total').className = 'value ' + pnlClass(p.total_pnl);
+  document.getElementById('port-total').textContent = fmt$(p.total_pnl);
+  document.getElementById('tab-pos-count').textContent = p.position_count || 0;
+
+  const tb = document.getElementById('positions-tbody');
+  if (!p.positions || !p.positions.length) {
+    tb.innerHTML = emptyRow(8, 'No open positions');
+    return;
+  }
+  tb.innerHTML = p.positions.map(pos => {
+    const pnlCls = pos.unrealized_pnl > 0 ? 'pos' : pos.unrealized_pnl < 0 ? 'neg' : 'neu';
+    return `
+    <tr>
+      <td><span class="market-id">${truncate(pos.market_id, 28)}</span></td>
+      <td><span class="question">${truncate(pos.question, 40)}</span></td>
+      <td class="${pos.side === 'yes' ? 'side-yes' : 'side-no'}">${pos.side.toUpperCase()}</td>
+      <td>${pos.contracts}</td>
+      <td>${pos.avg_price}¢</td>
+      <td>${pos.current_mid}¢</td>
+      <td class="${pnlCls}">${fmt$(pos.unrealized_pnl)}</td>
+      <td style="color:var(--muted)">${pos.hours_left}h</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTrades(trades) {
+  if (!trades) return;
+  document.getElementById('tab-trade-count').textContent = trades.length;
+  const tb = document.getElementById('trades-tbody');
+  if (!trades.length) { tb.innerHTML = emptyRow(11, 'No trades yet'); return; }
+  tb.innerHTML = trades.map(t => `
+    <tr>
+      <td style="color:var(--muted)">${t.id}</td>
+      <td><span class="market-id">${truncate(t.market_id, 26)}</span></td>
+      <td><span class="question">${truncate(t.question, 40)}</span></td>
+      <td style="color:var(--muted);font-size:10px">${t.arb_type || '—'}</td>
+      <td>${t.yes_price != null ? (t.yes_price * 100).toFixed(1) + '¢' : '—'}</td>
+      <td>${t.no_price  != null ? (t.no_price  * 100).toFixed(1) + '¢' : '—'}</td>
+      <td>${t.contracts != null ? t.contracts : '—'}</td>
+      <td><span class="${edgeClass(t.net_profit_pct)}">${fmtPct(t.net_profit_pct)}</span></td>
+      <td class="${t.dry_run ? 'neg' : 'pos'}">${t.dry_run ? 'DRY' : 'LIVE'}</td>
+      <td class="status-${t.status}">${t.status}</td>
+      <td style="color:var(--muted);font-size:10px">${t.created_at || '—'}</td>
+    </tr>`).join('');
+}
+
+// ── Stat cards ─────────────────────────────────────────────────────────────
+function updateStats(data) {
+  // Top-level from state
+  document.getElementById('stat-markets').textContent = data.markets_count || '—';
+  document.getElementById('stat-whale').textContent = data.scans?.whale ?? '—';
+
+  // Scan counters
+  const sc = data.scans || {};
+  document.getElementById('sc-arb').textContent    = sc.arb    || 0;
+  document.getElementById('sc-mm').textContent     = sc.mm     || 0;
+  document.getElementById('sc-corr').textContent   = sc.corr   || 0;
+  document.getElementById('sc-signal').textContent = sc.signal || 0;
+  document.getElementById('sc-cross').textContent  = sc.cross  || 0;
+
+  // Portfolio summary (from portfolio sub-key)
+  const p = data.portfolio;
+  if (p) {
+    document.getElementById('stat-balance').textContent = fmt$(p.balance);
+    const uEl = document.getElementById('stat-unreal');
+    uEl.textContent = fmt$(p.unrealized_pnl);
+    uEl.className = 'value ' + pnlClass(p.unrealized_pnl);
+    const rEl = document.getElementById('stat-real');
+    rEl.textContent = fmt$(p.realized_pnl);
+    rEl.className = 'value ' + pnlClass(p.realized_pnl);
+    document.getElementById('stat-positions').textContent = p.position_count ?? '—';
+  }
+
+  // Mode badge
+  const modeBadge = document.getElementById('mode-badge');
+  if (data.dry_run) {
+    modeBadge.textContent = 'DRY RUN';
+    modeBadge.className = 'badge badge-dry';
+  } else {
+    modeBadge.textContent = 'LIVE';
+    modeBadge.className = 'badge badge-live';
+  }
+}
+
+// ── WebSocket ──────────────────────────────────────────────────────────────
+let ws;
+let reconnectDelay = 1000;
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+  ws.onopen = () => {
+    document.getElementById('conn-badge').textContent = 'CONNECTED';
+    document.getElementById('conn-badge').className = 'badge badge-conn';
+    document.getElementById('conn-dot').className = 'dot dot-green';
+    reconnectDelay = 1000;
+  };
+
+  ws.onmessage = (evt) => {
+    try {
+      const data = JSON.parse(evt.data);
+      document.getElementById('last-update').textContent =
+        new Date().toLocaleTimeString();
+
+      updateStats(data);
+      renderArb(data.arb_opps);
+      renderCorr(data.corr_opps);
+      renderSignals(data.signal_opps);
+      renderCross(data.cross_opps);
+      if (data.portfolio) renderPortfolio(data.portfolio);
+      if (data.trades)    renderTrades(data.trades);
+    } catch(e) {
+      console.error('WS parse error', e);
+    }
+  };
+
+  ws.onclose = () => {
+    document.getElementById('conn-badge').textContent = 'RECONNECTING';
+    document.getElementById('conn-badge').className = 'badge badge-disc';
+    document.getElementById('conn-dot').className = 'dot dot-red';
+    setTimeout(connect, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+  };
+
+  ws.onerror = () => ws.close();
+}
+
+connect();
+</script>
+</body>
+</html>
