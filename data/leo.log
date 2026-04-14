@@ -11281,3 +11281,199 @@ task: <Task cancelling name='cross' coro=<cross_platform_loop() done, defined at
 2026-04-10 00:19:13,952 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B77500' | buy yes@0.061 x64 | edge=+5.4%
 2026-04-10 00:19:13,952 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B37500' | buy no@0.958 x51 | edge=-5.3%
 2026-04-10 00:19:13,953 [INFO] leo.main: Crypto signal: 61 opps, top edge=94.6%
+2026-04-10 19:59:47,721 [WARNING] api_clients.forecast_client: Metaculus fetch failed: 'NoneType' object has no attribute 'get'
+2026-04-10 19:59:47,722 [WARNING] api_clients.forecast_client: Manifold fetch failed: 'NoneType' object has no attribute 'get'
+2026-04-10 19:59:47,722 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-04-10 19:59:47,729 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-10 19:59:48,282 [INFO] api_clients.weather_client: Weather: refreshed 13 city forecasts
+2026-04-10 20:00:17,466 [INFO] auto_correlator: AutoCorrelator: discovered 0 relations from 0 event groups
+2026-04-10 20:00:17,839 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-10 20:00:18,615 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-10 20:00:18,619 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-10 20:00:20,480 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-APR' | buy yes@0.020 x2473 | edge=+95.4%
+2026-04-10 20:00:20,482 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOL26500-27JAN0100-T500' | buy yes@0.050 x989 | edge=+92.5%
+2026-04-10 20:00:20,483 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-MAY' | buy yes@0.080 x617 | edge=+89.4%
+2026-04-10 20:00:20,484 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-JUNE' | buy yes@0.120 x411 | edge=+85.4%
+2026-04-10 20:00:20,485 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-SEP' | buy yes@0.240 x205 | edge=+73.5%
+2026-04-10 20:00:20,486 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1750' | buy no@0.330 x123 | edge=-64.1%
+2026-04-10 20:00:20,487 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-DEC' | buy yes@0.390 x126 | edge=+58.4%
+2026-04-10 20:00:20,488 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-60000.00' | buy no@0.350 x104 | edge=-58.2%
+2026-04-10 20:00:20,488 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-55000.00' | buy no@0.430 x109 | edge=-56.9%
+2026-04-10 20:00:20,489 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1500' | buy no@0.450 x108 | edge=-56.5%
+2026-04-10 20:00:20,490 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-50000.00' | buy no@0.510 x96 | edge=-50.5%
+2026-04-10 20:00:20,490 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1250' | buy no@0.580 x84 | edge=-43.5%
+2026-04-10 20:00:20,491 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-3500.00' | buy no@0.610 x80 | edge=-40.5%
+2026-04-10 20:00:20,492 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-45000.00' | buy no@0.630 x78 | edge=-38.5%
+2026-04-10 20:00:20,493 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-150' | buy no@0.640 x76 | edge=-38.0%
+2026-04-10 20:00:20,494 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-99999.99' | buy no@0.640 x76 | edge=-37.4%
+2026-04-10 20:00:20,494 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-3750.00' | buy no@0.690 x71 | edge=-32.5%
+2026-04-10 20:00:20,495 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-40000.00' | buy no@0.690 x71 | edge=-32.5%
+2026-04-10 20:00:20,496 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-160' | buy no@0.720 x68 | edge=-32.0%
+2026-04-10 20:00:20,497 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1000' | buy no@0.720 x68 | edge=-29.5%
+2026-04-10 20:00:20,499 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-170' | buy no@0.760 x64 | edge=-29.0%
+2026-04-10 20:00:20,500 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4000.00' | buy no@0.750 x65 | edge=-27.5%
+2026-04-10 20:00:20,501 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-109999.99' | buy no@0.750 x65 | edge=-26.5%
+2026-04-10 20:00:20,502 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-180' | buy no@0.760 x64 | edge=-26.0%
+2026-04-10 20:00:20,503 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4250.00' | buy no@0.790 x62 | edge=-23.5%
+2026-04-10 20:00:20,504 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T99.99' | buy no@0.640 x55 | edge=-21.2%
+2026-04-10 20:00:20,505 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-119999.99' | buy no@0.810 x60 | edge=-20.5%
+2026-04-10 20:00:20,506 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4500.00' | buy no@0.820 x60 | edge=-19.5%
+2026-04-10 20:00:20,507 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4750.00' | buy no@0.840 x58 | edge=-18.0%
+2026-04-10 20:00:20,508 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-750' | buy no@0.840 x58 | edge=-17.5%
+2026-04-10 20:00:20,508 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-B2125' | buy yes@0.097 x109 | edge=+17.3%
+2026-04-10 20:00:20,509 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T149.99' | buy no@0.860 x57 | edge=-17.0%
+2026-04-10 20:00:20,510 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-190' | buy no@0.860 x57 | edge=-17.0%
+2026-04-10 20:00:20,512 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-200' | buy no@0.870 x56 | edge=-16.5%
+2026-04-10 20:00:20,513 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-250' | buy no@0.880 x56 | edge=-14.5%
+2026-04-10 20:00:20,513 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-129999.99' | buy no@0.870 x56 | edge=-14.5%
+2026-04-10 20:00:20,514 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-B2375' | buy yes@0.089 x98 | edge=+14.0%
+2026-04-10 20:00:20,514 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-5000.00' | buy no@0.880 x56 | edge=-13.5%
+2026-04-10 20:00:20,515 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-139999.99' | buy no@0.900 x54 | edge=-11.5%
+2026-04-10 20:00:20,516 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B72500' | buy yes@0.068 x99 | edge=+10.6%
+2026-04-10 20:00:20,516 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-300' | buy no@0.920 x53 | edge=-10.5%
+2026-04-10 20:00:20,518 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-6000.00' | buy no@0.910 x54 | edge=-10.5%
+2026-04-10 20:00:20,518 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B67500' | buy yes@0.065 x99 | edge=+10.1%
+2026-04-10 20:00:20,519 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T199.99' | buy no@0.940 x52 | edge=-9.5%
+2026-04-10 20:00:20,520 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-149999.99' | buy no@0.920 x53 | edge=-9.5%
+2026-04-10 20:00:20,520 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-B1375' | buy no@0.929 x53 | edge=-8.6%
+2026-04-10 20:00:20,521 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-B1125' | buy no@0.932 x53 | edge=-8.1%
+2026-04-10 20:00:20,521 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-B1875' | buy yes@0.089 x61 | edge=+8.0%
+2026-04-10 20:00:20,522 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T299.99' | buy no@0.950 x52 | edge=-8.0%
+2026-04-10 20:00:20,522 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B77500' | buy yes@0.063 x83 | edge=+7.9%
+2026-04-10 20:00:20,523 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T249.99' | buy no@0.960 x51 | edge=-7.5%
+2026-04-10 20:00:20,524 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTC2026200-27JAN01-200000' | buy no@0.940 x52 | edge=-7.5%
+2026-04-10 20:00:20,525 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-199999.99' | buy no@0.940 x52 | edge=-7.5%
+2026-04-10 20:00:20,526 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-T149999.99' | buy no@0.939 x52 | edge=-7.1%
+2026-04-10 20:00:20,526 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B42500' | buy no@0.947 x52 | edge=-6.4%
+2026-04-10 20:00:20,527 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B47500' | buy no@0.949 x52 | edge=-6.2%
+2026-04-10 20:00:20,527 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-T4999.99' | buy no@0.954 x51 | edge=-5.8%
+2026-04-10 20:00:20,528 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-T1000.00' | buy no@0.969 x51 | edge=-5.5%
+2026-04-10 20:00:20,528 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTC2026250-27JAN01-250000' | buy no@0.960 x51 | edge=-5.5%
+2026-04-10 20:00:20,528 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B52500' | buy no@0.944 x51 | edge=-5.5%
+2026-04-10 20:00:20,529 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-B37500' | buy no@0.958 x51 | edge=-5.3%
+2026-04-10 20:00:20,530 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-B3125' | buy no@0.953 x51 | edge=-5.1%
+2026-04-10 20:00:20,531 [INFO] leo.main: Crypto signal: 62 opps, top edge=95.4%
+2026-04-10 20:00:47,477 [INFO] auto_correlator: AutoCorrelator: discovered 0 relations from 0 event groups
+2026-04-10 20:00:47,960 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-10 20:00:49,761 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-10 20:00:49,765 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-10 20:00:51,786 [INFO] leo.main: Crypto signal: 61 opps, top edge=95.5%
+2026-04-14 16:29:31,030 [WARNING] api_clients.forecast_client: Metaculus fetch failed: 'NoneType' object has no attribute 'get'
+2026-04-14 16:29:31,030 [WARNING] api_clients.forecast_client: Manifold fetch failed: 'NoneType' object has no attribute 'get'
+2026-04-14 16:29:31,030 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-04-14 16:29:31,071 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:29:31,605 [INFO] api_clients.weather_client: Weather: refreshed 13 city forecasts
+2026-04-14 16:30:00,779 [INFO] auto_correlator: AutoCorrelator: discovered 0 relations from 0 event groups
+2026-04-14 16:30:01,195 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:30:02,004 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:30:02,006 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:30:04,127 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOL26500-27JAN0100-T500' | buy yes@0.050 x979 | edge=+91.5%
+2026-04-14 16:30:04,130 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-APR' | buy yes@0.020 x2025 | edge=+77.8%
+2026-04-14 16:30:04,131 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-MAY' | buy yes@0.080 x498 | edge=+71.8%
+2026-04-14 16:30:04,131 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-JUNE' | buy yes@0.150 x260 | edge=+64.8%
+2026-04-14 16:30:04,132 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-SEP' | buy yes@0.290 x135 | edge=+54.8%
+2026-04-14 16:30:04,133 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAX100-26-DEC' | buy yes@0.410 x83 | edge=+38.8%
+2026-04-14 16:30:04,134 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-55000.00' | buy no@0.450 x46 | edge=-31.6%
+2026-04-14 16:30:04,135 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-50000.00' | buy no@0.550 x59 | edge=-30.2%
+2026-04-14 16:30:04,136 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-60000.00' | buy no@0.390 x15 | edge=-29.5%
+2026-04-14 16:30:04,137 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-3500.00' | buy no@0.590 x59 | edge=-27.3%
+2026-04-14 16:30:04,138 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-150' | buy no@0.680 x61 | edge=-26.4%
+2026-04-14 16:30:04,139 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-99999.99' | buy no@0.590 x57 | edge=-24.8%
+2026-04-14 16:30:04,139 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1250' | buy no@0.610 x57 | edge=-23.6%
+2026-04-14 16:30:04,140 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-3750.00' | buy no@0.660 x58 | edge=-23.1%
+2026-04-14 16:30:04,141 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-45000.00' | buy no@0.680 x61 | edge=-23.1%
+2026-04-14 16:30:04,141 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-160' | buy no@0.730 x59 | edge=-22.7%
+2026-04-14 16:30:04,142 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1500' | buy no@0.520 x42 | edge=-22.6%
+2026-04-14 16:30:04,142 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMINY-27JAN01-40000.00' | buy no@0.740 x62 | edge=-22.6%
+2026-04-14 16:30:04,142 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-170' | buy no@0.760 x59 | edge=-21.5%
+2026-04-14 16:30:04,143 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4000.00' | buy no@0.710 x58 | edge=-19.3%
+2026-04-14 16:30:04,143 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1000' | buy no@0.760 x58 | edge=-18.4%
+2026-04-14 16:30:04,144 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-180' | buy no@0.800 x57 | edge=-18.1%
+2026-04-14 16:30:04,145 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4250.00' | buy no@0.760 x56 | edge=-17.2%
+2026-04-14 16:30:04,145 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-109999.99' | buy no@0.730 x55 | edge=-16.2%
+2026-04-14 16:30:04,146 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4500.00' | buy no@0.790 x56 | edge=-15.1%
+2026-04-14 16:30:04,146 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-190' | buy no@0.850 x54 | edge=-15.0%
+2026-04-14 16:30:04,147 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-750' | buy no@0.860 x56 | edge=-14.7%
+2026-04-14 16:30:04,147 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-200' | buy no@0.870 x54 | edge=-14.7%
+2026-04-14 16:30:04,148 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-4750.00' | buy no@0.820 x55 | edge=-13.3%
+2026-04-14 16:30:04,148 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-250' | buy no@0.880 x54 | edge=-12.5%
+2026-04-14 16:30:04,149 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-119999.99' | buy no@0.810 x54 | edge=-12.0%
+2026-04-14 16:30:04,149 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-5000.00' | buy no@0.840 x54 | edge=-11.8%
+2026-04-14 16:30:04,150 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T99.99' | buy no@0.640 x41 | edge=-10.6%
+2026-04-14 16:30:04,150 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-129999.99' | buy no@0.860 x53 | edge=-9.5%
+2026-04-14 16:30:04,150 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-149999.99' | buy no@0.890 x53 | edge=-9.3%
+2026-04-14 16:30:04,151 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLMAXY-27JAN01-300' | buy no@0.920 x52 | edge=-9.1%
+2026-04-14 16:30:04,152 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T149.99' | buy no@0.840 x51 | edge=-8.4%
+2026-04-14 16:30:04,152 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMAXY-27JAN01-6000.00' | buy no@0.900 x52 | edge=-8.3%
+2026-04-14 16:30:04,152 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-139999.99' | buy no@0.890 x52 | edge=-8.2%
+2026-04-14 16:30:04,153 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T199.99' | buy no@0.940 x50 | edge=-7.7%
+2026-04-14 16:30:04,153 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCMAXY-26DEC31-199999.99' | buy no@0.940 x51 | edge=-6.2%
+2026-04-14 16:30:04,154 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTC2026200-27JAN01-200000' | buy no@0.940 x51 | edge=-6.2%
+2026-04-14 16:30:04,154 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T299.99' | buy no@0.950 x51 | edge=-5.1%
+2026-04-14 16:30:04,154 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T249.99' | buy no@0.960 x50 | edge=-5.0%
+2026-04-14 16:30:04,155 [INFO] leo.main: Crypto signal: 45 opps, top edge=91.5%
+2026-04-14 16:30:31,322 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:30:33,171 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:30:33,173 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:30:35,400 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTC2026250-27JAN01-250000' | buy no@0.960 x51 | edge=-5.5%
+2026-04-14 16:30:35,402 [INFO] trader: [DRY RUN] signal coinbase:BTC 'KXBTCY-27JAN0100-T149999.99' | buy no@0.945 x51 | edge=-5.4%
+2026-04-14 16:30:35,402 [INFO] leo.main: Crypto signal: 47 opps, top edge=91.5%
+2026-04-14 16:31:01,383 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:31:04,351 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:31:04,355 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:31:06,979 [INFO] leo.main: Crypto signal: 46 opps, top edge=91.5%
+2026-04-14 16:31:31,591 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:31:35,512 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:31:35,517 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:31:38,206 [INFO] leo.main: Crypto signal: 47 opps, top edge=91.5%
+2026-04-14 16:32:01,766 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:32:06,702 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:32:06,706 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:32:09,668 [INFO] trader: [DRY RUN] signal coinbase:SOL 'KXSOLD26-27JAN0100-T349.99' | buy no@0.970 x51 | edge=-5.0%
+2026-04-14 16:32:09,670 [INFO] leo.main: Crypto signal: 48 opps, top edge=92.5%
+2026-04-14 16:32:31,887 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:32:37,874 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:32:37,878 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:32:40,968 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHY-27JAN0100-T4999.99' | buy no@0.947 x50 | edge=-5.2%
+2026-04-14 16:32:40,969 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:33:01,956 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:33:09,047 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:33:09,051 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:33:12,326 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:33:32,024 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:33:40,232 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:33:40,233 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:33:43,530 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:34:02,194 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:34:11,388 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:34:11,389 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:34:15,040 [INFO] trader: [DRY RUN] signal coinbase:ETH 'KXETHMINY-27JAN01-1750' | buy no@0.370 x10 | edge=-31.8%
+2026-04-14 16:34:15,041 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:34:32,341 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:34:42,541 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:34:42,545 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:34:46,640 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:35:02,528 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:35:13,723 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:35:13,727 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:35:18,066 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:35:32,597 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:35:44,897 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:35:44,899 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:35:49,419 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:36:02,663 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:36:16,085 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:36:16,089 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:36:20,953 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:36:32,725 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:36:47,261 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:36:47,264 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:36:52,406 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:37:02,880 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:37:18,457 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:37:18,460 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:37:23,682 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%
+2026-04-14 16:37:33,035 [ERROR] position_manager: PositionManager refresh failed: 401, message='Unauthorized', url='https://api.elections.kalshi.com/trade-api/v2/portfolio/balance'
+2026-04-14 16:37:49,612 [INFO] api_clients.polymarket_client: Polymarket: loaded 300 active markets
+2026-04-14 16:37:49,616 [INFO] strategies.cross_platform: CrossPlatform: loaded 300 external markets
+2026-04-14 16:37:55,110 [INFO] leo.main: Crypto signal: 49 opps, top edge=92.5%

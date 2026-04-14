@@ -25,16 +25,28 @@ from rich.panel import Panel
 from rich.table import Table
 
 from api_clients.binance_client import BinanceClient
+from api_clients.forecast_client import ForecastClient
 from api_clients.kalshi_client import KalshiClient, Market
+from api_clients.llm_client import LLMClient
+from api_clients.polymarket_client import PolymarketClient
+from api_clients.weather_client import WeatherClient
 from arbitrage import ArbitrageDetector, ArbOpportunity
+from strategies.cross_platform import (
+    CrossPlatformConfig,
+    CrossPlatformDetector,
+    CrossPlatformOpportunity,
+)
 from config import config
 from position_manager import PositionManager
 from storage import Storage
 from strategies.correlated import CorrelatedOpportunity
 from strategies.crypto_signal import CryptoSignalDetector
+from strategies.forecast_signal import ForecastSignalDetector
+from strategies.llm_signal import LLMSignalDetector
 from strategies.news_fade import NewsFadeDetector, NewsFadeConfig
 from strategies.range_straddle import RangeStraddleDetector
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.weather_signal import WeatherSignalDetector
 from trader import Trader
 
 logging.basicConfig(
@@ -63,21 +75,29 @@ class BotState:
         # Opportunities per strategy
         self.arb_opps: list[ArbOpportunity] = []
         self.crypto_opps: list[AggregatedSignal] = []
+        self.cross_opps: list[CrossPlatformOpportunity] = []
         self.range_opps: list[AggregatedSignal] = []
         self.corr_opps: list[CorrelatedOpportunity] = []
         self.fade_opps: list[AggregatedSignal] = []
 
+        self.forecast_opps: list[AggregatedSignal] = []
+        self.llm_opps: list[AggregatedSignal] = []
+        self.weather_opps: list[AggregatedSignal] = []
+
         # Scan counters
         self.arb_scans = 0
         self.crypto_scans = 0
+        self.cross_scans = 0
         self.range_scans = 0
         self.corr_scans = 0
         self.fade_scans = 0
+        self.forecast_scans = 0
+        self.llm_scans = 0
+        self.weather_scans = 0
 
         # Web-gui compat aliases
         self.signal_opps: list[AggregatedSignal] = []
         self.signal_scans = 0
-        self.cross_opps: list = []   # kept for web_gui compat, always empty
         self.mm_scans = 0
         self.whale_signals = 0
 
@@ -145,6 +165,25 @@ def _crypto_table() -> Table:
     return t
 
 
+def _cross_table() -> Table:
+    t = Table(
+        "Market", "Buy@", "Sell@", "Net%",
+        box=box.SIMPLE_HEAD, title="[blue]Cross-Platform[/]",
+        title_style="bold", min_width=50,
+    )
+    for o in state.cross_opps[:5]:
+        t.add_row(
+            o.kalshi_market_id[:24]
+            + ("…" if len(o.kalshi_market_id) > 24 else ""),
+            f"{o.buy_platform[:3]} {o.buy_price:.3f}",
+            f"{o.sell_platform[:3]} {o.sell_price:.3f}",
+            f"[bold blue]{o.net_profit_pct:.1%}[/]",
+        )
+    if not state.cross_opps:
+        t.add_row("[dim]none[/]", "", "", "")
+    return t
+
+
 def _range_table() -> Table:
     t = Table(
         "Market", "Model", "Mkt", "Edge",
@@ -191,6 +230,65 @@ def _fade_table() -> Table:
     return t
 
 
+def _forecast_table() -> Table:
+    t = Table(
+        "Market", "Src", "Model", "Mkt", "Edge",
+        box=box.SIMPLE_HEAD, title="[bright_cyan]Forecast Aggregator[/]",
+        title_style="bold", min_width=58,
+    )
+    for o in state.forecast_opps[:5]:
+        clr = "green" if o.edge > 0 else "red"
+        t.add_row(
+            o.market_id[:22] + ("…" if len(o.market_id) > 22 else ""),
+            (o.source or "")[:10],
+            f"{o.model_prob:.0%}",
+            f"{o.market_prob:.0%}",
+            f"[{clr}]{o.edge:+.1%}[/]",
+        )
+    if not state.forecast_opps:
+        t.add_row("[dim]none[/]", "", "", "", "")
+    return t
+
+
+def _llm_table() -> Table:
+    t = Table(
+        "Market", "Model", "Mkt", "Edge", "Conf",
+        box=box.SIMPLE_HEAD, title="[bright_green]LLM Analysis[/]",
+        title_style="bold", min_width=58,
+    )
+    for o in state.llm_opps[:5]:
+        clr = "green" if o.edge > 0 else "red"
+        t.add_row(
+            o.market_id[:22] + ("…" if len(o.market_id) > 22 else ""),
+            f"{o.model_prob:.0%}",
+            f"{o.market_prob:.0%}",
+            f"[{clr}]{o.edge:+.1%}[/]",
+            f"{o.confidence:.0%}" if o.confidence else "—",
+        )
+    if not state.llm_opps:
+        t.add_row("[dim]none[/]", "", "", "", "")
+    return t
+
+
+def _weather_table() -> Table:
+    t = Table(
+        "Market", "Forecast", "Mkt", "Edge",
+        box=box.SIMPLE_HEAD, title="[bright_blue]Weather Signal[/]",
+        title_style="bold", min_width=54,
+    )
+    for o in state.weather_opps[:5]:
+        clr = "green" if o.edge > 0 else "red"
+        t.add_row(
+            o.market_id[:24] + ("…" if len(o.market_id) > 24 else ""),
+            f"{o.model_prob:.0%}",
+            f"{o.market_prob:.0%}",
+            f"[{clr}]{o.edge:+.1%}[/]",
+        )
+    if not state.weather_opps:
+        t.add_row("[dim]none[/]", "", "", "")
+    return t
+
+
 def _stats_table(storage: Storage, pos_manager: PositionManager) -> Table:
     trade_stats = storage.get_pnl_summary()
     pos = pos_manager.summary()
@@ -206,8 +304,12 @@ def _stats_table(storage: Storage, pos_manager: PositionManager) -> Table:
     t.add_row("Markets", str(len(state.markets)))
     t.add_row("Arb scans", str(state.arb_scans))
     t.add_row("Crypto scans", str(state.crypto_scans))
+    t.add_row("Cross scans", str(state.cross_scans))
     t.add_row("Range scans", str(state.range_scans))
     t.add_row("Fade scans", str(state.fade_scans))
+    t.add_row("Forecast scans", str(state.forecast_scans))
+    t.add_row("LLM scans", str(state.llm_scans))
+    t.add_row("Weather scans", str(state.weather_scans))
     t.add_row("─" * 10, "─" * 7)
     t.add_row("Trades", str(trade_stats.get("total_trades", 0)))
     t.add_row(
@@ -219,10 +321,12 @@ def _stats_table(storage: Storage, pos_manager: PositionManager) -> Table:
 
 def build_ui(storage: Storage, pos_manager: PositionManager) -> Panel:
     row1 = Columns([_arb_table(), _crypto_table()], equal=True)
-    row2 = Columns([_range_table(), _fade_table()], equal=True)
-    row3 = _stats_table(storage, pos_manager)
+    row2 = Columns([_cross_table(), _range_table()], equal=True)
+    row3 = Columns([_fade_table(), _forecast_table()], equal=True)
+    row4 = Columns([_llm_table(), _weather_table()], equal=True)
+    row5 = Columns([_stats_table(storage, pos_manager)])
     return Panel(
-        Group(row1, row2, row3),
+        Group(row1, row2, row3, row4, row5),
         title=(
             "[bold]Leo — Kalshi Trading Bot[/bold]  "
             + datetime.now().strftime("%H:%M:%S")
@@ -299,6 +403,55 @@ async def crypto_signal_loop(
         except Exception as e:
             logger.error(f"Crypto signal loop: {e}")
         await asyncio.sleep(config.crypto_signal.refresh_interval_sec)
+
+
+async def cross_platform_loop(trader: Trader):
+    """Strategy 2: Polymarket prices as a Kalshi signal source."""
+    if not config.cross_arb.enabled:
+        return
+
+    cross_cfg = CrossPlatformConfig(
+        min_profit_pct=config.cross_arb.min_profit_pct,
+        max_position_usd=config.cross_arb.max_position_usd,
+        signal_only=config.cross_arb.signal_only,
+    )
+    detector = CrossPlatformDetector(cross_cfg)
+
+    async with PolymarketClient() as poly:
+        while True:
+            try:
+                if state.markets:
+                    poly_markets = await poly.get_all_active_markets(
+                        max_pages=3
+                    )
+                    ext_markets = poly.to_external_markets(poly_markets)
+                    detector.load_external_markets(ext_markets)
+                    state.cross_opps = detector.scan(state.markets)
+                    state.cross_scans += 1
+                    # Always execute on Kalshi, even when signal_only=False
+                    for opp in state.cross_opps:
+                        sig = AggregatedSignal(
+                            market_id=opp.kalshi_market_id,
+                            question=opp.question,
+                            market_prob=opp.buy_price,
+                            model_prob=opp.sell_price,
+                            edge=opp.net_profit_pct,
+                            recommended_side=(
+                                "yes"
+                                if opp.buy_platform == "kalshi"
+                                else "no"
+                            ),
+                            source=f"cross:{opp.sell_platform}",
+                            recommended_size_usd=opp.max_size_usd,
+                        )
+                        await trader.execute_signal(sig, state.market_map)
+                    if state.cross_opps:
+                        logger.info(
+                            f"Cross-platform: {len(state.cross_opps)} opps"
+                        )
+            except Exception as e:
+                logger.error(f"Cross-platform loop: {e}")
+            await asyncio.sleep(config.cross_arb.refresh_interval_sec)
 
 
 async def range_straddle_loop(
@@ -411,6 +564,129 @@ async def news_fade_loop(trader: Trader):
         except Exception as e:
             logger.error(f"News fade loop: {e}")
         await asyncio.sleep(300)   # check every 5 min
+
+
+async def forecast_loop(trader: Trader):
+    """Strategy 5: Community forecast aggregation (Metaculus + Manifold)."""
+    if not config.forecast.enabled:
+        return
+
+    sig_cfg = SignalArbConfig(
+        min_edge=config.forecast.min_edge,
+        fee_pct=config.arbitrage.fee_pct,
+        max_position_usd=config.forecast.max_position_usd,
+        kelly_fraction=config.forecast.kelly_fraction,
+    )
+    try:
+        bankroll = await trader.client.get_balance()
+    except Exception:
+        bankroll = 500.0
+
+    fc = ForecastClient()
+    detector = ForecastSignalDetector(sig_cfg, fc, bankroll)
+    async with fc:
+        while True:
+            try:
+                await fc.refresh()
+                if state.markets:
+                    state.forecast_opps = detector.scan(state.markets)
+                    state.forecast_scans += 1
+                    for sig in state.forecast_opps:
+                        await trader.execute_signal(sig, state.market_map)
+                if state.forecast_opps:
+                    logger.info(
+                        f"Forecast: {len(state.forecast_opps)} opps, "
+                        f"top edge={state.forecast_opps[0].edge:.1%}"
+                    )
+            except Exception as e:
+                logger.error(f"Forecast loop: {e}")
+            await asyncio.sleep(config.forecast.refresh_interval_sec)
+
+
+async def llm_loop(trader: Trader):
+    """Strategy 6: LLM fundamental analysis (Claude Haiku)."""
+    if not config.llm.enabled:
+        return
+
+    sig_cfg = SignalArbConfig(
+        min_edge=config.llm.min_edge,
+        fee_pct=config.arbitrage.fee_pct,
+        max_position_usd=config.llm.max_position_usd,
+        kelly_fraction=config.llm.kelly_fraction,
+    )
+    try:
+        bankroll = await trader.client.get_balance()
+    except Exception:
+        bankroll = 500.0
+
+    fc = ForecastClient() if config.forecast.enabled else None
+    llm = LLMClient(
+        api_key=config.llm.api_key,
+        model=config.llm.model,
+        max_concurrent=config.llm.max_concurrent,
+        cache_ttl_min=config.llm.cache_ttl_min,
+    )
+    detector = LLMSignalDetector(
+        sig_cfg,
+        llm,
+        bankroll,
+        forecast_client=fc,
+        max_markets_per_scan=config.llm.max_markets_per_scan,
+        min_liquidity_usd=config.llm.min_liquidity_usd,
+    )
+    while True:
+        try:
+            if state.markets:
+                state.llm_opps = await detector.scan(state.markets)
+                state.llm_scans += 1
+                for sig in state.llm_opps:
+                    await trader.execute_signal(sig, state.market_map)
+                if state.llm_opps:
+                    logger.info(
+                        f"LLM: {len(state.llm_opps)} opps, "
+                        f"top edge={state.llm_opps[0].edge:.1%}"
+                    )
+        except Exception as e:
+            logger.error(f"LLM loop: {e}")
+        await asyncio.sleep(config.llm.refresh_interval_sec)
+
+
+async def weather_loop(trader: Trader):
+    """Strategy 7: Weather market signal trading (Open-Meteo)."""
+    if not config.weather.enabled:
+        return
+
+    sig_cfg = SignalArbConfig(
+        min_edge=config.weather.min_edge,
+        fee_pct=config.arbitrage.fee_pct,
+        max_position_usd=config.weather.max_position_usd,
+        kelly_fraction=config.weather.kelly_fraction,
+    )
+    try:
+        bankroll = await trader.client.get_balance()
+    except Exception:
+        bankroll = 500.0
+
+    weather = WeatherClient()
+    detector = WeatherSignalDetector(sig_cfg, weather, bankroll)
+
+    async with weather:
+        while True:
+            try:
+                await weather.refresh_all()
+                if state.markets:
+                    state.weather_opps = detector.scan(state.markets)
+                    state.weather_scans += 1
+                    for sig in state.weather_opps:
+                        await trader.execute_signal(sig, state.market_map)
+                    if state.weather_opps:
+                        logger.info(
+                            f"Weather: {len(state.weather_opps)} opps, "
+                            f"top edge={state.weather_opps[0].edge:.1%}"
+                        )
+            except Exception as e:
+                logger.error(f"Weather loop: {e}")
+            await asyncio.sleep(config.weather.refresh_interval_sec)
 
 
 async def position_loop(pos_manager: PositionManager):
@@ -527,6 +803,9 @@ async def run():
                     crypto_signal_loop(binance, trader), name="crypto"
                 ),
                 asyncio.create_task(
+                    cross_platform_loop(trader), name="cross"
+                ),
+                asyncio.create_task(
                     range_straddle_loop(binance, trader), name="range"
                 ),
                 asyncio.create_task(
@@ -534,6 +813,15 @@ async def run():
                 ),
                 asyncio.create_task(
                     news_fade_loop(trader), name="fade"
+                ),
+                asyncio.create_task(
+                    forecast_loop(trader), name="forecast"
+                ),
+                asyncio.create_task(
+                    llm_loop(trader), name="llm"
+                ),
+                asyncio.create_task(
+                    weather_loop(trader), name="weather"
                 ),
                 asyncio.create_task(
                     position_loop(pos_manager), name="positions"
