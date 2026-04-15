@@ -1,0 +1,15 @@
+.env
+__pychache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.bak
+*.swp
+.DS_Store
+.idea/
+.vscode/
+.ruff_cache/
+.mypy_cache/
