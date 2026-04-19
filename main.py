@@ -339,6 +339,18 @@ def build_ui(storage: Storage, pos_manager: PositionManager) -> Panel:
 # Strategy loops
 # ---------------------------------------------------------------------------
 
+_BANKROLL_REFRESH_EVERY = 10   # scans between balance re-fetches
+
+
+async def _refresh_bankroll(trader: Trader, sizer) -> None:
+    """Fetch current Kalshi balance and update a KellySizer in-place."""
+    try:
+        bal = await trader.client.get_balance()
+        sizer.update_bankroll(bal)
+    except Exception:
+        pass
+
+
 async def market_refresh_loop(client: KalshiClient):
     """Dedicated loop: fetch all Kalshi markets and update shared state."""
     while True:
@@ -393,6 +405,8 @@ async def crypto_signal_loop(
                 state.signal_opps = state.crypto_opps
                 state.crypto_scans += 1
                 state.signal_scans = state.crypto_scans
+                if state.crypto_scans % _BANKROLL_REFRESH_EVERY == 0:
+                    await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.crypto_opps:
                     await trader.execute_signal(sig, state.market_map)
                 if state.crypto_opps:
@@ -481,6 +495,8 @@ async def range_straddle_loop(
             if state.markets:
                 state.range_opps = detector.scan(state.markets)
                 state.range_scans += 1
+                if state.range_scans % _BANKROLL_REFRESH_EVERY == 0:
+                    await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.range_opps:
                     await trader.execute_signal(sig, state.market_map)
         except Exception as e:
@@ -559,6 +575,8 @@ async def news_fade_loop(trader: Trader):
             if state.markets:
                 state.fade_opps = detector.scan(state.markets)
                 state.fade_scans += 1
+                if state.fade_scans % _BANKROLL_REFRESH_EVERY == 0:
+                    await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.fade_opps:
                     await trader.execute_signal(sig, state.market_map)
         except Exception as e:
@@ -591,6 +609,8 @@ async def forecast_loop(trader: Trader):
                 if state.markets:
                     state.forecast_opps = detector.scan(state.markets)
                     state.forecast_scans += 1
+                    if state.forecast_scans % _BANKROLL_REFRESH_EVERY == 0:
+                        await _refresh_bankroll(trader, detector.sizer)
                     for sig in state.forecast_opps:
                         await trader.execute_signal(sig, state.market_map)
                 if state.forecast_opps:
@@ -639,6 +659,8 @@ async def llm_loop(trader: Trader):
             if state.markets:
                 state.llm_opps = await detector.scan(state.markets)
                 state.llm_scans += 1
+                if state.llm_scans % _BANKROLL_REFRESH_EVERY == 0:
+                    await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.llm_opps:
                     await trader.execute_signal(sig, state.market_map)
                 if state.llm_opps:
@@ -677,6 +699,8 @@ async def weather_loop(trader: Trader):
                 if state.markets:
                     state.weather_opps = detector.scan(state.markets)
                     state.weather_scans += 1
+                    if state.weather_scans % _BANKROLL_REFRESH_EVERY == 0:
+                        await _refresh_bankroll(trader, detector.sizer)
                     for sig in state.weather_opps:
                         await trader.execute_signal(sig, state.market_map)
                     if state.weather_opps:
@@ -784,10 +808,10 @@ async def run():
 
     async with KalshiClient(config.kalshi) as client:
         arb_detector = ArbitrageDetector(config.arbitrage)
-        trader = Trader(config, client, storage)
         pos_manager = PositionManager(
             client, config.positions.refresh_interval_sec
         )
+        trader = Trader(config, client, storage, pos_manager)
         _bot_state._pos_manager_ref = pos_manager
 
         # Single shared Coinbase client for all price-dependent strategies

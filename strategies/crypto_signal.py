@@ -29,7 +29,7 @@ from typing import Optional
 
 from api_clients.binance_client import ANNUAL_VOL, BinanceClient, _norm_cdf
 from api_clients.kalshi_client import Market
-from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
@@ -92,9 +92,9 @@ class CryptoSignalDetector:
         self.sizer = KellySizer(bankroll=bankroll, fraction=cfg.kelly_fraction)
 
     def _vol(self, symbol: str) -> float:
-        """Realized vol if we have enough candles, else baseline estimate."""
-        rv = self.binance.compute_realized_vol(symbol)
-        if rv and 0.10 < rv < 5.0:   # sanity-check the estimate
+        """Blended realized vol (30 min + 6h), falling back to baseline."""
+        rv = self.binance.compute_realized_vol_blended(symbol)
+        if rv:
             return rv
         return ANNUAL_VOL.get(symbol, 0.90)
 
@@ -213,25 +213,26 @@ class CryptoSignalDetector:
                     continue
 
                 adj_prob = max(0.01, min(0.99, model_prob + adj))
-                market_prob = market.yes_price
-                if market_prob <= 0:
-                    continue
 
-                edge = adj_prob - market_prob - self.cfg.fee_pct
-                if abs(edge) < self.cfg.min_edge:
+                result = ask_edge(
+                    adj_prob,
+                    market.yes_ask, market.no_ask, market.yes_bid,
+                    self.cfg.fee_pct, self.cfg.min_edge,
+                )
+                if not result:
                     continue
+                edge, side, entry_price = result
 
-                side = "yes" if edge > 0 else "no"
                 trade_prob = adj_prob if side == "yes" else (1 - adj_prob)
                 size = self.sizer.size(
-                    trade_prob, market_prob, self.cfg.max_position_usd
+                    trade_prob, entry_price, self.cfg.max_position_usd
                 )
 
                 rsi_val = self.binance.compute_rsi(symbol) or 0
                 results.append(AggregatedSignal(
                     market_id=market.market_id,
                     question=market.question or market.market_id,
-                    market_prob=market_prob,
+                    market_prob=market.yes_price,
                     model_prob=adj_prob,
                     edge=edge,
                     recommended_side=side,
@@ -241,7 +242,8 @@ class CryptoSignalDetector:
                         f"spot={spot:,.0f} "
                         f"floor={floor} cap={cap} "
                         f"base={model_prob:.2%} adj={adj:+.2%} "
-                        f"RSI={rsi_val:.0f} vol={vol:.0%}"
+                        f"RSI={rsi_val:.0f} vol={vol:.0%} "
+                        f"ask={entry_price:.3f}"
                     ),
                     recommended_size_usd=size,
                 ))

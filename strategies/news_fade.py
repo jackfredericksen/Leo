@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from api_clients.kalshi_client import Market
-from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.signal_arb import AggregatedSignal, SignalArbConfig, _MAX_SPREAD
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
@@ -71,6 +71,8 @@ class NewsFadeDetector:
             try:
                 if market.liquidity_usd < self.fade.min_liquidity_usd:
                     continue
+                if market.yes_ask - market.yes_bid > _MAX_SPREAD:
+                    continue
 
                 q = market.question.lower()
                 if not any(w in q for w in _CRYPTO_KEYWORDS):
@@ -115,28 +117,28 @@ class NewsFadeDetector:
                 spike_move = current - prior_price
                 expected_reversion = spike_move * self.fade.fade_fraction
                 target_price = current - expected_reversion
+                model_prob = target_price   # our estimate of fair P(YES)
+                market_prob = current       # displayed as current market price
 
                 if spike_dir == "up":
-                    # Spiked up → fade by buying NO
-                    model_prob = target_price
-                    market_prob = current
+                    # Spiked up → YES overpriced → buy NO
+                    # P(NO wins) = 1 - target_price, cost = no_ask
                     side = "no"
-                    edge = market_prob - model_prob - self.cfg.fee_pct
+                    entry_price = market.no_ask
+                    edge = (1 - model_prob) - entry_price - self.cfg.fee_pct
                 else:
-                    # Spiked down → fade by buying YES
-                    model_prob = target_price
-                    market_prob = current
+                    # Spiked down → YES underpriced → buy YES
+                    # P(YES wins) = target_price, cost = yes_ask
                     side = "yes"
-                    edge = model_prob - market_prob - self.cfg.fee_pct
+                    entry_price = market.yes_ask
+                    edge = model_prob - entry_price - self.cfg.fee_pct
 
                 if edge < self.fade.min_edge:
                     continue
 
-                trade_prob = (
-                    model_prob if side == "yes" else (1 - model_prob)
-                )
+                trade_prob = model_prob if side == "yes" else (1 - model_prob)
                 size = self.sizer.size(
-                    trade_prob, market_prob, self.cfg.max_position_usd
+                    trade_prob, entry_price, self.cfg.max_position_usd
                 )
 
                 results.append(AggregatedSignal(

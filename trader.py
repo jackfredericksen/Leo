@@ -20,6 +20,7 @@ from datetime import datetime, timedelta, timezone
 from api_clients.kalshi_client import KalshiClient, OrderResult
 from arbitrage import ArbOpportunity
 from config import Config
+from position_manager import PositionManager
 from storage import Storage
 from strategies.correlated import CorrelatedOpportunity
 from strategies.signal_arb import AggregatedSignal
@@ -31,12 +32,17 @@ _COOLDOWN_MINUTES = 30
 
 class Trader:
     def __init__(
-        self, cfg: Config, client: KalshiClient, storage: Storage
+        self,
+        cfg: Config,
+        client: KalshiClient,
+        storage: Storage,
+        pos_manager: PositionManager | None = None,
     ):
         self.cfg = cfg
         self.arb_cfg = cfg.arbitrage
         self.client = client
         self.storage = storage
+        self.pos_manager = pos_manager
         self._total_exposure = 0.0
         # market_id → time of last trade (prevents multi-strategy double-fires)
         self._cooldowns: dict[str, datetime] = {}
@@ -159,6 +165,11 @@ class Trader:
             return False
         if not self._check_exposure(sig.recommended_size_usd):
             return False
+        if self._has_position(sig.market_id):
+            logger.debug(
+                f"Skipping {sig.market_id}: already holding a position"
+            )
+            return False
 
         market = market_map.get(sig.market_id)
         if not market:
@@ -245,6 +256,11 @@ class Trader:
         if self._in_cooldown(opp.market_id_mispriced):
             return False
         if not self._check_exposure(opp.max_size_usd):
+            return False
+        if self._has_position(opp.market_id_mispriced):
+            logger.debug(
+                f"Skipping {opp.market_id_mispriced}: already holding"
+            )
             return False
 
         market = market_map.get(opp.market_id_mispriced)
@@ -349,6 +365,12 @@ class Trader:
         for order in orders:
             if order:
                 await self.client.cancel_order(order.order_id)
+
+    def _has_position(self, market_id: str) -> bool:
+        if not self.pos_manager:
+            return False
+        pos = self.pos_manager.get_position(market_id)
+        return pos is not None and pos.contracts > 0
 
     def _check_exposure(self, size: float) -> bool:
         return (

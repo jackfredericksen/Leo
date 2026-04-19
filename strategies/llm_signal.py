@@ -22,7 +22,7 @@ from typing import Optional
 from api_clients.kalshi_client import Market
 from api_clients.llm_client import LLMClient
 from api_clients.forecast_client import ForecastClient
-from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class LLMSignalDetector:
 
         # Prioritise by liquidity so the limited LLM budget hits the
         # most-active markets first
-        candidates.sort(key=lambda x: x["liquidity"], reverse=True)
+        candidates.sort(key=lambda x: float(x["liquidity"]), reverse=True)
         return candidates[:self.max_markets]
 
     async def scan(self, markets: list[Market]) -> list[AggregatedSignal]:
@@ -135,34 +135,32 @@ class LLMSignalDetector:
                 if not est:
                     continue
 
-                market_prob = candidate["prob"]
                 llm_prob = est.probability
-                edge = llm_prob - market_prob - self.cfg.fee_pct
-
-                if abs(edge) < self.cfg.min_edge:
-                    continue
 
                 # Scale by LLM confidence — low confidence = no trade
                 if est.confidence < 0.3:
                     continue
 
-                side = "yes" if edge > 0 else "no"
-                trade_prob = (
-                    llm_prob if side == "yes" else (1 - llm_prob)
+                mkt: Market = candidate["_market"]
+                result = ask_edge(
+                    llm_prob,
+                    mkt.yes_ask, mkt.no_ask, mkt.yes_bid,
+                    self.cfg.fee_pct, self.cfg.min_edge,
                 )
-                trade_price = (
-                    market_prob if side == "yes" else (1 - market_prob)
-                )
+                if not result:
+                    continue
+                edge, side, entry_price = result
+
+                trade_prob = llm_prob if side == "yes" else (1 - llm_prob)
                 size = self.sizer.size(
-                    trade_prob, trade_price, self.cfg.max_position_usd
+                    trade_prob, entry_price, self.cfg.max_position_usd
                 )
-                # Scale size by LLM confidence
                 size = round(size * est.confidence, 2)
 
                 results.append(AggregatedSignal(
                     market_id=candidate["market_id"],
                     question=candidate["question"],
-                    market_prob=market_prob,
+                    market_prob=mkt.yes_price,
                     model_prob=llm_prob,
                     edge=edge,
                     recommended_side=side,

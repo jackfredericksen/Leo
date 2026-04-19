@@ -8,6 +8,7 @@ AggregatedSignal is the shared output format for all signal strategies:
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Optional
 
 
 @dataclass
@@ -34,6 +35,44 @@ class AggregatedSignal:
     detected_at: datetime = field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+
+# Markets wider than this are too illiquid to trade cost-effectively.
+# yes_ask - yes_bid > 8 cents means you lose ~4 cents on entry alone.
+_MAX_SPREAD = 0.08
+
+
+def ask_edge(
+    model_prob: float,
+    yes_ask: float,
+    no_ask: float,
+    yes_bid: float,
+    fee_pct: float,
+    min_edge: float,
+) -> Optional[tuple[float, str, float]]:
+    """
+    Compute executable edge using ask prices (what you'd actually pay).
+
+    Returns (edge, side, entry_price) or None when:
+      - spread is too wide (> _MAX_SPREAD)
+      - neither side has edge >= min_edge
+
+    Args:
+        model_prob: Your estimated P(YES resolves).
+        yes_ask / no_ask: Current ask prices for each side.
+        yes_bid: Current best YES bid (used to compute spread).
+        fee_pct: Round-trip fee to subtract from edge.
+        min_edge: Minimum edge threshold.
+    """
+    if yes_ask - yes_bid > _MAX_SPREAD:
+        return None
+    edge_yes = model_prob - yes_ask - fee_pct
+    edge_no = (1.0 - model_prob) - no_ask - fee_pct
+    if edge_yes >= edge_no and edge_yes >= min_edge:
+        return edge_yes, "yes", yes_ask
+    if edge_no > edge_yes and edge_no >= min_edge:
+        return edge_no, "no", no_ask
+    return None
 
 
 def _norm_cdf(x: float) -> float:

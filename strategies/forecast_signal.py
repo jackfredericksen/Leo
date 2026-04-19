@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 from api_clients.forecast_client import ForecastClient, ForecastQuestion
 from api_clients.kalshi_client import Market
-from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
@@ -90,13 +90,15 @@ class ForecastSignalDetector:
                     continue
 
                 forecast_prob = weighted_prob / total_weight
-                market_prob = market.yes_price
-                if market_prob <= 0:
-                    continue
 
-                edge = forecast_prob - market_prob - self.cfg.fee_pct
-                if abs(edge) < self.cfg.min_edge:
+                result = ask_edge(
+                    forecast_prob,
+                    market.yes_ask, market.no_ask, market.yes_bid,
+                    self.cfg.fee_pct, self.cfg.min_edge,
+                )
+                if not result:
                     continue
+                edge, side, entry_price = result
 
                 # Confidence: best match similarity × forecaster weight
                 best_sim, best_fq = matches[0]
@@ -105,22 +107,16 @@ class ForecastSignalDetector:
                 if len(sources) > 1:
                     conf = min(1.0, conf * 1.2)
 
-                side = "yes" if edge > 0 else "no"
-                trade_prob = (
-                    forecast_prob if side == "yes" else (1 - forecast_prob)
-                )
-                trade_price = (
-                    market_prob if side == "yes" else (1 - market_prob)
-                )
+                trade_prob = forecast_prob if side == "yes" else (1 - forecast_prob)
                 size = self.sizer.size(
-                    trade_prob, trade_price, self.cfg.max_position_usd
+                    trade_prob, entry_price, self.cfg.max_position_usd
                 )
 
                 source_label = "+".join(sorted(sources))
                 results.append(AggregatedSignal(
                     market_id=market.market_id,
                     question=market.question,
-                    market_prob=market_prob,
+                    market_prob=market.yes_price,
                     model_prob=forecast_prob,
                     edge=edge,
                     recommended_side=side,
@@ -128,7 +124,7 @@ class ForecastSignalDetector:
                     confidence=conf,
                     reasoning=(
                         f"forecast={forecast_prob:.2%} "
-                        f"kalshi={market_prob:.2%} "
+                        f"kalshi={market.yes_price:.2%} "
                         f"sources={len(matches)} "
                         f"match={best_sim:.0%} "
                         f'"{best_fq.title[:60]}"'

@@ -28,7 +28,7 @@ from typing import Optional
 
 from api_clients.kalshi_client import Market
 from api_clients.weather_client import DayForecast, WeatherClient
-from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
@@ -167,9 +167,9 @@ def _parse_weather_market(
     # --- Parse metric from subtitle if not already set ---
     if not metric:
         text_lower = text.lower()
-        if "high" in text_lower or "maximum" in text_lower or "max" in text_lower:
+        if any(w in text_lower for w in ["high", "maximum", "max"]):
             metric = "high_temp"
-        elif "low" in text_lower or "minimum" in text_lower or "min" in text_lower:
+        elif any(w in text_lower for w in ["low", "minimum", "min"]):
             metric = "low_temp"
         elif any(w in text_lower for w in ["rain", "precip", "snow", "inch"]):
             metric = "precip"
@@ -240,41 +240,35 @@ class WeatherSignalDetector:
                 if model_prob is None:
                     continue
 
-                market_prob = market.yes_price
-                if market_prob <= 0:
-                    continue
-
                 # Determine if market is YES = above or YES = below
                 sub = (market.subtitle_yes or market.question or "").lower()
                 yes_is_above = any(
                     w in sub for w in ["above", "exceed", "over", "high"]
                 )
                 if not yes_is_above:
-                    # YES = below threshold
                     model_prob = 1.0 - model_prob
 
-                edge = model_prob - market_prob - self.cfg.fee_pct
-                if abs(edge) < self.cfg.min_edge:
+                result = ask_edge(
+                    model_prob,
+                    market.yes_ask, market.no_ask, market.yes_bid,
+                    self.cfg.fee_pct, self.cfg.min_edge,
+                )
+                if not result:
                     continue
+                edge, side, entry_price = result
 
                 # Confidence: higher for near-term, lower for far-out
                 confidence = max(0.3, 1.0 - days_out * 0.05)
 
-                side = "yes" if edge > 0 else "no"
-                trade_prob = (
-                    model_prob if side == "yes" else (1 - model_prob)
-                )
-                trade_price = (
-                    market_prob if side == "yes" else (1 - market_prob)
-                )
+                trade_prob = model_prob if side == "yes" else (1 - model_prob)
                 size = self.sizer.size(
-                    trade_prob, trade_price, self.cfg.max_position_usd
+                    trade_prob, entry_price, self.cfg.max_position_usd
                 )
 
                 results.append(AggregatedSignal(
                     market_id=market.market_id,
                     question=market.question or market.market_id,
-                    market_prob=market_prob,
+                    market_prob=market.yes_price,
                     model_prob=model_prob,
                     edge=edge,
                     recommended_side=side,

@@ -27,7 +27,7 @@ from typing import Optional
 
 from api_clients.binance_client import ANNUAL_VOL, BinanceClient, _norm_cdf
 from api_clients.kalshi_client import Market
-from strategies.signal_arb import AggregatedSignal, SignalArbConfig
+from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
@@ -100,8 +100,9 @@ class RangeStraddleDetector:
         return None
 
     def _vol(self, symbol: str) -> float:
-        rv = self.binance.compute_realized_vol(symbol)
-        if rv and 0.10 < rv < 5.0:
+        """Blended realized vol (30 min + 6h), falling back to baseline."""
+        rv = self.binance.compute_realized_vol_blended(symbol)
+        if rv:
             return rv
         return ANNUAL_VOL.get(symbol, 0.90)
 
@@ -163,32 +164,33 @@ class RangeStraddleDetector:
                 vol = self._vol(symbol)
 
                 model_prob = _prob_in_range(spot, lo, hi, days, vol)
-                market_prob = market.yes_price
 
-                edge = model_prob - market_prob - self.cfg.fee_pct
-                if abs(edge) < self.cfg.min_edge:
-                    continue
-
-                side = "yes" if edge > 0 else "no"
-                trade_prob = (
-                    model_prob if side == "yes" else (1 - model_prob)
+                result = ask_edge(
+                    model_prob,
+                    market.yes_ask, market.no_ask, market.yes_bid,
+                    self.cfg.fee_pct, self.cfg.min_edge,
                 )
+                if not result:
+                    continue
+                edge, side, entry_price = result
+
+                trade_prob = model_prob if side == "yes" else (1 - model_prob)
                 size = self.sizer.size(
-                    trade_prob, market_prob, self.cfg.max_position_usd
+                    trade_prob, entry_price, self.cfg.max_position_usd
                 )
 
                 results.append(AggregatedSignal(
                     market_id=market.market_id,
                     question=market.question,
-                    market_prob=market_prob,
+                    market_prob=market.yes_price,
                     model_prob=model_prob,
                     edge=edge,
                     recommended_side=side,
                     source="range-straddle",
                     reasoning=(
                         f"spot={spot:.0f} range=[{lo:.0f},{hi:.0f}] "
-                        f"model={model_prob:.2%} mkt={market_prob:.2%} "
-                        f"vol={vol:.0%}"
+                        f"model={model_prob:.2%} mkt={market.yes_price:.2%} "
+                        f"ask={entry_price:.3f} vol={vol:.0%}"
                     ),
                     recommended_size_usd=size,
                 ))
@@ -231,12 +233,14 @@ class RangeStraddleDetector:
                 lo_strike, lo_mkt = items[i]
                 hi_strike, hi_mkt = items[i + 1]
                 # Logical violation: P(above lower) < P(above higher)
-                if lo_mkt.yes_price < hi_mkt.yes_price - 0.03:
-                    edge = hi_mkt.yes_price - lo_mkt.yes_price
+                spread = lo_mkt.yes_ask - lo_mkt.yes_bid
+                price_violation = lo_mkt.yes_price < hi_mkt.yes_price - 0.03
+                if price_violation and spread <= 0.08:
+                    edge = hi_mkt.yes_price - lo_mkt.yes_ask - self.cfg.fee_pct
                     if edge >= self.cfg.min_edge:
                         size = self.sizer.size(
                             hi_mkt.yes_price,
-                            lo_mkt.yes_price,
+                            lo_mkt.yes_ask,
                             self.cfg.max_position_usd,
                         )
                         results.append(AggregatedSignal(
