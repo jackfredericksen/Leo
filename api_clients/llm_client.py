@@ -19,7 +19,7 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 import anthropic
@@ -27,20 +27,22 @@ import anthropic
 logger = logging.getLogger(__name__)
 
 _MODEL = "claude-haiku-4-5-20251001"
-_SYSTEM = """You are a calibrated probability forecaster analyzing prediction market questions.
+_SYSTEM_TEMPLATE = """You are a calibrated probability forecaster analyzing prediction market questions.
+Today's date is {date}. Your training data has a knowledge cutoff and may be significantly out of date — treat any facts about current prices, recent news, or ongoing events as potentially stale unless explicitly provided in the context below.
 
 Given a market question and context, respond with a JSON object ONLY — no explanation outside the JSON:
-{
+{{
   "probability": <float 0.00-1.00>,
   "confidence": <float 0.0-1.0>,
-  "reasoning": "<one sentence>"
-}
+  "reasoning": "<one sentence using only information provided in this prompt>"
+}}
 
 Guidelines:
 - probability: your best estimate of the YES outcome probability
 - confidence: how confident you are (0 = total uncertainty, 1 = near-certain)
 - Be calibrated — do not anchor too heavily on the current market price
-- Use base rates, reference classes, and available context
+- Use base rates, reference classes, and the provided context
+- Do NOT cite facts from training data about current prices or recent events
 - If you have very little information, confidence should be low (< 0.3)"""
 
 
@@ -72,6 +74,19 @@ class LLMClient:
         self._sem = asyncio.Semaphore(max_concurrent)
         self._cache_ttl = timedelta(minutes=cache_ttl_min)
         self._cache: dict[str, LLMEstimate] = {}
+        # Spot prices injected by the strategy loop before each batch
+        self.spot_prices: dict[str, float] = {}
+
+    def _system_prompt(self) -> str:
+        today = date.today().isoformat()
+        system = _SYSTEM_TEMPLATE.format(date=today)
+        if self.spot_prices:
+            lines = ", ".join(
+                f"{sym.replace('USDT','')}=${price:,.0f}"
+                for sym, price in self.spot_prices.items()
+            )
+            system += f"\n\nCurrent live spot prices: {lines}"
+        return system
 
     def _cached(self, market_id: str) -> Optional[LLMEstimate]:
         est = self._cache.get(market_id)
@@ -113,7 +128,7 @@ class LLMClient:
                 msg = await self._client.messages.create(
                     model=self._model,
                     max_tokens=256,
-                    system=_SYSTEM,
+                    system=self._system_prompt(),
                     messages=[{"role": "user", "content": prompt}],
                 )
                 text = msg.content[0].text.strip()

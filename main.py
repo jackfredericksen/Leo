@@ -623,7 +623,7 @@ async def forecast_loop(trader: Trader):
             await asyncio.sleep(config.forecast.refresh_interval_sec)
 
 
-async def llm_loop(trader: Trader):
+async def llm_loop(trader: Trader, binance: BinanceClient):
     """Strategy 6: LLM fundamental analysis (Claude Haiku)."""
     if not config.llm.enabled:
         return
@@ -656,6 +656,11 @@ async def llm_loop(trader: Trader):
     )
     while True:
         try:
+            # Keep LLM grounded with live prices before each scan
+            llm.spot_prices = {
+                s: p for s in binance.SYMBOLS
+                if (p := binance.get_price(s))
+            }
             if state.markets:
                 state.llm_opps = await detector.scan(state.markets)
                 state.llm_scans += 1
@@ -842,7 +847,7 @@ async def run():
                     forecast_loop(trader), name="forecast"
                 ),
                 asyncio.create_task(
-                    llm_loop(trader), name="llm"
+                    llm_loop(trader, binance), name="llm"
                 ),
                 asyncio.create_task(
                     weather_loop(trader), name="weather"
