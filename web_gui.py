@@ -610,6 +610,9 @@ async def update_risk(body: _RiskBody):
                 sub.min_edge = edge
         if hasattr(cfg, "cross_arb") and hasattr(cfg.cross_arb, "min_profit_pct"):
             cfg.cross_arb.min_profit_pct = edge
+        # SemanticArbConfig uses min_price_gap instead of min_edge
+        if hasattr(cfg, "semantic_arb") and hasattr(cfg.semantic_arb, "min_price_gap"):
+            cfg.semantic_arb.min_price_gap = edge
     if body.total_limit_usd is not None:
         cfg.arbitrage.max_total_exposure_usd = body.total_limit_usd
     return {

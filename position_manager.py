@@ -19,12 +19,16 @@ P&L model:
     realized_pnl = N × (0.0 − avg_price)  = −N × avg_price  if NO resolves
 """
 
+import json
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
 from api_clients.polymarket_client import PolymarketClient, Market
+
+_STATE_FILE = "data/position_state.json"
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +75,26 @@ class PositionManager:
         self.refresh_interval_sec = refresh_interval_sec
         self._snapshot: Optional[PortfolioSnapshot] = None
         self._last_refresh: Optional[datetime] = None
-        self._realized_pnl: float = 0.0
-        self._settled_ids: set[str] = set()  # market_ids already counted in realized
+        self._realized_pnl, self._settled_ids = self._load_state()
+
+    def _load_state(self) -> tuple[float, set[str]]:
+        try:
+            with open(_STATE_FILE) as f:
+                data = json.load(f)
+            return float(data.get("realized_pnl", 0.0)), set(data.get("settled_ids", []))
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
+            return 0.0, set()
+
+    def _save_state(self) -> None:
+        try:
+            os.makedirs(os.path.dirname(_STATE_FILE), exist_ok=True)
+            with open(_STATE_FILE, "w") as f:
+                json.dump(
+                    {"realized_pnl": self._realized_pnl, "settled_ids": list(self._settled_ids)},
+                    f,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to save position state: {e}")
 
     # ------------------------------------------------------------------
     # Public API
@@ -156,6 +178,7 @@ class PositionManager:
                     realized = shares * (payout - avg_price)
                     self._realized_pnl += realized
                     self._settled_ids.add(market_id)
+                    self._save_state()
                     logger.info(
                         f"Settled {market_id}: side={side} result={result} "
                         f"realized=${realized:.2f}"

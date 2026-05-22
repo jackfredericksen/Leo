@@ -189,12 +189,12 @@ class Storage:
             )
 
     def get_unresolved_trades(self) -> list[sqlite3.Row]:
-        """Return live (non-dry-run) trades still marked pending."""
+        """Return all trades (live and paper) still marked pending."""
         with self._connect() as conn:
             return conn.execute(
                 "SELECT id, market_id, arb_type, side, yes_price, no_price "
-                "FROM trades WHERE outcome = 'pending' AND dry_run = 0 "
-                "AND status = 'placed' ORDER BY created_at DESC LIMIT 200"
+                "FROM trades WHERE outcome = 'pending' "
+                "AND status IN ('placed', 'simulated') ORDER BY created_at DESC LIMIT 200"
             ).fetchall()
 
     def get_strategy_win_rates(self) -> dict[str, dict]:

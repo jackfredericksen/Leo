@@ -58,7 +58,6 @@ class Trader:
         self._cooldowns: dict[str, datetime] = {}
         self._today_date: date = datetime.now(timezone.utc).date()
         self._today_usd_deployed: float = 0.0
-        self._strategy_exposure: dict[str, float] = {}
 
     # ------------------------------------------------------------------ #
     #  Cooldown helpers                                                    #
@@ -90,14 +89,10 @@ class Trader:
             self._today_date = today
             self._today_usd_deployed = 0.0
             self._total_exposure = 0.0
-            self._strategy_exposure.clear()
 
     def _track_deploy(self, size_usd: float, strategy: str) -> None:
         self._today_usd_deployed += size_usd
         self._total_exposure += size_usd
-        self._strategy_exposure[strategy] = (
-            self._strategy_exposure.get(strategy, 0.0) + size_usd
-        )
 
     def _alert_task(self, coro) -> None:
         """Fire-and-forget an alerter coroutine (only if coroutine is not None)."""
@@ -150,6 +145,7 @@ class Trader:
                 dry_run=True,
                 status="simulated",
             )
+            self._track_deploy(size_usd, "overround")
             self._mark_cooldown(opp.market_id)
             return True
 
@@ -260,6 +256,7 @@ class Trader:
                 dry_run=True,
                 status="simulated",
             )
+            self._track_deploy(size_usd, sig.source or "signal")
             self._mark_cooldown(sig.market_id)
             return True
 
@@ -361,6 +358,7 @@ class Trader:
                 dry_run=True,
                 status="simulated",
             )
+            self._track_deploy(size_usd, f"corr:{opp.relation.value}")
             self._mark_cooldown(opp.market_id_mispriced)
             return True
 
@@ -449,7 +447,10 @@ class Trader:
                     self._today_usd_deployed, self.risk_cfg.max_daily_usd_deployed
                 ))
             return False
-        return (
-            self._total_exposure + size
-            <= self.arb_cfg.max_total_exposure_usd
-        )
+        if self._total_exposure + size > self.arb_cfg.max_total_exposure_usd:
+            logger.warning(
+                f"Total exposure limit reached: "
+                f"${self._total_exposure:.0f}/${self.arb_cfg.max_total_exposure_usd:.0f}"
+            )
+            return False
+        return True

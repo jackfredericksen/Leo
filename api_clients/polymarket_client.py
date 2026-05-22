@@ -123,6 +123,8 @@ class PolymarketClient:
         self._clob = None   # py_clob_client_v2.ClobClient, set in __aenter__
         self._clob_errors: int = 0
         self._circuit_open_until: Optional[datetime] = None
+        self._recent_cache: list[Market] = []
+        self._recent_cache_at: Optional[datetime] = None
 
     async def __aenter__(self):
         self._session = aiohttp.ClientSession(
@@ -256,14 +258,25 @@ class PolymarketClient:
         logger.info(f"Polymarket: loaded {len(all_markets)} active markets")
         return all_markets
 
-    async def get_recent_markets(self, limit: int = 200) -> list[Market]:
+    async def get_recent_markets(self, limit: int = 200, ttl_sec: int = 25) -> list[Market]:
         """
         Fetch recently-opened markets sorted by startDate descending.
 
         Rolling short-duration markets (e.g. 5-minute BTC up/down) have very low
         24h volume and appear at offset 3000+ in the volume-sorted list.  Sorting
         by startDate descending surfaces them on the first page.
+
+        Results are cached for `ttl_sec` seconds (default 25s) so that the
+        BTC 5-min loop (refresh every 20s) doesn't make redundant API calls.
         """
+        now = datetime.now(timezone.utc)
+        if (
+            self._recent_cache
+            and self._recent_cache_at is not None
+            and (now - self._recent_cache_at).total_seconds() < ttl_sec
+        ):
+            return self._recent_cache
+
         params = {
             "active": "true",
             "closed": "false",
@@ -273,12 +286,14 @@ class PolymarketClient:
         }
         batch = await self._fetch_gamma_page(params)
         if not batch:
-            return []
+            return self._recent_cache  # return stale on error rather than empty
         markets = []
         for raw in batch:
             m = self._parse_market(raw)
             if m:
                 markets.append(m)
+        self._recent_cache = markets
+        self._recent_cache_at = now
         logger.debug(f"Polymarket: loaded {len(markets)} recent markets")
         return markets
 
@@ -635,7 +650,11 @@ def _parse_date(raw) -> datetime:
     if not raw:
         return default
     try:
-        return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        s = str(raw).replace("Z", "+00:00")
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
         return default
 

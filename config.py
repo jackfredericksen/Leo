@@ -169,19 +169,6 @@ class CrossPlatformArbConfig:
     )
 
 
-@dataclass
-class LogicalArbConfig:
-    enabled: bool = (
-        os.getenv("LOGICAL_ARB_ENABLED", "true").lower() == "true"
-    )
-    min_edge: float = float(os.getenv("LOGICAL_ARB_MIN_EDGE", "0.03"))
-    max_position_usd: float = float(
-        os.getenv("LOGICAL_ARB_MAX_USD", "100.0")
-    )
-    kelly_fraction: float = float(
-        os.getenv("LOGICAL_ARB_KELLY", "0.15")
-    )
-
 
 @dataclass
 class ForecastConfig:
@@ -421,7 +408,6 @@ class BTC5MinConfig:
 @dataclass
 class RiskConfig:
     max_daily_usd_deployed: float = float(os.getenv("MAX_DAILY_USD", "1000.0"))
-    per_strategy_max_usd: float = float(os.getenv("PER_STRATEGY_MAX_USD", "300.0"))
     paper_bankroll: float = float(os.getenv("PAPER_BANKROLL", "1000.0"))
 
 
@@ -452,7 +438,6 @@ class Config:
     cross_arb: CrossPlatformArbConfig = field(
         default_factory=CrossPlatformArbConfig
     )
-    logical_arb: LogicalArbConfig = field(default_factory=LogicalArbConfig)
     news_fade: NewsFadeConfig = field(default_factory=NewsFadeConfig)
     correlated: CorrelatedArbConfig = field(
         default_factory=CorrelatedArbConfig

@@ -1213,8 +1213,9 @@ async def outcome_tracker_loop(storage: Storage, pos_manager: PositionManager):
         await asyncio.sleep(300)
         try:
             unresolved = storage.get_unresolved_trades()
+            combined_map = state.extended_market_map if state.extended_market_map else state.market_map
             for row in unresolved:
-                market = state.market_map.get(row["market_id"])
+                market = combined_map.get(row["market_id"])
                 if not market or market.status != "settled" or not market.result:
                     continue
                 our_side = row["side"]

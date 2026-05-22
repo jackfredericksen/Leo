@@ -19931,3 +19931,402 @@ task: <Task cancelling name='cross' coro=<cross_platform_loop() done, defined at
 2026-05-22 16:34:58,444 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
 2026-05-22 16:35:18,638 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
 2026-05-22 16:35:18,639 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:35:25,332 [INFO] leo.main: Crypto signal: 57 opps, top edge=97.0%
+2026-05-22 16:35:33,352 [INFO] leo.main: OracleSqueeze: 8 opps, top edge=21.0%
+2026-05-22 16:35:33,830 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:35:55,926 [INFO] leo.main: Crypto signal: 57 opps, top edge=97.0%
+2026-05-22 16:35:59,882 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:36:09,161 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:36:19,016 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:36:19,016 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:36:26,508 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:36:32,134 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x47238237b852c32737e975bc16e67a2cfa554dfa1682fba99fdab2f9842ae6bf 3.50%->2.95%
+2026-05-22 16:36:33,354 [INFO] leo.main: OracleSqueeze: 8 opps, top edge=19.5%
+2026-05-22 16:36:39,273 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 16:36:44,496 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:36:57,127 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:37:19,566 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:37:19,566 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:37:20,402 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:37:27,689 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:37:33,356 [INFO] leo.main: OracleSqueeze: 7 opps, top edge=20.5%
+2026-05-22 16:37:55,792 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:37:58,418 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:38:00,258 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:38:19,949 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:38:19,949 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:38:29,001 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:38:31,280 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:38:33,359 [INFO] leo.main: OracleSqueeze: 7 opps, top edge=20.5%
+2026-05-22 16:38:59,804 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:39:06,746 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:39:20,504 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:39:20,504 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:39:30,379 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:39:33,361 [INFO] leo.main: OracleSqueeze: 7 opps, top edge=20.5%
+2026-05-22 16:39:42,617 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:40:00,773 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:40:01,219 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:40:18,016 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:40:20,924 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:40:20,926 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:40:31,805 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:40:33,361 [INFO] leo.main: OracleSqueeze: 7 opps, top edge=20.5%
+2026-05-22 16:40:53,439 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:41:02,421 [INFO] leo.main: Crypto signal: 54 opps, top edge=97.0%
+2026-05-22 16:41:21,558 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:41:21,560 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:41:28,898 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:41:32,249 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xc101e0b623a5fab691973681383be841276bc2f3c4f14436780a191c25d55650 2.25%->2.80%
+2026-05-22 16:41:33,110 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:41:33,476 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=20.5%
+2026-05-22 16:42:01,268 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:42:03,713 [INFO] leo.main: Crypto signal: 54 opps, top edge=97.0%
+2026-05-22 16:42:04,660 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:42:21,951 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:42:21,952 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:42:33,479 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=20.5%
+2026-05-22 16:42:34,467 [INFO] leo.main: Crypto signal: 54 opps, top edge=97.0%
+2026-05-22 16:42:40,032 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:43:05,364 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:43:15,433 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:43:22,483 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:43:22,484 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:43:33,482 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=20.5%
+2026-05-22 16:43:35,839 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:43:50,830 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:44:01,651 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:44:06,915 [INFO] leo.main: Crypto signal: 55 opps, top edge=97.0%
+2026-05-22 16:44:22,880 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:44:22,880 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:44:26,730 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:44:33,485 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=20.5%
+2026-05-22 16:44:37,500 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:45:02,116 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:45:08,363 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:45:23,419 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:45:23,420 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:45:33,486 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=20.5%
+2026-05-22 16:45:37,521 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:45:38,921 [INFO] leo.main: Crypto signal: 57 opps, top edge=97.0%
+2026-05-22 16:46:02,028 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:46:02,658 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 16:46:09,966 [INFO] leo.main: Crypto signal: 57 opps, top edge=97.0%
+2026-05-22 16:46:12,902 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:46:23,808 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:46:23,808 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:46:33,488 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=20.5%
+2026-05-22 16:46:40,566 [INFO] leo.main: Crypto signal: 56 opps, top edge=97.0%
+2026-05-22 16:46:49,040 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:47:11,184 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 16:47:24,384 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:47:24,384 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:47:24,435 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:47:33,492 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=18.0%
+2026-05-22 16:47:42,061 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 16:48:00,023 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:48:03,038 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:48:12,784 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 16:48:24,772 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:48:24,772 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:48:33,495 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=18.0%
+2026-05-22 16:48:35,410 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:48:43,561 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:49:11,573 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:49:14,400 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:49:25,273 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:49:25,274 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:49:33,499 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=18.0%
+2026-05-22 16:49:44,992 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:49:47,002 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:50:03,584 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:50:15,609 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:50:22,359 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:50:25,663 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:50:25,663 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:50:33,503 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=16.5%
+2026-05-22 16:50:46,185 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:50:57,749 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:51:17,033 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:51:26,207 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:51:26,207 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:51:32,258 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xf9ba42b5d92701b068800935b28f4218fa087773dfd36339ee8fb47ec4b8628e 0.05%->0.15%
+2026-05-22 16:51:33,507 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=21.0%
+2026-05-22 16:51:33,573 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:51:36,002 [INFO] api_clients.weather_client: Weather: refreshed 13 city forecasts
+2026-05-22 16:51:36,008 [INFO] trader: [DRY RUN] signal weather:los_angeles '0xe7419bcfe4ce43b666b13c9c896cb1e799f5ecdb6021f87da31210c83f6fc565' | buy yes@0.002 x50000.0 | edge=+97.8%
+2026-05-22 16:51:36,011 [INFO] trader: [DRY RUN] signal weather:los_angeles '0xf51ee70ecfd6cb3c3232d49fd16d9f85323849080b0051edba2244d575ffed54' | buy yes@0.004 x21428.6 | edge=+97.6%
+2026-05-22 16:51:36,013 [INFO] leo.main: Weather: 2 opps, top edge=97.8%
+2026-05-22 16:51:40,171 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 16:51:47,820 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:52:03,978 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:52:08,972 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:52:18,416 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:52:26,619 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:52:26,619 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:52:33,511 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:52:44,373 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:52:49,062 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:53:19,875 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:53:19,875 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:53:27,125 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:53:27,125 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:53:33,513 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:53:50,579 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:53:55,669 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:54:04,500 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:54:21,163 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 16:54:27,518 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:54:27,518 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:54:31,206 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:54:33,517 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:54:51,775 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 16:55:06,563 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:55:22,626 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 16:55:28,065 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:55:28,065 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:55:33,520 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:55:42,001 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:55:53,595 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 16:56:04,879 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:56:18,135 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:56:24,403 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 16:56:28,459 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:56:28,460 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:56:33,522 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:56:53,513 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:56:55,257 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:57:25,872 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:57:28,920 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:57:28,997 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:57:28,997 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:57:33,532 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:57:56,478 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 16:58:04,297 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:58:05,275 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:58:27,098 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 16:58:29,405 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:58:29,405 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:58:33,544 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:58:40,144 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:58:57,853 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 16:59:15,644 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:59:28,588 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 16:59:29,909 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 16:59:29,909 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 16:59:33,548 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.0%
+2026-05-22 16:59:51,151 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 16:59:59,265 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 17:00:03,658 [INFO] trader: [DRY RUN] corr-arb '0x0cfa93ab96f4e662b57fe86432ff98c5f8f1ef50f080f5ae09b3ca2a4973405f' | buy yes@0.840 x89.3 | edge=+4.3% anchor=0x52677674e65c09e834bb4beee0a623c3bd9f286f7b9e9f3b360f5ce0fb5351d0
+2026-05-22 17:00:05,810 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:00:26,601 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:00:29,974 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 17:00:30,368 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:00:30,369 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:00:33,551 [INFO] leo.main: OracleSqueeze: 7 opps, top edge=21.0%
+2026-05-22 17:01:00,812 [INFO] leo.main: Crypto signal: 56 opps, top edge=96.9%
+2026-05-22 17:01:02,517 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:01:30,936 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:01:30,936 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:01:31,411 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:01:33,559 [INFO] leo.main: OracleSqueeze: 6 opps, top edge=21.5%
+2026-05-22 17:01:37,998 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:02:02,231 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 17:02:06,215 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:02:07,195 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 17:02:13,550 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:02:31,332 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:02:31,333 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:02:33,112 [INFO] leo.main: Crypto signal: 55 opps, top edge=96.9%
+2026-05-22 17:02:33,563 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=21.5%
+2026-05-22 17:02:48,897 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:03:03,955 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 17:03:24,843 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:03:31,859 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:03:31,859 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:03:33,564 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=21.5%
+2026-05-22 17:03:34,564 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:04:00,170 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:04:05,243 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:04:07,571 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:04:32,303 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:04:32,304 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:04:33,568 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=21.5%
+2026-05-22 17:04:35,508 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:04:36,036 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:05:06,686 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 17:05:10,898 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:05:32,827 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:05:32,828 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:05:33,570 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=21.5%
+2026-05-22 17:05:37,609 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:05:46,772 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:06:07,939 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:06:08,426 [INFO] leo.main: Crypto signal: 52 opps, top edge=96.9%
+2026-05-22 17:06:22,234 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:06:32,288 [INFO] strategies.news_fade: NewsFade: spike up detected on 0x523c642a2da7b7fcf4ecb1da444d805c790fe16497fa83ba6f99046ec7343ade 1.05%->1.50%
+2026-05-22 17:06:32,289 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x07857c6044c440560c3dadc25f5c50168b130a12e14b43abcbd95f80457dc5d0 2.35%->1.95%
+2026-05-22 17:06:33,212 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:06:33,212 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:06:33,573 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=18.5%
+2026-05-22 17:06:39,299 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:06:40,958 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 17:06:57,534 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:07:10,176 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:07:32,861 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:07:33,584 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=18.5%
+2026-05-22 17:07:33,753 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:07:33,754 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:07:40,639 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 17:08:08,316 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:08:08,998 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:08:11,250 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 17:08:33,599 [INFO] leo.main: OracleSqueeze: 5 opps, top edge=18.5%
+2026-05-22 17:08:34,148 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:08:34,149 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:08:42,059 [INFO] leo.main: Crypto signal: 54 opps, top edge=96.9%
+2026-05-22 17:08:44,363 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:09:12,676 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:09:19,659 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:09:33,602 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:09:34,681 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:09:34,681 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:09:43,246 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:09:55,066 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:10:08,702 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:10:14,089 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:10:30,762 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:10:33,604 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:10:35,068 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:10:35,068 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:10:44,659 [INFO] leo.main: Crypto signal: 53 opps, top edge=96.9%
+2026-05-22 17:11:06,137 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:11:15,262 [INFO] leo.main: Crypto signal: 52 opps, top edge=96.9%
+2026-05-22 17:11:33,606 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:11:35,615 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:11:35,615 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:11:41,505 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:11:45,827 [INFO] leo.main: Crypto signal: 51 opps, top edge=96.9%
+2026-05-22 17:12:09,081 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:12:16,695 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:12:16,859 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:12:33,609 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:12:36,007 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:12:36,007 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:12:47,253 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:12:53,024 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:13:17,867 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:13:28,368 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:13:33,616 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:13:36,518 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:13:36,518 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:13:48,745 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:14:03,863 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:14:09,605 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:14:19,697 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:14:33,623 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:14:36,913 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:14:36,913 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:14:39,252 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:14:50,332 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:15:15,198 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:15:20,911 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:15:33,626 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:15:37,460 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:15:37,461 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:15:50,668 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:15:51,776 [INFO] leo.main: Crypto signal: 50 opps, top edge=96.9%
+2026-05-22 17:16:09,997 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:16:22,378 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:16:26,029 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:16:33,628 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:16:37,850 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:16:37,851 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:16:52,959 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:17:01,435 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:17:23,854 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:17:33,638 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:17:37,512 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:17:38,384 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:17:38,384 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:17:54,387 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:18:10,513 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:18:11,455 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 17:18:12,896 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:18:25,335 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:18:33,641 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:18:38,774 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:18:38,774 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:18:48,343 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:18:55,929 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:19:23,757 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:19:26,852 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:19:33,649 [INFO] leo.main: OracleSqueeze: 4 opps, top edge=18.5%
+2026-05-22 17:19:39,315 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:19:39,316 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:19:57,498 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:20:00,043 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:20:11,852 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:20:28,306 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:20:33,655 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:20:35,513 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:20:39,704 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:20:39,706 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:20:58,879 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:21:10,912 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:21:29,592 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:21:33,660 [INFO] leo.main: OracleSqueeze: 2 opps, top edge=14.5%
+2026-05-22 17:21:36,819 [INFO] api_clients.weather_client: Weather: refreshed 13 city forecasts
+2026-05-22 17:21:36,827 [INFO] trader: [DRY RUN] signal weather:los_angeles '0xe7419bcfe4ce43b666b13c9c896cb1e799f5ecdb6021f87da31210c83f6fc565' | buy yes@0.002 x50000.0 | edge=+97.8%
+2026-05-22 17:21:36,829 [INFO] trader: [DRY RUN] signal weather:los_angeles '0xf51ee70ecfd6cb3c3232d49fd16d9f85323849080b0051edba2244d575ffed54' | buy yes@0.002 x37500.0 | edge=+97.8%
+2026-05-22 17:21:36,830 [INFO] leo.main: Weather: 2 opps, top edge=97.8%
+2026-05-22 17:21:40,228 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:21:40,229 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:21:41,721 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-05-22 17:21:46,348 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:22:00,246 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:22:12,425 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:22:22,111 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:22:30,866 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:22:33,663 [INFO] leo.main: OracleSqueeze: 1 opps, top edge=14.5%
+2026-05-22 17:22:40,620 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:22:40,621 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:22:57,624 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:23:01,614 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:23:32,210 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:23:33,043 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:23:33,667 [INFO] leo.main: OracleSqueeze: 2 opps, top edge=17.5%
+2026-05-22 17:23:41,209 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:23:41,210 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:24:02,829 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:24:08,482 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:24:12,804 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:24:33,428 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:24:33,672 [INFO] leo.main: OracleSqueeze: 2 opps, top edge=17.5%
+2026-05-22 17:24:41,593 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:24:41,593 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:24:44,328 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:25:03,992 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:25:19,805 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:25:33,675 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:25:34,587 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:25:42,121 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:25:42,121 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:25:55,170 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:26:05,163 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:26:13,336 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:26:30,555 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:26:33,679 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:26:35,786 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:26:42,517 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:26:42,517 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:27:06,269 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:27:06,390 [INFO] leo.main: Crypto signal: 49 opps, top edge=96.9%
+2026-05-22 17:27:33,682 [INFO] leo.main: OracleSqueeze: 3 opps, top edge=18.5%
+2026-05-22 17:27:37,309 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:27:41,674 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-05-22 17:27:43,074 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:27:43,074 [INFO] strategies.cross_platform: CrossPlatform: loaded 0 Kalshi signal markets
+2026-05-22 17:28:08,252 [INFO] leo.main: Crypto signal: 48 opps, top edge=96.9%
+2026-05-22 17:28:13,737 [INFO] strategies.cross_platform: KalshiSignal: loaded 0 markets
+2026-05-22 17:28:17,052 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
