@@ -11,7 +11,7 @@ The ongoing humanitarian crisis in Palestine has left millions in urgent need of
 
 # Leo — Polymarket Trading Bot
 
-Leo is an automated trading bot for [Polymarket](https://polymarket.com) prediction markets. It runs 14 independent strategies in parallel, finding edges through overround pricing, crypto price models, correlated market logic, community forecasts, weather data, order book imbalance, and LLM analysis. All order execution goes through Polymarket's CLOB API v2; external platforms (Kalshi, Metaculus, Manifold, Binance) are used as price signals only.
+Leo is an automated trading bot for [Polymarket](https://polymarket.com) prediction markets. It runs 15 independent strategies in parallel, finding edges through overround pricing, crypto price models, correlated market logic, community forecasts, weather data, order book imbalance, LLM analysis, and short-term BTC microstructure signals. All order execution goes through Polymarket's CLOB API v2; external platforms (Kalshi, Metaculus, Manifold, Binance) are used as price signals only.
 
 ---
 
@@ -78,12 +78,22 @@ Requires one async `get_orderbook()` call per candidate market per scan.
 
 Posts resting limit buy orders on both YES and NO sides of selected markets. Earns the bid-ask spread passively when takers fill against resting orders. Polymarket CLOB v2 redistributes 100% of taker fees to makers daily — orders must stay on-book ≥ 3.5 seconds to qualify. Targets markets with real CLOB spread > 6¢ (checked via live orderbook, not the Gamma API mid-price).
 
+### 15. BTC 5-Minute Up/Down
+
+Trades Polymarket's rolling 5-minute "Will BTC be higher or lower in 5 minutes?" markets using three real-time Binance microstructure signals combined linearly:
+
+- **Order Book Imbalance (OBI)** — top-10 bid vs ask depth ratio (50% weight)
+- **Momentum** — direction of the last N 1-minute candle closes (30% weight)
+- **RSI** — 14-period RSI rescaled to a [-1, +1] signal (20% weight)
+
+The composite signal is compared to the Polymarket YES ask; trades are placed only in the 1.5–4.0 minute entry window (too early = market hasn't priced the move yet; too close = price locked in). Markets are discovered via a separate `startDate desc` API fetch so that these low-volume markets — which sit thousands of positions past the volume-sorted pagination limit — are always found.
+
 ---
 
 ## Architecture
 
 ```
-main.py              — Orchestrator: 17 asyncio tasks + Rich terminal UI
+main.py              — Orchestrator: 18 asyncio tasks + Rich terminal UI
 config.py            — All settings as dataclasses, loaded from env vars
 trader.py            — Order execution: execute(), execute_signal(), execute_correlated()
 arbitrage.py         — Overround arb scanner
@@ -94,7 +104,7 @@ bot_state.py         — Shared state bridge between main loop and web dashboard
 web_gui.py           — FastAPI + WebSocket real-time dashboard (port 5002)
 
 api_clients/
-  polymarket_client.py — Gamma API (markets) + CLOB v2 (orders) + Data API (positions)
+  polymarket_client.py — Gamma API (markets + get_recent_markets) + CLOB v2 (orders) + Data API (positions)
   binance_client.py    — Spot prices + 1-min OHLCV + realized volatility
   forecast_client.py   — Metaculus + Manifold (community forecasts)
   llm_client.py        — Anthropic Claude (async, semaphore-limited, TTL cache)
@@ -115,12 +125,15 @@ strategies/
   semantic_arb.py        — Number-aware cross-platform semantic matching
   orderbook_momentum.py  — OFI momentum from live CLOB depth
   market_maker.py        — Stateful resting order management + rebate targeting
+  btc_5min.py            — 5-min BTC up/down via OBI + momentum + RSI signals
   kelly.py               — Fractional Kelly position sizing
 ```
 
 ### Execution flow
 
-Each strategy loop runs independently via `asyncio.create_task`. All loops share a `state.markets` list refreshed every 30 seconds by a dedicated `market_refresh_loop`. When a loop finds an opportunity it calls one of three paths on `Trader`:
+Each strategy loop runs independently via `asyncio.create_task`. All loops share a `state.markets` list refreshed every 30 seconds by a dedicated `market_refresh_loop`. BTC 5-min markets are fetched separately via `get_recent_markets()` (sorted by `startDate desc`) and merged into `state.extended_market_map` so that position P&L tracking covers all open positions regardless of which discovery path found them.
+
+When a loop finds an opportunity it calls one of three paths on `Trader`:
 
 - `trader.execute(opp)` — two-leg overround arb (buy YES + NO simultaneously)
 - `trader.execute_signal(sig, market_map)` — single-leg signal trade
@@ -207,14 +220,23 @@ The dashboard has 6 tabs:
 
 | Tab | Contents |
 |---|---|
-| **Overview** | Balance, P&L cards, scan counters, opportunity grids for all 14 strategies |
-| **Signals** | Crypto, News Fade, Forecast, LLM, Weather, Range, Cross-Platform tables |
+| **Overview** | Balance, P&L cards, scan counters, opportunity grids for all 15 strategies |
+| **Signals** | Crypto, News Fade, Forecast, LLM, Weather, Range, Cross-Platform, BTC 5-min tables |
 | **Arb + MM** | Market Maker active quotes, Overround Arb table, Correlated Arb table |
 | **Portfolio** | Open positions with unrealized P&L, hours to resolution |
 | **Trades** | Last 50 logged trades |
-| **Controls** | Dry Run toggle, Pause/Resume, Stop (with confirmation), per-strategy enable/disable |
+| **Controls** | Dry Run toggle, Pause/Resume, Stop, per-strategy enable/disable, Quick Actions, Exposure bars, Risk Controls |
 
 The dashboard connects via WebSocket and reconnects automatically with exponential backoff.
+
+### Controls page
+
+| Control | Description |
+|---|---|
+| **Refresh Markets** | Forces an immediate market list reload (normally every 30 seconds) |
+| **Clear Cooldowns** | Resets all 30-minute per-market cooldowns |
+| **Today / Total exposure bars** | Visual progress toward daily and total deployment limits |
+| **Risk Controls** | Live-edit max position size, daily limit, min edge %, and total exposure cap — changes apply to all strategies immediately |
 
 ---
 
@@ -254,7 +276,18 @@ The dashboard connects via WebSocket and reconnects automatically with exponenti
 | `MM_MAX_MARKETS` | `8` | Max simultaneous markets to quote |
 | `MM_HALF_SPREAD` | `0.03` | Quote offset from mid (liquid markets) |
 | `MM_THIN_HALF_SPREAD` | `0.05` | Quote offset from mid (thin markets) |
+| `BTC5MIN_ENABLED` | `true` | Enable the BTC 5-min up/down strategy |
+| `BTC5MIN_MIN_EDGE` | `0.04` | Min edge to trade a 5-min market |
+| `BTC5MIN_MAX_USD` | `50.0` | Max position size per 5-min trade |
+| `BTC5MIN_KELLY` | `0.08` | Kelly fraction for 5-min trades |
+| `BTC5MIN_MIN_MINS` | `1.5` | Earliest entry (minutes before close) |
+| `BTC5MIN_MAX_MINS` | `4.0` | Latest entry (minutes before close) |
+| `BTC5MIN_OBI_WEIGHT` | `0.50` | Signal weight for order book imbalance |
+| `BTC5MIN_MOM_WEIGHT` | `0.30` | Signal weight for price momentum |
+| `BTC5MIN_RSI_WEIGHT` | `0.20` | Signal weight for RSI |
+| `BTC5MIN_REFRESH_SEC` | `20` | Scan interval for 5-min markets (seconds) |
 | `SIGNAL_KELLY_FRACTION` | `0.10` | Kelly fraction for most signal strategies |
+| `MAX_DAILY_USD` | `1000.0` | Max USD deployed per calendar day (all strategies) |
 
 ---
 
@@ -271,5 +304,7 @@ All trades are logged to `data/leo.db` (SQLite). Logs write to `data/leo.log` an
 - The **LLM strategy is disabled by default** (`LLM_ENABLED=false`). Claude Haiku calls incur cost and have higher uncertainty than rule-based strategies — use a higher `LLM_MIN_EDGE` and low `LLM_MAX_MARKETS_PER_SCAN` when enabling.
 - The **Market Maker strategy is enabled by default** but requires a funded wallet and valid CLOB credentials to place actual orders. In dry-run mode it logs intended quotes without submitting them.
 - The **Oracle Squeeze** strategy trades markets past their `close_time`. UMA occasionally resolves N/A or disputes — `ORACLE_SQUEEZE_MIN_GAP=0.08` filters out ambiguous cases but does not eliminate this risk entirely.
+- The **BTC 5-min strategy** trades very short-duration markets with high turnover. The entry window (1.5–4.0 minutes before close) is intentionally narrow; trades outside this window are skipped entirely. These markets have low liquidity — `BTC5MIN_MAX_USD=50.0` is conservative by design.
 - Polymarket imposes CLOB rate limits. The `get_orderbook()` calls in OFI and Market Maker are the highest-frequency API consumers; the default candidate limits (`OFI_MAX_CANDIDATES=20`, `MM_MAX_MARKETS=8`) keep request volume within normal bounds.
 - Weather, forecast, and Open-Meteo data sources are all free and require no API keys.
+- The **daily deployment limit** (`MAX_DAILY_USD`) and **total exposure cap** (`MAX_TOTAL_EXPOSURE_USD`) both reset at UTC midnight. These limits can be adjusted live from the Controls tab without restarting the bot.

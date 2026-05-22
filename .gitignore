@@ -14,3 +14,5 @@ __pychache__/
 .ruff_cache/
 .mypy_cache/
 Claude.md
+data/leo.log
+data/leo.db
