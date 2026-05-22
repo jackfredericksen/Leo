@@ -30,6 +30,7 @@ class Storage:
                     market_id       TEXT NOT NULL,
                     question        TEXT,
                     arb_type        TEXT,
+                    side            TEXT,
                     yes_price       REAL,
                     no_price        REAL,
                     contracts       INTEGER,
@@ -38,6 +39,7 @@ class Storage:
                     status          TEXT,
                     yes_order_id    TEXT,
                     no_order_id     TEXT,
+                    outcome         TEXT DEFAULT 'pending',
                     created_at      TEXT DEFAULT (datetime('now'))
                 );
 
@@ -51,7 +53,25 @@ class Storage:
                     acted_on         INTEGER DEFAULT 0,
                     detected_at      TEXT
                 );
+
+                CREATE TABLE IF NOT EXISTS pnl_history (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    taken_at     TEXT DEFAULT (datetime('now')),
+                    balance_usd  REAL,
+                    unrealized   REAL,
+                    realized     REAL,
+                    total_pnl    REAL
+                );
             """)
+            # Migrations for existing databases
+            for migration in [
+                "ALTER TABLE trades ADD COLUMN outcome TEXT DEFAULT 'pending'",
+                "ALTER TABLE trades ADD COLUMN side TEXT",
+            ]:
+                try:
+                    conn.execute(migration)
+                except sqlite3.OperationalError:
+                    pass  # column already exists
 
     def log_trade(
         self,
@@ -64,6 +84,7 @@ class Storage:
         net_profit_pct: float,
         dry_run: bool,
         status: str,
+        side: Optional[str] = None,
         yes_order_id: Optional[str] = None,
         no_order_id: Optional[str] = None,
     ):
@@ -71,13 +92,13 @@ class Storage:
             conn.execute(
                 """
                 INSERT INTO trades
-                (market_id, question, arb_type, yes_price, no_price,
+                (market_id, question, arb_type, side, yes_price, no_price,
                  contracts, net_profit_pct, dry_run, status,
                  yes_order_id, no_order_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    market_id, question, arb_type, yes_price, no_price,
+                    market_id, question, arb_type, side, yes_price, no_price,
                     contracts, net_profit_pct, int(dry_run), status,
                     yes_order_id, no_order_id,
                 ),
@@ -114,6 +135,97 @@ class Storage:
                 (limit,),
             ).fetchall()
 
+    def log_pnl_snapshot(
+        self,
+        balance: float,
+        unrealized: float,
+        realized: float,
+    ) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT INTO pnl_history (balance_usd, unrealized, realized, total_pnl) "
+                "VALUES (?, ?, ?, ?)",
+                (balance, unrealized, realized, unrealized + realized),
+            )
+
+    def get_pnl_history(self, hours: int = 24) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT taken_at, balance_usd, unrealized, realized, total_pnl "
+                "FROM pnl_history "
+                "WHERE taken_at > datetime('now', ?) "
+                "ORDER BY taken_at ASC",
+                (f"-{hours} hours",),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_strategy_pnl(self) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                    arb_type,
+                    COUNT(*)                            AS trades,
+                    AVG(net_profit_pct)                 AS avg_edge,
+                    SUM(
+                        contracts
+                        * MIN(yes_price, no_price)
+                        * net_profit_pct
+                    )                                   AS est_pnl
+                FROM trades
+                WHERE status IN ('placed', 'simulated')
+                GROUP BY arb_type
+                ORDER BY est_pnl DESC
+                """,
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def update_trade_outcome(self, trade_id: int, outcome: str) -> None:
+        """Mark a trade as 'won', 'lost', or 'pending'."""
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE trades SET outcome = ? WHERE id = ?",
+                (outcome, trade_id),
+            )
+
+    def get_unresolved_trades(self) -> list[sqlite3.Row]:
+        """Return live (non-dry-run) trades still marked pending."""
+        with self._connect() as conn:
+            return conn.execute(
+                "SELECT id, market_id, arb_type, side, yes_price, no_price "
+                "FROM trades WHERE outcome = 'pending' AND dry_run = 0 "
+                "AND status = 'placed' ORDER BY created_at DESC LIMIT 200"
+            ).fetchall()
+
+    def get_strategy_win_rates(self) -> dict[str, dict]:
+        """
+        Return per-strategy win rate computed from resolved trades.
+        Only includes trades with outcome in ('won', 'lost').
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                    arb_type,
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN outcome = 'won' THEN 1 ELSE 0 END) AS wins,
+                    CAST(SUM(CASE WHEN outcome = 'won' THEN 1 ELSE 0 END) AS FLOAT)
+                      / NULLIF(COUNT(CASE WHEN outcome IN ('won','lost') THEN 1 END), 0)
+                      AS win_rate
+                FROM trades
+                WHERE outcome IN ('won', 'lost')
+                GROUP BY arb_type
+                """
+            ).fetchall()
+        return {
+            row["arb_type"]: {
+                "total": row["total"],
+                "wins": row["wins"],
+                "win_rate": row["win_rate"] or 0.0,
+            }
+            for row in rows
+        }
+
     def get_pnl_summary(self) -> dict:
         with self._connect() as conn:
             row = conn.execute("""
@@ -122,9 +234,9 @@ class Storage:
                     SUM(contracts) as total_contracts,
                     AVG(net_profit_pct) as avg_net_profit_pct,
                     SUM(
-                        CASE WHEN dry_run=0
-                        THEN contracts * yes_price * net_profit_pct
-                        ELSE 0 END
+                        contracts
+                        * MIN(yes_price, no_price)
+                        * net_profit_pct
                     ) as estimated_pnl_usd
                 FROM trades
                 WHERE status IN ('placed', 'simulated')

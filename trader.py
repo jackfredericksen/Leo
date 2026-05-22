@@ -1,13 +1,17 @@
 """
-Trade execution for Leo — Kalshi-only trading bot.
+Trade execution for Leo — Polymarket trading bot.
 
 Handles three trade types:
-  1. Overround arb  (ArbOpportunity)    — sell both YES and NO legs
-  2. Signal trade   (AggregatedSignal)  — single-leg buy on one side
+  1. Overround arb  (ArbOpportunity)        — buy both YES and NO legs cheap
+  2. Signal trade   (AggregatedSignal)      — single-leg buy on one side
   3. Correlated arb (CorrelatedOpportunity) — single-leg buy on mispriced side
 
-All live orders go through KalshiClient.place_order().
+All live orders go through PolymarketClient.place_order().
 Dry-run mode logs every intended trade without placing real orders.
+
+On Polymarket, overround arb is executed by BUYING both YES and NO shares
+when their total ask price < $1.00 (guaranteed $1.00 payout at resolution).
+This is equivalent to the sell-both-sides arb on Kalshi.
 
 A per-market cooldown (default 30 min) prevents the same market from
 being traded by multiple strategies simultaneously.
@@ -15,9 +19,10 @@ being traded by multiple strategies simultaneously.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from typing import Optional
 
-from api_clients.kalshi_client import KalshiClient, OrderResult
+from api_clients.polymarket_client import PolymarketClient, OrderResult
 from arbitrage import ArbOpportunity
 from config import Config
 from position_manager import PositionManager
@@ -34,18 +39,26 @@ class Trader:
     def __init__(
         self,
         cfg: Config,
-        client: KalshiClient,
+        client: PolymarketClient,
         storage: Storage,
         pos_manager: PositionManager | None = None,
+        alerter=None,
+        confluence=None,
     ):
         self.cfg = cfg
         self.arb_cfg = cfg.arbitrage
+        self.risk_cfg = cfg.risk
+        self.alert_cfg = cfg.alerting
         self.client = client
         self.storage = storage
         self.pos_manager = pos_manager
+        self.alerter = alerter
+        self.confluence = confluence
         self._total_exposure = 0.0
-        # market_id → time of last trade (prevents multi-strategy double-fires)
         self._cooldowns: dict[str, datetime] = {}
+        self._today_date: date = datetime.now(timezone.utc).date()
+        self._today_usd_deployed: float = 0.0
+        self._strategy_exposure: dict[str, float] = {}
 
     # ------------------------------------------------------------------ #
     #  Cooldown helpers                                                    #
@@ -62,42 +75,77 @@ class Trader:
 
     def _mark_cooldown(self, market_id: str):
         self._cooldowns[market_id] = datetime.now(timezone.utc)
+        # Prune expired cooldowns every ~100 marks to prevent unbounded growth
+        if len(self._cooldowns) > 200:
+            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_COOLDOWN_MINUTES)
+            self._cooldowns = {k: v for k, v in self._cooldowns.items() if v > cutoff}
 
     # ------------------------------------------------------------------ #
-    #  Overround arb (two-legged sell)                                     #
+    #  Daily limit helpers                                                 #
+    # ------------------------------------------------------------------ #
+
+    def _reset_daily_if_needed(self) -> None:
+        today = datetime.now(timezone.utc).date()
+        if today != self._today_date:
+            self._today_date = today
+            self._today_usd_deployed = 0.0
+            self._total_exposure = 0.0
+            self._strategy_exposure.clear()
+
+    def _track_deploy(self, size_usd: float, strategy: str) -> None:
+        self._today_usd_deployed += size_usd
+        self._total_exposure += size_usd
+        self._strategy_exposure[strategy] = (
+            self._strategy_exposure.get(strategy, 0.0) + size_usd
+        )
+
+    def _alert_task(self, coro) -> None:
+        """Fire-and-forget an alerter coroutine (only if coroutine is not None)."""
+        if coro is not None:
+            asyncio.create_task(coro)
+
+    # ------------------------------------------------------------------ #
+    #  Overround arb (buy both legs cheap)                                 #
     # ------------------------------------------------------------------ #
 
     async def execute(self, opp: ArbOpportunity) -> bool:
-        """Sell both YES and NO legs simultaneously."""
+        """
+        Buy both YES and NO shares when total ask < $1.00.
+        Profit = $1.00 payout - (YES_ask + NO_ask) per share.
+        """
         if self._in_cooldown(opp.market_id):
             return False
+        if self.confluence and not self.confluence.passes(opp.market_id, "both"):
+            logger.debug(f"Confluence gate: {opp.market_id[:16]} skipped (arb)")
+            return False
         if not self._check_exposure(opp.max_size_usd):
-            logger.warning(
-                f"Skipping {opp.market_id}: exposure limit reached"
-            )
+            logger.warning(f"Skipping {opp.market_id}: exposure limit reached")
             return False
 
         size_usd = min(opp.max_size_usd, self.arb_cfg.max_position_usd)
-        yes_price_cents = round(opp.yes_bid * 100)
-        no_price_cents = round(opp.no_bid * 100)
-        contracts = KalshiClient.contracts_for_usd(size_usd, opp.yes_bid)
+        # We buy YES at yes_ask and NO at no_ask
+        yes_ask = opp.yes_ask
+        no_ask  = opp.no_ask
+        # shares to buy on the YES side (NO side will match)
+        shares = PolymarketClient.usdc_to_shares(size_usd / 2, yes_ask)
 
-        if contracts < 1:
+        if shares < 1.0:
             return False
 
         if self.cfg.dry_run:
             logger.info(
                 f"[DRY RUN] overround {opp.market_id!r} | "
-                f"sell YES@{opp.yes_bid:.3f} + sell NO@{opp.no_bid:.3f}"
-                f" | {contracts} contracts | net={opp.net_profit_pct:.2%}"
+                f"buy YES@{yes_ask:.3f} + buy NO@{no_ask:.3f} | "
+                f"{shares:.1f} shares | net={opp.net_profit_pct:.2%}"
             )
             self.storage.log_trade(
                 market_id=opp.market_id,
                 question=opp.question,
                 arb_type=opp.arb_type,
-                yes_price=opp.yes_bid,
-                no_price=opp.no_bid,
-                contracts=contracts,
+                side="both",
+                yes_price=yes_ask,
+                no_price=no_ask,
+                contracts=int(shares),
                 net_profit_pct=opp.net_profit_pct,
                 dry_run=True,
                 status="simulated",
@@ -108,31 +156,28 @@ class Trader:
         try:
             yes_order, no_order = await asyncio.gather(
                 self._place_leg(
-                    opp.market_id, "yes", "sell",
-                    contracts, yes_price_cents,
+                    opp.yes_token_id, "yes", "buy", yes_ask, shares
                 ),
                 self._place_leg(
-                    opp.market_id, "no", "sell",
-                    contracts, no_price_cents,
+                    opp.no_token_id, "no", "buy", no_ask, shares
                 ),
             )
 
             if not yes_order or not no_order:
-                logger.error(
-                    f"One leg failed for {opp.market_id}, cancelling"
-                )
+                logger.error(f"One leg failed for {opp.market_id}, cancelling")
                 await self._cancel_if_placed(yes_order, no_order)
                 return False
 
-            self._total_exposure += size_usd
+            self._track_deploy(size_usd, "overround")
             self._mark_cooldown(opp.market_id)
             self.storage.log_trade(
                 market_id=opp.market_id,
                 question=opp.question,
                 arb_type=opp.arb_type,
-                yes_price=opp.yes_bid,
-                no_price=opp.no_bid,
-                contracts=contracts,
+                side="both",
+                yes_price=yes_ask,
+                no_price=no_ask,
+                contracts=int(shares),
                 net_profit_pct=opp.net_profit_pct,
                 dry_run=False,
                 status="placed",
@@ -143,12 +188,14 @@ class Trader:
                 f"Placed arb on {opp.market_id} | "
                 f"YES={yes_order.order_id} NO={no_order.order_id}"
             )
+            if self.alerter and size_usd >= self.alert_cfg.large_fill_threshold_usd:
+                self._alert_task(self.alerter.large_fill(
+                    opp.market_id, "both", size_usd, "overround"
+                ))
             return True
 
         except Exception as e:
-            logger.error(
-                f"Arb execution error for {opp.market_id}: {e}"
-            )
+            logger.error(f"Arb execution error for {opp.market_id}: {e}")
             return False
 
     # ------------------------------------------------------------------ #
@@ -163,12 +210,13 @@ class Trader:
         """Buy one side on a signal opportunity."""
         if self._in_cooldown(sig.market_id):
             return False
+        if self.confluence and not self.confluence.passes(sig.market_id, sig.recommended_side):
+            logger.debug(f"Confluence gate: {sig.market_id[:16]} {sig.recommended_side} skipped")
+            return False
         if not self._check_exposure(sig.recommended_size_usd):
             return False
         if self._has_position(sig.market_id):
-            logger.debug(
-                f"Skipping {sig.market_id}: already holding a position"
-            )
+            logger.debug(f"Skipping {sig.market_id}: already holding a position")
             return False
 
         market = market_map.get(sig.market_id)
@@ -176,34 +224,38 @@ class Trader:
             return False
 
         side = sig.recommended_side.lower()
-        price_dollars = market.yes_ask if side == "yes" else market.no_ask
-        if price_dollars <= 0:
+        if side == "yes":
+            token_id    = market.yes_token_id
+            price_dollars = market.yes_ask
+        else:
+            token_id    = market.no_token_id
+            price_dollars = market.no_ask
+
+        if price_dollars <= 0 or not token_id:
             return False
 
-        size_usd = min(
-            sig.recommended_size_usd, self.arb_cfg.max_position_usd
-        )
-        contracts = KalshiClient.contracts_for_usd(size_usd, price_dollars)
-        if contracts < 1:
+        size_usd = min(sig.recommended_size_usd, self.arb_cfg.max_position_usd)
+        shares   = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
+        if shares < 1.0:
             return False
 
-        price_cents = round(price_dollars * 100)
         yes_p = price_dollars if side == "yes" else (1 - price_dollars)
-        no_p = price_dollars if side == "no" else (1 - price_dollars)
+        no_p  = price_dollars if side == "no"  else (1 - price_dollars)
 
         if self.cfg.dry_run:
             logger.info(
                 f"[DRY RUN] signal {sig.source} {sig.market_id!r} | "
-                f"buy {side}@{price_dollars:.3f} x{contracts} | "
+                f"buy {side}@{price_dollars:.3f} x{shares:.1f} | "
                 f"edge={sig.edge:+.1%}"
             )
             self.storage.log_trade(
                 market_id=sig.market_id,
                 question=sig.question,
                 arb_type=f"signal:{sig.source}",
+                side=side,
                 yes_price=yes_p,
                 no_price=no_p,
-                contracts=contracts,
+                contracts=int(shares),
                 net_profit_pct=sig.edge,
                 dry_run=True,
                 status="simulated",
@@ -213,19 +265,20 @@ class Trader:
 
         try:
             order = await self._place_leg(
-                sig.market_id, side, "buy", contracts, price_cents
+                token_id, side, "buy", price_dollars, shares
             )
             if not order:
                 return False
-            self._total_exposure += size_usd
+            self._track_deploy(size_usd, sig.source or "signal")
             self._mark_cooldown(sig.market_id)
             self.storage.log_trade(
                 market_id=sig.market_id,
                 question=sig.question,
                 arb_type=f"signal:{sig.source}",
+                side=side,
                 yes_price=yes_p,
                 no_price=no_p,
-                contracts=contracts,
+                contracts=int(shares),
                 net_profit_pct=sig.edge,
                 dry_run=False,
                 status="placed",
@@ -236,11 +289,13 @@ class Trader:
                 f"Placed signal trade on {sig.market_id} | "
                 f"{side} order={order.order_id}"
             )
+            if self.alerter and size_usd >= self.alert_cfg.large_fill_threshold_usd:
+                self._alert_task(self.alerter.large_fill(
+                    sig.market_id, side, size_usd, sig.source or "signal"
+                ))
             return True
         except Exception as e:
-            logger.error(
-                f"Signal execution error for {sig.market_id}: {e}"
-            )
+            logger.error(f"Signal execution error for {sig.market_id}: {e}")
             return False
 
     # ------------------------------------------------------------------ #
@@ -255,12 +310,13 @@ class Trader:
         """Buy the mispriced side on a correlated-arb opportunity."""
         if self._in_cooldown(opp.market_id_mispriced):
             return False
+        if self.confluence and not self.confluence.passes(opp.market_id_mispriced, opp.recommended_side):
+            logger.debug(f"Confluence gate: {opp.market_id_mispriced[:16]} corr skipped")
+            return False
         if not self._check_exposure(opp.max_size_usd):
             return False
         if self._has_position(opp.market_id_mispriced):
-            logger.debug(
-                f"Skipping {opp.market_id_mispriced}: already holding"
-            )
+            logger.debug(f"Skipping {opp.market_id_mispriced}: already holding")
             return False
 
         market = market_map.get(opp.market_id_mispriced)
@@ -268,23 +324,28 @@ class Trader:
             return False
 
         side = opp.recommended_side.lower()
-        price_dollars = market.yes_ask if side == "yes" else market.no_ask
-        if price_dollars <= 0:
+        if side == "yes":
+            token_id    = market.yes_token_id
+            price_dollars = market.yes_ask
+        else:
+            token_id    = market.no_token_id
+            price_dollars = market.no_ask
+
+        if price_dollars <= 0 or not token_id:
             return False
 
         size_usd = min(opp.max_size_usd, self.arb_cfg.max_position_usd)
-        contracts = KalshiClient.contracts_for_usd(size_usd, price_dollars)
-        if contracts < 1:
+        shares   = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
+        if shares < 1.0:
             return False
 
-        price_cents = round(price_dollars * 100)
         yes_p = price_dollars if side == "yes" else (1 - price_dollars)
-        no_p = price_dollars if side == "no" else (1 - price_dollars)
+        no_p  = price_dollars if side == "no"  else (1 - price_dollars)
 
         if self.cfg.dry_run:
             logger.info(
                 f"[DRY RUN] corr-arb {opp.market_id_mispriced!r} | "
-                f"buy {side}@{price_dollars:.3f} x{contracts} | "
+                f"buy {side}@{price_dollars:.3f} x{shares:.1f} | "
                 f"edge={opp.edge:+.1%} "
                 f"anchor={opp.market_id_anchor}"
             )
@@ -292,9 +353,10 @@ class Trader:
                 market_id=opp.market_id_mispriced,
                 question=opp.question_mispriced,
                 arb_type=f"corr:{opp.relation.value}",
+                side=side,
                 yes_price=yes_p,
                 no_price=no_p,
-                contracts=contracts,
+                contracts=int(shares),
                 net_profit_pct=opp.edge,
                 dry_run=True,
                 status="simulated",
@@ -304,20 +366,20 @@ class Trader:
 
         try:
             order = await self._place_leg(
-                opp.market_id_mispriced, side, "buy",
-                contracts, price_cents,
+                token_id, side, "buy", price_dollars, shares
             )
             if not order:
                 return False
-            self._total_exposure += size_usd
+            self._track_deploy(size_usd, f"corr:{opp.relation.value}")
             self._mark_cooldown(opp.market_id_mispriced)
             self.storage.log_trade(
                 market_id=opp.market_id_mispriced,
                 question=opp.question_mispriced,
                 arb_type=f"corr:{opp.relation.value}",
+                side=side,
                 yes_price=yes_p,
                 no_price=no_p,
-                contracts=contracts,
+                contracts=int(shares),
                 net_profit_pct=opp.edge,
                 dry_run=False,
                 status="placed",
@@ -328,11 +390,14 @@ class Trader:
                 f"Placed corr-arb on {opp.market_id_mispriced} | "
                 f"order={order.order_id}"
             )
+            if self.alerter and size_usd >= self.alert_cfg.large_fill_threshold_usd:
+                self._alert_task(self.alerter.large_fill(
+                    opp.market_id_mispriced, side, size_usd,
+                    f"corr:{opp.relation.value}"
+                ))
             return True
         except Exception as e:
-            logger.error(
-                f"Corr execution error for {opp.market_id_mispriced}: {e}"
-            )
+            logger.error(f"Corr execution error for {opp.market_id_mispriced}: {e}")
             return False
 
     # ------------------------------------------------------------------ #
@@ -341,24 +406,24 @@ class Trader:
 
     async def _place_leg(
         self,
-        ticker: str,
+        token_id: str,
         side: str,
         action: str,
-        contracts: int,
-        price_cents: int,
+        price: float,
+        shares: float,
     ) -> OrderResult | None:
         try:
-            return await self.client.place_order(
-                ticker=ticker,
-                side=side,
+            result = await self.client.place_order(
+                token_id=token_id,
                 action=action,
-                count=contracts,
-                limit_price=price_cents,
+                price=price,
+                size=shares,
             )
+            if result:
+                result.side = side
+            return result
         except Exception as e:
-            logger.error(
-                f"Failed to place {action} {side} on {ticker}: {e}"
-            )
+            logger.error(f"Failed to place {action} {side} ({token_id[:8]}): {e}")
             return None
 
     async def _cancel_if_placed(self, *orders):
@@ -373,6 +438,17 @@ class Trader:
         return pos is not None and pos.contracts > 0
 
     def _check_exposure(self, size: float) -> bool:
+        self._reset_daily_if_needed()
+        if self._today_usd_deployed + size > self.risk_cfg.max_daily_usd_deployed:
+            logger.warning(
+                f"Daily deployment limit reached: "
+                f"${self._today_usd_deployed:.0f}/${self.risk_cfg.max_daily_usd_deployed:.0f}"
+            )
+            if self.alerter:
+                self._alert_task(self.alerter.daily_limit_hit(
+                    self._today_usd_deployed, self.risk_cfg.max_daily_usd_deployed
+                ))
+            return False
         return (
             self._total_exposure + size
             <= self.arb_cfg.max_total_exposure_usd

@@ -18,7 +18,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, _MAX_SPREAD
 from strategies.kelly import KellySizer
 

@@ -17,7 +17,7 @@ import logging
 from datetime import datetime, timezone
 
 from api_clients.forecast_client import ForecastClient, ForecastQuestion
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
@@ -124,7 +124,7 @@ class ForecastSignalDetector:
                     confidence=conf,
                     reasoning=(
                         f"forecast={forecast_prob:.2%} "
-                        f"kalshi={market.yes_price:.2%} "
+                        f"mkt={market.yes_price:.2%} "
                         f"sources={len(matches)} "
                         f"match={best_sim:.0%} "
                         f'"{best_fq.title[:60]}"'

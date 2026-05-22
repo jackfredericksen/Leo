@@ -271,6 +271,36 @@ class BinanceClient:
             return None
         return (snap.price - vwap) / vwap
 
+    async def compute_obi(self, symbol: str, levels: int = 10) -> Optional[float]:
+        """
+        Order Book Imbalance from Coinbase L2 book.
+        Returns (bid_depth - ask_depth) / (bid_depth + ask_depth) in [-1, 1].
+        Positive = more bids = buying pressure (bullish for 5-min prediction).
+        """
+        pair = SYMBOL_TO_PAIR.get(symbol)
+        if not pair or not self._session:
+            return None
+        try:
+            url = f"{COINBASE_REST}/products/{pair}/book?limit={levels}"
+            async with self._session.get(
+                url, timeout=aiohttp.ClientTimeout(total=5)
+            ) as resp:
+                if resp.status != 200:
+                    return None
+                data = await resp.json()
+            pricebook = data.get("pricebook", {})
+            bids = pricebook.get("bids", [])
+            asks = pricebook.get("asks", [])
+            bid_depth = sum(float(b["size"]) for b in bids[:levels])
+            ask_depth = sum(float(a["size"]) for a in asks[:levels])
+            total = bid_depth + ask_depth
+            if total == 0:
+                return None
+            return (bid_depth - ask_depth) / total
+        except Exception as e:
+            logger.warning(f"Coinbase OBI fetch failed ({symbol}): {e}")
+            return None
+
     def compute_signals(self, symbol: str) -> dict:
         return {
             "price": self.get_price(symbol),

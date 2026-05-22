@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 
 logger = logging.getLogger(__name__)
 

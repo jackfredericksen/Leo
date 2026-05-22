@@ -19,7 +19,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from api_clients.llm_client import LLMClient
 from api_clients.forecast_client import ForecastClient
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
@@ -27,23 +27,23 @@ from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
 
-# Markets where LLM adds no value (handled by dedicated strategies)
-_SKIP_PREFIXES = ("KXBTC", "KXETH", "KXSOL")
-_SKIP_KEYWORDS = ("bitcoin", "ethereum", "solana", "btc price", "eth price")
+# Markets where LLM adds no value (handled by dedicated price strategies)
+_CRYPTO_KEYWORDS = (
+    "btc price", "eth price", "sol price",
+    "bitcoin price", "ethereum price", "solana price",
+    "above $", "below $", "between $",  # numeric threshold markets
+)
 
 
 def _is_crypto_price(market: Market) -> bool:
-    uid = market.market_id.upper()
-    if any(uid.startswith(p) for p in _SKIP_PREFIXES):
-        return True
     q = market.question.lower()
-    return any(kw in q for kw in _SKIP_KEYWORDS)
+    return any(kw in q for kw in _CRYPTO_KEYWORDS)
 
 
 class LLMSignalDetector:
     """
     Generates trading signals by asking Claude to estimate probabilities
-    for qualitative Kalshi markets.
+    for qualitative Polymarket markets.
     """
 
     def __init__(

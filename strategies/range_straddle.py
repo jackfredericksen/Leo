@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from api_clients.binance_client import ANNUAL_VOL, BinanceClient, _norm_cdf
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 

@@ -1,23 +1,19 @@
 """
-Auto-correlation discovery for Kalshi markets.
+Auto-correlation discovery for Polymarket markets.
 
-Kalshi organises markets into Events (event_ticker). An event can have
-multiple markets — e.g. the "INXD" event might have:
-  INXD-25DEC31-B4800   "S&P 500 above 4800 by Dec 31"
-  INXD-25DEC31-B5000   "S&P 500 above 5000 by Dec 31"
-  INXD-25DEC31-B5200   "S&P 500 above 5200 by Dec 31"
+Polymarket groups related markets via a shared groupItemTitle / category tag.
+For example, a "Bitcoin Price" group might contain:
+  "Will BTC close above $90,000 this week?"
+  "Will BTC close above $100,000 this week?"
+  "Will BTC close above $110,000 this week?"
 
 These share a MONOTONE relationship:
-  P(above 5200) ≤ P(above 5000) ≤ P(above 4800)
+  P(above $110k) ≤ P(above $100k) ≤ P(above $90k)
   If any market violates this ordering, it is mispriced.
 
-We also detect MUTEX relationships from multi-outcome events:
+We also detect MUTEX relationships from multi-outcome groups:
   "Who will win the 2024 election?" → candidate markets sum ≤ 1.00.
   If any two markets sum > 1.00 + fees, there is an overround to exploit.
-
-Additionally we detect cross-event IMPLIES relationships using title similarity:
-  "Will X happen in Q1?" and "Will X happen in H1?" — the H1 market must be
-  >= the Q1 market (if Q1 is a subset of H1).
 
 Relations discovered here are fed into the existing CorrelatedDetector.
 """
@@ -27,7 +23,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from strategies.correlated import (
     CorrelatedDetector,
     MarketRelation,
@@ -115,17 +111,17 @@ class AutoCorrelator:
         """
         relations: list[MarketRelation] = []
 
-        # Group by event_ticker
+        # Group by group_id (Polymarket groupItemTitle / category)
         by_event: dict[str, list[Market]] = {}
         for m in markets:
             if m.status != "open":
                 continue
             if m.liquidity_usd < self.cfg.min_liquidity_usd:
                 continue
-            key = m.event_ticker or m.market_id
+            key = m.group_id or m.market_id
             by_event.setdefault(key, []).append(m)
 
-        for event_ticker, group in by_event.items():
+        for _group_key, group in by_event.items():
             group = group[: self.cfg.max_markets_per_event]
             if len(group) < 2:
                 continue

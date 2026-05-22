@@ -1,12 +1,12 @@
 """
 Strategy: Weather market signal trading.
 
-Kalshi lists daily/weekly weather markets in major US cities:
+Polymarket weather markets ask questions like:
   "Will NYC high temperature exceed 75°F on April 15?"
   "Will Chicago precipitation exceed 0.50 inches this week?"
 
 We compare Open-Meteo's deterministic forecast + spread model against
-Kalshi's implied probability and trade when they diverge.
+Polymarket's implied probability and trade when they diverge.
 
 Probability estimation:
   - Temperature markets: use forecast value + model uncertainty to
@@ -15,9 +15,9 @@ Probability estimation:
     adjusted by magnitude (if forecast is 0.1in and threshold is 0.5in,
     even with 60% chance of rain it's unlikely to hit threshold).
 
-Question parsing:
-  Kalshi weather tickers look like: HIGHNYC-26APR15, LOWCHI-26APR15
-  Subtitles: "NYC high temperature above 75°F"
+Market detection:
+  Filter on category == "weather" or keyword match in question text.
+  All parsing done from the question string directly.
 """
 
 import logging
@@ -26,21 +26,20 @@ import re
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from api_clients.weather_client import DayForecast, WeatherClient
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
 
-# Kalshi weather ticker prefixes and how to parse them
-# HIGH{CITY}-{DATE}, LOW{CITY}-{DATE}, PRECIP{CITY}-{DATE}
-_WEATHER_RE = re.compile(
-    r"^(HIGH|LOW|PRECIP|RAIN|SNOW|TEMP)([A-Z]{2,6})-",
-    re.IGNORECASE,
-)
+_WEATHER_KEYWORDS = frozenset([
+    "temperature", "temp", "high", "low", "precipitation",
+    "precip", "rain", "snow", "weather", "forecast", "fahrenheit",
+    "celsius", "degrees", "inches of rain",
+])
 
-# Map Kalshi city codes → canonical city name for weather client
+# Map city name fragments → canonical city name for weather client
 _CITY_CODES: dict[str, str] = {
     "NYC":  "new york",
     "NY":   "new york",
@@ -58,7 +57,6 @@ _CITY_CODES: dict[str, str] = {
     "ATL":  "atlanta",
     "HOU":  "houston",
     "MSP":  "minneapolis",
-    "MIN":  "minneapolis",
 }
 
 # Temperature forecast uncertainty (°F std dev)
@@ -130,30 +128,18 @@ def _parse_weather_market(
     market: Market,
 ) -> Optional[tuple[str, str, float, date]]:
     """
-    Parse a Kalshi weather market into (city, metric, threshold, target_date).
+    Parse a Polymarket weather market into (city, metric, threshold, target_date).
     metric: "high_temp" | "low_temp" | "precip"
 
-    Parses from subtitle_yes when available, falls back to question text.
+    All parsing done from the question string; subtitle_yes is just "Yes"/"No"
+    on Polymarket and carries no semantic information.
     """
-    text = market.subtitle_yes or market.question or ""
-    tid = market.market_id.upper()
+    text = market.question or ""
 
-    # --- Try ticker prefix for city code ---
     city = None
     metric = None
-    m = _WEATHER_RE.match(tid)
-    if m:
-        kind = m.group(1).upper()
-        code = m.group(2).upper()
-        city = _CITY_CODES.get(code)
-        if kind in ("HIGH", "TEMP"):
-            metric = "high_temp"
-        elif kind == "LOW":
-            metric = "low_temp"
-        elif kind in ("PRECIP", "RAIN", "SNOW"):
-            metric = "precip"
 
-    # --- Fallback: parse city from question text ---
+    # --- Parse city from question text ---
     if not city:
         text_lower = text.lower()
         for code, city_name in _CITY_CODES.items():
@@ -190,7 +176,6 @@ def _parse_weather_market(
     threshold = float(threshold_match.group(1))
 
     # --- Parse target date from close_time ---
-    # Kalshi weather markets close at or just after the target date
     target_date = market.close_time.date()
 
     return city, metric, threshold, target_date
@@ -198,7 +183,7 @@ def _parse_weather_market(
 
 class WeatherSignalDetector:
     """
-    Finds edge in Kalshi temperature and precipitation markets
+    Finds edge in Polymarket temperature and precipitation markets
     using Open-Meteo forecasts.
     """
 
@@ -221,6 +206,15 @@ class WeatherSignalDetector:
                 if market.status != "open":
                     continue
 
+                # Fast pre-filter: only attempt parsing on likely weather markets
+                q_lower = (market.question or "").lower()
+                is_weather = (
+                    market.category.lower() == "weather"
+                    or any(kw in q_lower for kw in _WEATHER_KEYWORDS)
+                )
+                if not is_weather:
+                    continue
+
                 parsed = _parse_weather_market(market)
                 if not parsed:
                     continue
@@ -240,10 +234,12 @@ class WeatherSignalDetector:
                 if model_prob is None:
                     continue
 
-                # Determine if market is YES = above or YES = below
-                sub = (market.subtitle_yes or market.question or "").lower()
+                # Determine if market is YES = above or YES = below.
+                # Always use the question text — subtitle_yes on Polymarket
+                # is just the outcome label "Yes", not a descriptive phrase.
+                q_lower = market.question.lower()
                 yes_is_above = any(
-                    w in sub for w in ["above", "exceed", "over", "high"]
+                    w in q_lower for w in ["above", "exceed", "over", "more than", "at least"]
                 )
                 if not yes_is_above:
                     model_prob = 1.0 - model_prob

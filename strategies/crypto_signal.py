@@ -1,18 +1,18 @@
 """
-Strategy 1: Real-time crypto price signal trading.
+Strategy 1: Real-time crypto price signal trading on Polymarket.
 
-Kalshi crypto price markets use tickers like:
-  KXBTCY-27JAN0100-B72500   → BTC price range (floor=72500) on Jan 1 2027
-  KXBTCM-26APR-B65000       → BTC monthly above $65k
-  KXETHMW-26APR18-B2000     → ETH weekly above $2000
+Polymarket crypto price markets use question text like:
+  "Will BTC be above $100,000 on Dec 31?"
+  "Will ETH close between $3,000 and $4,000 this week?"
+  "Will SOL reach $200 before the end of March?"
 
-Market structure:
-  - floor_strike: lower bound (the strike price)
-  - cap_strike:   upper bound (for range markets)
-  - strike_type:  "between" (range) or "greater" / "less_than" (above/below)
+Market structure (carried through the Market dataclass):
+  - floor_strike: extracted lower bound (e.g. 100_000 for "above $100k")
+  - cap_strike:   extracted upper bound (e.g. for range markets)
+  - subtitle_yes: outcome label ("Yes" or "above $100k")
 
 Signal: Use Coinbase real-time price + log-normal model to estimate
-the true probability, compare to Kalshi's implied probability, trade edge.
+the true probability, compare to Polymarket's implied probability, trade edge.
 
 Technical layer (RSI/momentum) adjusts base probability for short-term
 momentum that the log-normal model misses.
@@ -28,30 +28,26 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from api_clients.binance_client import ANNUAL_VOL, BinanceClient, _norm_cdf
-from api_clients.kalshi_client import Market
+from api_clients.polymarket_client import Market
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, ask_edge
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
 
-# Ticker prefixes → Coinbase symbol
-_TICKER_SYMBOL = {
-    "KXBTC": "BTCUSDT",
-    "KXETH": "ETHUSDT",
-    "KXSOL": "SOLUSDT",
-}
+# Keywords in question text → Coinbase price symbol
+_QUESTION_SYMBOL: list[tuple[list[str], str]] = [
+    (["btc", "bitcoin"], "BTCUSDT"),
+    (["eth", "ethereum", "ether"],  "ETHUSDT"),
+    (["sol", "solana"],             "SOLUSDT"),
+]
 
 
-def _get_symbol(market_id: str) -> Optional[str]:
-    uid = market_id.upper()
-    for prefix, sym in _TICKER_SYMBOL.items():
-        if uid.startswith(prefix):
-            # Must be followed immediately by a digit, hyphen, or
-            # time-period letter (M/W/D/Y/Q) — not more letters.
-            # Rules out KXSOLAR (SOL+AR), KXBTCVSGOLD (BTC+VS), etc.
-            after = uid[len(prefix):]
-            if after and (after[0].isdigit() or after[0] in "-MWDYQ"):
-                return sym
+def _get_symbol(question: str) -> Optional[str]:
+    """Match a crypto symbol from a market question string."""
+    q = question.lower()
+    for keywords, sym in _QUESTION_SYMBOL:
+        if any(kw in q for kw in keywords):
+            return sym
     return None
 
 
@@ -155,7 +151,7 @@ class CryptoSignalDetector:
         results = []
         for market in markets:
             try:
-                symbol = _get_symbol(market.market_id)
+                symbol = _get_symbol(market.question)
                 if not symbol:
                     continue
 
@@ -176,8 +172,7 @@ class CryptoSignalDetector:
                 days = hours / 24.0
                 vol = self._vol(symbol)
 
-                sub_yes = market.subtitle_yes.lower()
-                ticker_upper = market.market_id.upper()
+                q_lower = market.question.lower()
 
                 # Range market: both floor and cap present
                 if floor is not None and cap is not None:
@@ -188,10 +183,9 @@ class CryptoSignalDetector:
 
                 # Above/below market: only floor present
                 elif floor is not None:
-                    if (
-                        "above" in sub_yes
-                        or "over" in sub_yes
-                        or re.search(r"-B\d", ticker_upper)
+                    if any(
+                        w in q_lower
+                        for w in ("above", "over", "exceed", "higher", "more than")
                     ):
                         model_prob = _prob_above(spot, floor, days, vol)
                         adj, score = self._technical_adjustment(

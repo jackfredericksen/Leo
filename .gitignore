@@ -13,3 +13,4 @@ __pychache__/
 .vscode/
 .ruff_cache/
 .mypy_cache/
+Claude.md

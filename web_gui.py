@@ -22,9 +22,11 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +92,16 @@ def _serialise_state() -> dict:
     if state is None or config is None:
         return {"error": "bot not running"}
 
+    slug_map: dict[str, str] = {
+        m.market_id: m.slug
+        for m in (state.markets or [])
+        if m.slug
+    }
+
     arb_opps = [
         {
             "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
             "question": o.question[:60],
             "yes_bid": round(o.yes_bid, 3),
             "no_bid": round(o.no_bid, 3),
@@ -110,6 +119,7 @@ def _serialise_state() -> dict:
     corr_opps = [
         {
             "market_id": o.market_id_mispriced,
+            "slug": slug_map.get(o.market_id_mispriced, ""),
             "anchor_id": o.market_id_anchor,
             "question": o.question_mispriced[:60],
             "relation": o.relation.value,
@@ -123,6 +133,7 @@ def _serialise_state() -> dict:
     signal_opps = [
         {
             "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
             "question": o.question[:60],
             "source": o.source,
             "market_prob": round(o.market_prob * 100, 1),
@@ -131,13 +142,14 @@ def _serialise_state() -> dict:
             "side": o.recommended_side,
             "size": round(o.recommended_size_usd, 2),
             "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
         }
         for o in state.signal_opps[:20]
     ]
 
     cross_opps = [
         {
-            "kalshi_id": o.kalshi_market_id,
+            "polymarket_id": o.polymarket_market_id,
             "ext_id": o.external_market_id,
             "question": o.question[:60],
             "buy_platform": o.buy_platform,
@@ -145,62 +157,233 @@ def _serialise_state() -> dict:
             "buy_price": round(o.buy_price * 100, 1),
             "sell_price": round(o.sell_price * 100, 1),
             "net_pct": round(o.net_profit_pct * 100, 2),
-            "signal_only": o.signal_only,
         }
         for o in state.cross_opps[:20]
     ]
 
+    fav_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "market_prob": round(o.market_prob * 100, 1),
+            "model_prob": round(o.model_prob * 100, 1),
+            "edge_pct": round(o.edge * 100, 2),
+            "side": getattr(o, "recommended_side", "no"),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.fav_opps[:20]
+    ]
+
+    squeeze_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "market_prob": round(o.market_prob * 100, 1),
+            "side": o.recommended_side,
+            "edge_pct": round(o.edge * 100, 2),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.squeeze_opps[:20]
+    ]
+
+    semarg_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "poly_prob": round(o.market_prob * 100, 1),
+            "ext_prob": round(o.model_prob * 100, 1),
+            "side": o.recommended_side,
+            "edge_pct": round(o.edge * 100, 2),
+            "source": o.source,
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.semarg_opps[:20]
+    ]
+
+    ofi_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "side": o.recommended_side,
+            "edge_pct": round(o.edge * 100, 2),
+            "source": o.source,
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.ofi_opps[:20]
+    ]
+
+    btc5min_opps = [
+        {
+            "market_id": o.market_id,
+            # slug comes from the signal itself (market not in volume-sorted state.markets)
+            "slug": getattr(o, "slug", "") or slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "market_prob": round(o.market_prob * 100, 1),
+            "model_prob": round(o.model_prob * 100, 1),
+            "side": o.recommended_side,
+            "edge_pct": round(o.edge * 100, 2),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.btc5min_opps[:20]
+    ]
+
+    # Best single opportunity across all strategy types
+    all_edge_opps = (
+        [(o["net_pct"],  "arb",     o) for o in arb_opps]
+        + [(o["edge_pct"], "corr",    o) for o in corr_opps]
+        + [(o["edge_pct"], "signal",  o) for o in signal_opps]
+        + [(o["edge_pct"], "fav",     o) for o in fav_opps]
+        + [(o["edge_pct"], "squeeze", o) for o in squeeze_opps]
+        + [(o["edge_pct"], "semarg",  o) for o in semarg_opps]
+        + [(o["edge_pct"], "ofi",     o) for o in ofi_opps]
+        + [(o["edge_pct"], "btc5min", o) for o in btc5min_opps]
+    )
+    best_opp = None
+    if all_edge_opps:
+        _edge, _tag, _opp = max(all_edge_opps, key=lambda x: x[0])
+        best_opp = {"strategy": _tag, **_opp}
+
+    # Strategy enabled states (for controls page)
+    strategy_states = {}
+    for name in (
+        "arbitrage", "crypto_signal", "range_straddle", "cross_arb",
+        "correlated", "news_fade", "forecast", "llm", "weather",
+        "favorite_short", "oracle_squeeze", "semantic_arb",
+        "orderbook_momentum", "market_maker", "btc_5min",
+    ):
+        cfg = getattr(config, name, None)
+        if cfg and hasattr(cfg, "enabled"):
+            strategy_states[name] = cfg.enabled
+
+    trader = getattr(bot_state, "_trader_ref", None)
+    exposure = {
+        "today_usd":   round(trader._today_usd_deployed, 2) if trader else 0.0,
+        "total_usd":   round(trader._total_exposure,     2) if trader else 0.0,
+        "daily_limit": config.risk.max_daily_usd_deployed,
+        "total_limit": config.arbitrage.max_total_exposure_usd,
+    }
+    risk_config = {
+        "max_position_usd": config.arbitrage.max_position_usd,
+        "max_daily_usd":    config.risk.max_daily_usd_deployed,
+        "min_edge_pct":     round(config.arbitrage.min_profit_pct * 100, 2),
+        "total_limit_usd":  config.arbitrage.max_total_exposure_usd,
+    }
+
     return {
         "ts": datetime.now(timezone.utc).isoformat(),
         "dry_run": config.dry_run,
+        "paused": getattr(bot_state, "paused", False),
+        "strategy_states": strategy_states,
+        "exposure": exposure,
+        "risk_config": risk_config,
         "scans": {
-            "arb": state.arb_scans,
-            "mm": state.mm_scans,
-            "corr": state.corr_scans,
-            "signal": state.signal_scans,
-            "cross": state.cross_scans,
-            "whale": state.whale_signals,
+            "arb":      state.arb_scans,
+            "mm":       state.mm_scans,
+            "mm_active": state.mm_active,
+            "corr":     state.corr_scans,
+            "signal":   state.signal_scans,
+            "crypto":   state.crypto_scans,
+            "cross":    state.cross_scans,
+            "range":    state.range_scans,
+            "fade":     state.fade_scans,
+            "forecast": state.forecast_scans,
+            "llm":      state.llm_scans,
+            "weather":  state.weather_scans,
+            "whale":    state.whale_signals,
+            "fav":      state.fav_scans,
+            "squeeze":  state.squeeze_scans,
+            "semarg":   state.semarg_scans,
+            "ofi":      state.ofi_scans,
+            "btc5min":  state.btc5min_scans,
         },
         "markets_count": len(state.markets),
         "arb_opps": arb_opps,
         "corr_opps": corr_opps,
         "signal_opps": signal_opps,
         "cross_opps": cross_opps,
+        "fav_opps": fav_opps,
+        "squeeze_opps": squeeze_opps,
+        "semarg_opps": semarg_opps,
+        "ofi_opps": ofi_opps,
+        "btc5min_opps": btc5min_opps,
+        "mm_quotes": getattr(state, "mm_quotes", [])[:20],
+        "best_opp": best_opp,
     }
+
+
+def _serialise_slugs() -> dict:
+    """Map condition_id → event slug for all loaded markets."""
+    import bot_state
+    state = bot_state.state
+    if not state or not state.markets:
+        return {}
+    return {m.market_id: m.slug for m in state.markets if m.slug}
 
 
 def _serialise_portfolio() -> dict:
     import bot_state
-    pm = bot_state._pos_manager_ref
-    if not pm or not pm.snapshot:
-        return {}
+    pm      = bot_state._pos_manager_ref
+    cfg     = bot_state.config
+    storage = bot_state._storage_ref
 
-    s = pm.snapshot
-    positions = [
-        {
-            "market_id": p.market_id,
-            "question": p.question[:60],
-            "side": p.side,
-            "contracts": p.contracts,
-            "avg_price": round(p.avg_price * 100, 1),
-            "current_mid": round(p.current_mid * 100, 1),
-            "unrealized_pnl": round(p.unrealized_pnl, 2),
-            "status": p.status,
-            "hours_left": round(
-                (p.close_time - datetime.now(timezone.utc)).total_seconds()
-                / 3600, 1
-            ),
+    is_dry_run    = cfg and cfg.dry_run
+    paper_bankroll = cfg.risk.paper_bankroll if cfg else 1000.0
+
+    # Live path — use real position snapshot
+    if pm and pm.snapshot and not is_dry_run:
+        s = pm.snapshot
+        positions = [
+            {
+                "market_id": p.market_id,
+                "question": p.question[:60],
+                "side": p.side,
+                "contracts": p.contracts,
+                "avg_price": round(p.avg_price * 100, 1),
+                "current_mid": round(p.current_mid * 100, 1),
+                "unrealized_pnl": round(p.unrealized_pnl, 2),
+                "status": p.status,
+                "hours_left": round(
+                    (p.close_time - datetime.now(timezone.utc)).total_seconds()
+                    / 3600, 1
+                ),
+            }
+            for p in s.open_positions[:30]
+        ]
+        balance = s.balance_usd if s.balance_usd > 0 else paper_bankroll
+        return {
+            "balance": round(balance, 2),
+            "unrealized_pnl": round(s.unrealized_pnl, 2),
+            "realized_pnl": round(s.realized_pnl, 2),
+            "total_pnl": round(s.total_pnl, 2),
+            "position_count": s.position_count,
+            "positions": positions,
+            "paper": False,
         }
-        for p in s.open_positions[:30]
-    ]
+
+    # Paper / dry-run path — derive P&L from simulated trades in DB
+    est_pnl = 0.0
+    trade_count = 0
+    if storage:
+        summary = storage.get_pnl_summary()
+        est_pnl     = round(summary.get("estimated_pnl_usd") or 0.0, 2)
+        trade_count = summary.get("total_trades") or 0
 
     return {
-        "balance": round(s.balance_usd, 2),
-        "unrealized_pnl": round(s.unrealized_pnl, 2),
-        "realized_pnl": round(s.realized_pnl, 2),
-        "total_pnl": round(s.total_pnl, 2),
-        "position_count": s.position_count,
-        "positions": positions,
+        "balance": round(paper_bankroll + est_pnl, 2),
+        "unrealized_pnl": 0.0,
+        "realized_pnl": est_pnl,
+        "total_pnl": est_pnl,
+        "position_count": trade_count,
+        "positions": [],
+        "paper": True,
     }
 
 
@@ -217,6 +400,7 @@ def _serialise_trades(limit: int = 50) -> list:
             "market_id": row["market_id"],
             "question": (row["question"] or "")[:60],
             "arb_type": row["arb_type"],
+            "side": row["side"],
             "yes_price": row["yes_price"],
             "no_price": row["no_price"],
             "contracts": row["contracts"],
@@ -225,6 +409,7 @@ def _serialise_trades(limit: int = 50) -> list:
             ),
             "dry_run": bool(row["dry_run"]),
             "status": row["status"],
+            "outcome": row["outcome"],
             "created_at": row["created_at"],
         })
     return result
@@ -255,14 +440,184 @@ async def api_trades(limit: int = 50):
     return _serialise_trades(limit)
 
 
+@app.get("/api/pnl-history")
+async def api_pnl_history(hours: int = 24):
+    import bot_state
+    storage = bot_state._storage_ref
+    if not storage:
+        return []
+    return storage.get_pnl_history(hours)
+
+
+@app.get("/api/strategy-pnl")
+async def api_strategy_pnl():
+    import bot_state
+    storage = bot_state._storage_ref
+    if not storage:
+        return []
+    return storage.get_strategy_pnl()
+
+
+@app.get("/api/win-rates")
+async def api_win_rates():
+    import bot_state
+    storage = bot_state._storage_ref
+    if not storage:
+        return {}
+    return storage.get_strategy_win_rates()
+
+
+@app.get("/api/evolution")
+async def api_evolution():
+    import bot_state
+    agent = getattr(bot_state, "_evolution_ref", None)
+    if not agent:
+        return {"recommendation": None, "last_review": None}
+    return {
+        "recommendation": agent.last_recommendation,
+        "last_review": agent.last_review_ts,
+    }
+
+
+@app.get("/api/kyle-lambda")
+async def api_kyle_lambda():
+    import bot_state
+    tracker = getattr(bot_state, "_kyle_lambda_ref", None)
+    if not tracker:
+        return []
+    return tracker.summary(getattr(bot_state.state, "markets", []))
+
+
+@app.get("/api/confluence")
+async def api_confluence():
+    import bot_state
+    tracker = getattr(bot_state, "_confluence_ref", None)
+    if not tracker:
+        return []
+    return tracker.best_opps()
+
+
+class _BoolBody(BaseModel):
+    enabled: bool
+
+
 @app.post("/api/control/dry-run")
-async def toggle_dry_run(enabled: bool):
+async def toggle_dry_run(body: _BoolBody):
     try:
         import bot_state
-        bot_state.config.dry_run = enabled
-        return {"dry_run": enabled}
+        bot_state.config.dry_run = body.enabled
+        return {"dry_run": body.enabled}
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.post("/api/control/pause")
+async def pause_bot():
+    import bot_state
+    bot_state.paused = True
+    ev = getattr(bot_state, "_resume_event", None)
+    if ev is not None:
+        ev.clear()
+    return {"paused": True}
+
+
+@app.post("/api/control/resume")
+async def resume_bot():
+    import bot_state
+    bot_state.paused = False
+    ev = getattr(bot_state, "_resume_event", None)
+    if ev is not None:
+        ev.set()
+    return {"paused": False}
+
+
+@app.post("/api/control/stop")
+async def stop_bot():
+    import bot_state
+    ev = getattr(bot_state, "_stop_event", None)
+    if ev is None:
+        raise HTTPException(503, "Stop event not initialised — bot may not be running")
+    ev.set()
+    return {"stopping": True}
+
+
+@app.post("/api/control/strategy/{name}")
+async def toggle_strategy(name: str, body: _BoolBody):
+    import bot_state
+    if bot_state.config is None:
+        raise HTTPException(503, "Bot not running")
+    cfg = getattr(bot_state.config, name, None)
+    if cfg is None:
+        raise HTTPException(404, f"Unknown strategy: {name}")
+    if not hasattr(cfg, "enabled"):
+        raise HTTPException(400, f"Strategy '{name}' has no enabled flag")
+    cfg.enabled = body.enabled
+    return {"strategy": name, "enabled": body.enabled}
+
+
+@app.post("/api/control/refresh-markets")
+async def refresh_markets():
+    import bot_state
+    bot_state._force_market_refresh = True
+    return {"triggered": True}
+
+
+@app.post("/api/control/clear-cooldowns")
+async def clear_cooldowns():
+    import bot_state
+    trader = getattr(bot_state, "_trader_ref", None)
+    if not trader:
+        raise HTTPException(503, "Trader not initialised")
+    count = len(trader._cooldowns)
+    trader._cooldowns.clear()
+    return {"cleared": count}
+
+
+class _RiskBody(BaseModel):
+    max_position_usd: Optional[float] = None
+    max_daily_usd: Optional[float] = None
+    min_edge_pct: Optional[float] = None
+    total_limit_usd: Optional[float] = None
+
+
+@app.post("/api/control/risk")
+async def update_risk(body: _RiskBody):
+    import bot_state
+    if bot_state.config is None:
+        raise HTTPException(503, "Bot not running")
+    cfg = bot_state.config
+    if body.max_position_usd is not None:
+        for attr in (
+            "arbitrage", "crypto_signal", "range_straddle", "news_fade",
+            "forecast", "llm", "weather", "favorite_short", "oracle_squeeze",
+            "semantic_arb", "orderbook_momentum", "btc_5min",
+        ):
+            sub = getattr(cfg, attr, None)
+            if sub and hasattr(sub, "max_position_usd"):
+                sub.max_position_usd = body.max_position_usd
+    if body.max_daily_usd is not None:
+        cfg.risk.max_daily_usd_deployed = body.max_daily_usd
+    if body.min_edge_pct is not None:
+        edge = body.min_edge_pct / 100.0
+        cfg.arbitrage.min_profit_pct = edge
+        for attr in (
+            "correlated", "crypto_signal", "range_straddle", "news_fade",
+            "forecast", "llm", "weather", "favorite_short", "oracle_squeeze",
+            "orderbook_momentum", "btc_5min",
+        ):
+            sub = getattr(cfg, attr, None)
+            if sub and hasattr(sub, "min_edge"):
+                sub.min_edge = edge
+        if hasattr(cfg, "cross_arb") and hasattr(cfg.cross_arb, "min_profit_pct"):
+            cfg.cross_arb.min_profit_pct = edge
+    if body.total_limit_usd is not None:
+        cfg.arbitrage.max_total_exposure_usd = body.total_limit_usd
+    return {
+        "max_position_usd": cfg.arbitrage.max_position_usd,
+        "max_daily_usd":    cfg.risk.max_daily_usd_deployed,
+        "min_edge_pct":     round(cfg.arbitrage.min_profit_pct * 100, 2),
+        "total_limit_usd":  cfg.arbitrage.max_total_exposure_usd,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -280,6 +635,7 @@ async def websocket_endpoint(ws: WebSocket):
                     **_serialise_state(),
                     "portfolio": _serialise_portfolio(),
                     "trades": _serialise_trades(50),
+                    "market_slugs": _serialise_slugs(),
                 },
                 default=_json_default,
             )
@@ -314,6 +670,7 @@ async def broadcast_loop():
                     payload["portfolio"] = _serialise_portfolio()
                 if tick % 30 == 0:
                     payload["trades"] = _serialise_trades(50)
+                    payload["market_slugs"] = _serialise_slugs()
                 await manager.broadcast(payload)
             tick += 1
         except Exception as e:

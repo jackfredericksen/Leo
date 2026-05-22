@@ -32,6 +32,7 @@ class AggregatedSignal:
     confidence: float = 1.0
     reasoning: str = ""
     recommended_size_usd: float = 0.0
+    slug: str = ""
     detected_at: datetime = field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
