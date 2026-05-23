@@ -71,18 +71,54 @@ from strategies.market_maker import MarketMakerStrategy, MarketMakerConfig
 from strategies.btc_5min import BTC5MinConfig, BTC5MinDetector
 from trader import Trader
 
-logging.basicConfig(
-    level=config.log_level,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.FileHandler("data/leo.log"),
-        logging.StreamHandler(sys.stderr),
-    ],
-)
-logger = logging.getLogger("leo.main")
-console = Console()
+from logging.handlers import RotatingFileHandler as _RotFileHandler
 
 os.makedirs("data", exist_ok=True)
+
+_LOG_FMT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+_LEO_PREFIXES = ("leo", "arbitrage", "strategies", "trader", "position",
+                 "storage", "alerting", "auto_correlator", "api_clients",
+                 "web_gui", "__main__")
+_IGNORE_PREFIXES = ("uvicorn", "fastapi", "starlette", "asyncio",
+                    "aiohttp", "httpx", "websockets", "h11", "hpack")
+
+
+class _UILogHandler(logging.Handler):
+    """Copies INFO+ records for Leo-owned loggers into the web UI feed buffer."""
+    def emit(self, record):
+        if record.name.startswith(_IGNORE_PREFIXES):
+            return
+        try:
+            import bot_state as _bs
+            _bs._log_buffer.append({
+                "ts": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+                "level": record.levelname,
+                "name": record.name,
+                "msg": record.getMessage(),
+            })
+        except Exception:
+            pass
+
+
+_main_handler  = _RotFileHandler("data/leo.log",   maxBytes=10*1024*1024, backupCount=5)
+_error_handler = _RotFileHandler("data/errors.log", maxBytes=5*1024*1024,  backupCount=3)
+_error_handler.setLevel(logging.WARNING)
+_ui_handler    = _UILogHandler()
+_ui_handler.setLevel(logging.INFO)
+
+for _h in (_main_handler, _error_handler, _ui_handler):
+    _h.setFormatter(logging.Formatter(_LOG_FMT))
+
+logging.basicConfig(
+    level=config.log_level,
+    format=_LOG_FMT,
+    handlers=[_main_handler, logging.StreamHandler(sys.stderr)],
+)
+logging.getLogger().addHandler(_error_handler)
+logging.getLogger().addHandler(_ui_handler)
+
+logger = logging.getLogger("leo.main")
+console = Console()
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +170,9 @@ class BotState:
         self.signal_scans = 0
         self.mm_scans = 0
         self.whale_signals = 0
+
+        # Per-strategy timestamp of last non-empty scan result
+        self.last_signal_at: dict[str, str] = {}
 
 
 state = BotState()
@@ -439,6 +478,16 @@ async def _await_resume() -> None:
         await ev.wait()
 
 
+def _alert_task_standalone(coro) -> None:
+    """Fire-and-forget an alerter coroutine from outside the Trader class."""
+    if coro is not None:
+        asyncio.create_task(coro)
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 async def _refresh_bankroll(trader: Trader, sizer) -> None:
     try:
         bal = await trader.client.get_balance()
@@ -454,6 +503,7 @@ async def market_refresh_loop(client: PolymarketClient):
             markets = await client.get_all_markets()
             state.markets = markets
             state.market_map = {m.market_id: m for m in markets}
+            _bot_state._last_gamma_at = datetime.now(timezone.utc).isoformat()
             logger.debug(f"Market refresh: {len(markets)} markets loaded")
         except Exception as e:
             logger.error(f"Market refresh: {e}")
@@ -482,6 +532,8 @@ async def arb_loop(detector: ArbitrageDetector, trader: Trader, client: Polymark
                 else:
                     state.arb_opps = detector.scan(state.markets)
                 state.arb_scans += 1
+                if state.arb_opps:
+                    state.last_signal_at["arb"] = _now_iso()
                 for opp in state.arb_opps:
                     await trader.execute(opp)
         except Exception as e:
@@ -517,6 +569,8 @@ async def crypto_signal_loop(binance: BinanceClient, trader: Trader):
                 state.signal_opps = state.crypto_opps
                 state.crypto_scans += 1
                 state.signal_scans = state.crypto_scans
+                if state.crypto_opps:
+                    state.last_signal_at["crypto"] = _now_iso()
                 if state.crypto_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.crypto_opps:
@@ -551,6 +605,8 @@ async def cross_platform_loop(trader: Trader):
                     detector.load_external_markets(ext_markets)
                     state.cross_opps = detector.scan(state.markets)
                     state.cross_scans += 1
+                    if state.cross_opps:
+                        state.last_signal_at["cross_arb"] = _now_iso()
                     for opp in state.cross_opps:
                         # Determine which side to buy on Polymarket
                         # buy_price is the YES or NO ask — detect from context
@@ -606,6 +662,8 @@ async def range_straddle_loop(binance: BinanceClient, trader: Trader):
             if state.markets:
                 state.range_opps = detector.scan(state.markets)
                 state.range_scans += 1
+                if state.range_opps:
+                    state.last_signal_at["range_straddle"] = _now_iso()
                 if state.range_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.range_opps:
@@ -649,6 +707,8 @@ async def corr_loop(trader: Trader):
 
                 state.corr_opps = detector.scan(state.markets)
                 state.corr_scans += 1
+                if state.corr_opps:
+                    state.last_signal_at["correlated"] = _now_iso()
                 for opp in state.corr_opps:
                     await trader.execute_correlated(opp, state.market_map)
         except Exception as e:
@@ -689,6 +749,8 @@ async def news_fade_loop(trader: Trader, news_client: NewsClient):
             if state.markets:
                 state.fade_opps = detector.scan(state.markets)
                 state.fade_scans += 1
+                if state.fade_opps:
+                    state.last_signal_at["news_fade"] = _now_iso()
                 if state.fade_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.fade_opps:
@@ -736,6 +798,8 @@ async def forecast_loop(trader: Trader):
                 if state.markets:
                     state.forecast_opps = detector.scan(state.markets)
                     state.forecast_scans += 1
+                    if state.forecast_opps:
+                        state.last_signal_at["forecast"] = _now_iso()
                     if state.forecast_scans % _BANKROLL_REFRESH_EVERY == 0:
                         await _refresh_bankroll(trader, detector.sizer)
                     for sig in state.forecast_opps:
@@ -793,6 +857,8 @@ async def llm_loop(trader: Trader, binance: BinanceClient):
             if state.markets:
                 state.llm_opps = await detector.scan(state.markets)
                 state.llm_scans += 1
+                if state.llm_opps:
+                    state.last_signal_at["llm"] = _now_iso()
                 if state.llm_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.llm_opps:
@@ -836,6 +902,8 @@ async def weather_loop(trader: Trader):
                 if state.markets:
                     state.weather_opps = detector.scan(state.markets)
                     state.weather_scans += 1
+                    if state.weather_opps:
+                        state.last_signal_at["weather"] = _now_iso()
                     if state.weather_scans % _BANKROLL_REFRESH_EVERY == 0:
                         await _refresh_bankroll(trader, detector.sizer)
                     for sig in state.weather_opps:
@@ -870,6 +938,8 @@ async def favorite_short_loop(trader: Trader):
             if state.markets:
                 state.fav_opps = detector.scan(state.markets)
                 state.fav_scans += 1
+                if state.fav_opps:
+                    state.last_signal_at["favorite_short"] = _now_iso()
                 if state.fav_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.fav_opps:
@@ -904,6 +974,8 @@ async def oracle_squeeze_loop(trader: Trader):
             if state.markets:
                 state.squeeze_opps = detector.scan(state.markets)
                 state.squeeze_scans += 1
+                if state.squeeze_opps:
+                    state.last_signal_at["oracle_squeeze"] = _now_iso()
                 if state.squeeze_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.squeeze_opps:
@@ -976,6 +1048,8 @@ async def semantic_arb_loop(trader: Trader):
                     detector.load_external(ext_markets)
                     state.semarg_opps = detector.scan(state.markets)
                     state.semarg_scans += 1
+                    if state.semarg_opps:
+                        state.last_signal_at["semantic_arb"] = _now_iso()
                     if state.semarg_scans % _BANKROLL_REFRESH_EVERY == 0:
                         await _refresh_bankroll(trader, detector.sizer)
                     for sig in state.semarg_opps:
@@ -1010,6 +1084,8 @@ async def orderbook_momentum_loop(client: PolymarketClient, trader: Trader):
             if state.markets:
                 state.ofi_opps = await detector.scan(state.markets)
                 state.ofi_scans += 1
+                if state.ofi_opps:
+                    state.last_signal_at["orderbook_momentum"] = _now_iso()
                 if state.ofi_scans % _BANKROLL_REFRESH_EVERY == 0:
                     await _refresh_bankroll(trader, detector.sizer)
                 for sig in state.ofi_opps:
@@ -1050,7 +1126,10 @@ async def btc_5min_loop(binance: BinanceClient, trader: Trader):
             combined = recent + [m for m in state.markets if m.market_id not in seen_ids]
 
             state.btc5min_opps = await detector.scan(combined)
+            _bot_state._btc5min_signals = {**detector._last_signals}
             state.btc5min_scans += 1
+            if state.btc5min_opps:
+                state.last_signal_at["btc_5min"] = _now_iso()
             if state.btc5min_scans % _BANKROLL_REFRESH_EVERY == 0:
                 await _refresh_bankroll(trader, detector.sizer)
             # Build a market_map that includes the recent markets for execution
@@ -1105,9 +1184,9 @@ async def position_loop(pos_manager: PositionManager):
 
 
 async def pnl_snapshot_loop(storage: Storage, pos_manager: PositionManager):
-    """Write a P&L snapshot every 5 minutes for the history chart."""
+    """Write a P&L snapshot every minute for the history chart."""
     while True:
-        await asyncio.sleep(300)
+        await asyncio.sleep(60)
         try:
             snap = pos_manager.snapshot
             if snap:
@@ -1207,7 +1286,9 @@ async def daily_summary_loop(
             logger.error(f"Daily summary loop: {e}")
 
 
-async def outcome_tracker_loop(storage: Storage, pos_manager: PositionManager):
+async def outcome_tracker_loop(
+    storage: Storage, pos_manager: PositionManager, alerter: "Alerter"
+):
     """Periodically resolve trade outcomes by checking if the market settled."""
     while True:
         await asyncio.sleep(300)
@@ -1219,14 +1300,30 @@ async def outcome_tracker_loop(storage: Storage, pos_manager: PositionManager):
                 if not market or market.status != "settled" or not market.result:
                     continue
                 our_side = row["side"]
-                if not our_side or our_side == "both":
-                    continue  # arb trades always win on one leg, skip outcome tracking
+                if our_side == "both":
+                    # Overround arb: we hold YES + NO; guaranteed $1 payout at settlement
+                    storage.update_trade_outcome(row["id"], "won")
+                    logger.info(
+                        f"Outcome: arb trade {row['id']} → won "
+                        f"(market settled, both legs pay)"
+                    )
+                    if alerter:
+                        _alert_task_standalone(alerter.outcome_resolved(
+                            row["id"], row["market_id"], "won", row["arb_type"] or "arb"
+                        ))
+                    continue
+                if not our_side:
+                    continue
                 outcome = "won" if market.result == our_side else "lost"
                 storage.update_trade_outcome(row["id"], outcome)
-                logger.debug(
+                logger.info(
                     f"Outcome: trade {row['id']} → {outcome} "
-                    f"(market resolved {market.result}, we held {our_side})"
+                    f"(market={market.result}, held={our_side}, type={row['arb_type']})"
                 )
+                if alerter:
+                    _alert_task_standalone(alerter.outcome_resolved(
+                        row["id"], row["market_id"], outcome, row["arb_type"] or "signal"
+                    ))
         except Exception as e:
             logger.error(f"Outcome tracker: {e}")
 
@@ -1319,6 +1416,7 @@ async def run():
     news_client = NewsClient(config.news_fade.news_api_key)
 
     async with PolymarketClient(config.polymarket) as client:
+        _bot_state._client_ref = client
         arb_detector = ArbitrageDetector(config.arbitrage)
         pos_manager = PositionManager(
             client, config.positions.refresh_interval_sec
@@ -1389,7 +1487,7 @@ async def run():
                     kyle_lambda_loop(client), name="kyle-lambda"
                 ),
                 asyncio.create_task(
-                    outcome_tracker_loop(storage, pos_manager), name="outcome-tracker"
+                    outcome_tracker_loop(storage, pos_manager, alerter), name="outcome-tracker"
                 ),
                 asyncio.create_task(web_server_loop(), name="web"),
             ]

@@ -417,6 +417,7 @@ class AlertingConfig:
         default_factory=lambda: os.getenv("DISCORD_WEBHOOK_URL", "")
     )
     large_fill_threshold_usd: float = float(os.getenv("ALERT_LARGE_FILL_USD", "50.0"))
+    big_edge_threshold_pct: float = float(os.getenv("ALERT_BIG_EDGE_PCT", "8.0"))
     daily_loss_alert_usd: float = float(os.getenv("ALERT_DAILY_LOSS_USD", "100.0"))
     circuit_breaker_errors: int = int(os.getenv("CIRCUIT_BREAKER_ERRORS", "5"))
     circuit_breaker_pause_sec: int = int(os.getenv("CIRCUIT_BREAKER_PAUSE_SEC", "120"))

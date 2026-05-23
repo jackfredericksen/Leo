@@ -44,6 +44,34 @@ class Alerter:
             f"— pausing {pause_sec}s"
         )
 
+    async def big_edge(
+        self,
+        question: str,
+        edge_pct: float,
+        strategy: str,
+        side: str,
+        size_usd: float,
+    ) -> None:
+        sign = "+" if edge_pct >= 0 else ""
+        await self.send(
+            f"🎯 **High-edge signal** `{strategy}` → {side.upper()} "
+            f"**{sign}{edge_pct:.1f}%** | ${size_usd:.0f} deployed\n"
+            f"_{question[:80]}_"
+        )
+
+    async def outcome_resolved(
+        self,
+        trade_id: int,
+        question: str,
+        outcome: str,
+        strategy: str,
+    ) -> None:
+        icon = "✅" if outcome == "won" else "❌"
+        await self.send(
+            f"{icon} **Trade #{trade_id} resolved** `{strategy}` → **{outcome.upper()}**\n"
+            f"_{question[:80]}_"
+        )
+
     async def daily_summary(
         self,
         balance: float,

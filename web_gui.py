@@ -263,6 +263,23 @@ def _serialise_state() -> dict:
         if cfg and hasattr(cfg, "enabled"):
             strategy_states[name] = cfg.enabled
 
+    # Health indicators
+    _client = getattr(bot_state, "_client_ref", None)
+    _clob_ok = True
+    _clob_errors = 0
+    if _client:
+        _circuit_until = getattr(_client, "_circuit_open_until", None)
+        _clob_errors = getattr(_client, "_clob_errors", 0)
+        _clob_ok = _circuit_until is None or datetime.now(timezone.utc) > _circuit_until
+    _gamma_at = getattr(bot_state, "_last_gamma_at", "") or ""
+    _gamma_age = None
+    if _gamma_at:
+        try:
+            _gdt = datetime.fromisoformat(_gamma_at)
+            _gamma_age = round((datetime.now(timezone.utc) - _gdt).total_seconds())
+        except Exception:
+            pass
+
     trader = getattr(bot_state, "_trader_ref", None)
     exposure = {
         "today_usd":   round(trader._today_usd_deployed, 2) if trader else 0.0,
@@ -277,10 +294,32 @@ def _serialise_state() -> dict:
         "total_limit_usd":  config.arbitrage.max_total_exposure_usd,
     }
 
+    # Signal staleness — seconds since last non-empty scan per strategy
+    _now = datetime.now(timezone.utc)
+    signal_ages: dict[str, Optional[int]] = {}
+    for _k, _ts in (getattr(state, "last_signal_at", {}) or {}).items():
+        try:
+            _dt = datetime.fromisoformat(_ts)
+            signal_ages[_k] = round((_now - _dt).total_seconds())
+        except Exception:
+            signal_ages[_k] = None
+
+    # Confluence best opportunities
+    _conf = getattr(bot_state, "_confluence_ref", None)
+    confluence_opps = _conf.best_opps() if _conf else []
+
     return {
         "ts": datetime.now(timezone.utc).isoformat(),
         "dry_run": config.dry_run,
         "paused": getattr(bot_state, "paused", False),
+        "health": {
+            "clob_ok": _clob_ok,
+            "clob_errors": _clob_errors,
+            "gamma_age_sec": _gamma_age,
+        },
+        "btc5min_signals": getattr(bot_state, "_btc5min_signals", {}),
+        "signal_ages": signal_ages,
+        "confluence_opps": confluence_opps,
         "strategy_states": strategy_states,
         "exposure": exposure,
         "risk_config": risk_config,
@@ -404,6 +443,7 @@ def _serialise_trades(limit: int = 50) -> list:
             "yes_price": row["yes_price"],
             "no_price": row["no_price"],
             "contracts": row["contracts"],
+            "size_usd": row["size_usd"],
             "net_profit_pct": round(
                 (row["net_profit_pct"] or 0) * 100, 2
             ),
@@ -486,6 +526,15 @@ async def api_kyle_lambda():
     if not tracker:
         return []
     return tracker.summary(getattr(bot_state.state, "markets", []))
+
+
+@app.get("/api/hurst")
+async def api_hurst():
+    import bot_state
+    tracker = getattr(bot_state, "_hurst_ref", None)
+    if not tracker:
+        return []
+    return tracker.summary()
 
 
 @app.get("/api/confluence")
@@ -623,6 +672,70 @@ async def update_risk(body: _RiskBody):
     }
 
 
+@app.get("/api/health")
+async def api_health():
+    import bot_state
+    client = getattr(bot_state, "_client_ref", None)
+    clob_ok = True
+    clob_errors = 0
+    if client:
+        circuit_until = getattr(client, "_circuit_open_until", None)
+        clob_errors = getattr(client, "_clob_errors", 0)
+        clob_ok = circuit_until is None or datetime.now(timezone.utc) > circuit_until
+    gamma_at = getattr(bot_state, "_last_gamma_at", "") or ""
+    gamma_age = None
+    if gamma_at:
+        try:
+            gdt = datetime.fromisoformat(gamma_at)
+            gamma_age = round((datetime.now(timezone.utc) - gdt).total_seconds())
+        except Exception:
+            pass
+    return {
+        "clob_ok": clob_ok,
+        "clob_errors": clob_errors,
+        "gamma_age_sec": gamma_age,
+        "gamma_at": gamma_at or None,
+        "btc5min_signals": getattr(bot_state, "_btc5min_signals", {}),
+    }
+
+
+@app.get("/api/cooldowns")
+async def api_cooldowns():
+    import bot_state
+    from datetime import timedelta
+    trader = getattr(bot_state, "_trader_ref", None)
+    if not trader:
+        return []
+    now = datetime.now(timezone.utc)
+    cooldown_mins = 30  # mirrors _COOLDOWN_MINUTES in trader.py
+    result = []
+    m_map = {}
+    if bot_state.state:
+        m_map = getattr(bot_state.state, "extended_market_map", {}) or \
+                getattr(bot_state.state, "market_map", {})
+    for market_id, started_at in list(getattr(trader, "_cooldowns", {}).items()):
+        ends_at = started_at + timedelta(minutes=cooldown_mins)
+        secs_left = max(0, round((ends_at - now).total_seconds()))
+        if secs_left == 0:
+            continue
+        m = m_map.get(market_id)
+        result.append({
+            "market_id": market_id,
+            "question": (m.question[:60] if m else ""),
+            "secs_left": secs_left,
+            "ends_at": ends_at.isoformat(),
+        })
+    result.sort(key=lambda x: x["secs_left"])
+    return result
+
+
+@app.get("/api/log-feed")
+async def api_log_feed(n: int = 50):
+    import bot_state
+    buf = getattr(bot_state, "_log_buffer", [])
+    return list(buf)[-n:]
+
+
 # ---------------------------------------------------------------------------
 # WebSocket endpoint
 # ---------------------------------------------------------------------------
@@ -674,6 +787,13 @@ async def broadcast_loop():
                 if tick % 30 == 0:
                     payload["trades"] = _serialise_trades(50)
                     payload["market_slugs"] = _serialise_slugs()
+                    _kl = getattr(bot_state, "_kyle_lambda_ref", None)
+                    payload["kyle_lambda"] = (
+                        _kl.summary(getattr(bot_state.state, "markets", []))
+                        if _kl else []
+                    )
+                    _hu = getattr(bot_state, "_hurst_ref", None)
+                    payload["hurst"] = _hu.summary() if _hu else []
                 await manager.broadcast(payload)
             tick += 1
         except Exception as e:

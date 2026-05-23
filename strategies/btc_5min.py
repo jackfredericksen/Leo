@@ -77,6 +77,7 @@ class BTC5MinDetector:
             bankroll=bankroll,
             fraction=cfg.kelly_fraction,
         )
+        self._last_signals: dict = {}
 
     async def scan(self, markets: list) -> list[AggregatedSignal]:
         cfg = self._cfg
@@ -96,6 +97,12 @@ class BTC5MinDetector:
             "BTCUSDT", lookback=cfg.momentum_lookback
         )
         rsi = self._binance.compute_rsi("BTCUSDT", period=cfg.rsi_period)
+        self._last_signals = {
+            "obi": obi,
+            "momentum": momentum,
+            "rsi": rsi,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
 
         results = []
         for market in candidates:

@@ -144,6 +144,7 @@ class Trader:
                 net_profit_pct=opp.net_profit_pct,
                 dry_run=True,
                 status="simulated",
+                size_usd=size_usd,
             )
             self._track_deploy(size_usd, "overround")
             self._mark_cooldown(opp.market_id)
@@ -179,6 +180,7 @@ class Trader:
                 status="placed",
                 yes_order_id=yes_order.order_id,
                 no_order_id=no_order.order_id,
+                size_usd=size_usd,
             )
             logger.info(
                 f"Placed arb on {opp.market_id} | "
@@ -255,9 +257,15 @@ class Trader:
                 net_profit_pct=sig.edge,
                 dry_run=True,
                 status="simulated",
+                size_usd=size_usd,
             )
             self._track_deploy(size_usd, sig.source or "signal")
             self._mark_cooldown(sig.market_id)
+            if self.alerter and sig.edge * 100 >= self.alert_cfg.big_edge_threshold_pct:
+                self._alert_task(self.alerter.big_edge(
+                    sig.question or sig.market_id, sig.edge * 100,
+                    sig.source or "signal", side, size_usd,
+                ))
             return True
 
         try:
@@ -281,6 +289,7 @@ class Trader:
                 status="placed",
                 yes_order_id=order.order_id if side == "yes" else None,
                 no_order_id=order.order_id if side == "no" else None,
+                size_usd=size_usd,
             )
             logger.info(
                 f"Placed signal trade on {sig.market_id} | "
@@ -357,6 +366,7 @@ class Trader:
                 net_profit_pct=opp.edge,
                 dry_run=True,
                 status="simulated",
+                size_usd=size_usd,
             )
             self._track_deploy(size_usd, f"corr:{opp.relation.value}")
             self._mark_cooldown(opp.market_id_mispriced)
@@ -383,6 +393,7 @@ class Trader:
                 status="placed",
                 yes_order_id=order.order_id if side == "yes" else None,
                 no_order_id=order.order_id if side == "no" else None,
+                size_usd=size_usd,
             )
             logger.info(
                 f"Placed corr-arb on {opp.market_id_mispriced} | "

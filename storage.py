@@ -35,6 +35,7 @@ class Storage:
                     no_price        REAL,
                     contracts       INTEGER,
                     net_profit_pct  REAL,
+                    size_usd        REAL,
                     dry_run         INTEGER DEFAULT 1,
                     status          TEXT,
                     yes_order_id    TEXT,
@@ -67,6 +68,7 @@ class Storage:
             for migration in [
                 "ALTER TABLE trades ADD COLUMN outcome TEXT DEFAULT 'pending'",
                 "ALTER TABLE trades ADD COLUMN side TEXT",
+                "ALTER TABLE trades ADD COLUMN size_usd REAL",
             ]:
                 try:
                     conn.execute(migration)
@@ -87,6 +89,7 @@ class Storage:
         side: Optional[str] = None,
         yes_order_id: Optional[str] = None,
         no_order_id: Optional[str] = None,
+        size_usd: Optional[float] = None,
     ):
         with self._connect() as conn:
             conn.execute(
@@ -94,13 +97,13 @@ class Storage:
                 INSERT INTO trades
                 (market_id, question, arb_type, side, yes_price, no_price,
                  contracts, net_profit_pct, dry_run, status,
-                 yes_order_id, no_order_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 yes_order_id, no_order_id, size_usd)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     market_id, question, arb_type, side, yes_price, no_price,
                     contracts, net_profit_pct, int(dry_run), status,
-                    yes_order_id, no_order_id,
+                    yes_order_id, no_order_id, size_usd,
                 ),
             )
 
@@ -165,13 +168,18 @@ class Storage:
                 """
                 SELECT
                     arb_type,
-                    COUNT(*)                            AS trades,
-                    AVG(net_profit_pct)                 AS avg_edge,
+                    COUNT(*)        AS trades,
+                    AVG(net_profit_pct) AS avg_edge,
                     SUM(
-                        contracts
-                        * MIN(yes_price, no_price)
-                        * net_profit_pct
-                    )                                   AS est_pnl
+                        COALESCE(
+                            size_usd,
+                            contracts * CASE
+                                WHEN side = 'both' THEN COALESCE(yes_price,0) + COALESCE(no_price,0)
+                                WHEN side = 'no'   THEN COALESCE(no_price, 0.5)
+                                ELSE                    COALESCE(yes_price, 0.5)
+                            END
+                        ) * net_profit_pct
+                    )               AS est_pnl
                 FROM trades
                 WHERE status IN ('placed', 'simulated')
                 GROUP BY arb_type
@@ -234,9 +242,14 @@ class Storage:
                     SUM(contracts) as total_contracts,
                     AVG(net_profit_pct) as avg_net_profit_pct,
                     SUM(
-                        contracts
-                        * MIN(yes_price, no_price)
-                        * net_profit_pct
+                        COALESCE(
+                            size_usd,
+                            contracts * CASE
+                                WHEN side = 'both' THEN COALESCE(yes_price,0) + COALESCE(no_price,0)
+                                WHEN side = 'no'   THEN COALESCE(no_price, 0.5)
+                                ELSE                    COALESCE(yes_price, 0.5)
+                            END
+                        ) * net_profit_pct
                     ) as estimated_pnl_usd
                 FROM trades
                 WHERE status IN ('placed', 'simulated')
