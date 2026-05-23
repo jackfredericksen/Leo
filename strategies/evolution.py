@@ -109,7 +109,7 @@ class EvolutionAgent:
         )
 
         try:
-            response = await self.llm.client.messages.create(
+            response = await self.llm._client.messages.create(
                 model=self.cfg.model,
                 max_tokens=self.cfg.max_tokens,
                 messages=[{"role": "user", "content": prompt}],

@@ -79,12 +79,14 @@ class OracleSqueezeDetector:
                 if squeeze is None:
                     continue
 
-                side, model_prob, current_price = squeeze
-                edge = model_prob - current_price - self.cfg.fee_pct
+                side, model_prob, _ = squeeze
+                # Use actual ask price for entry (not mid) to avoid overstating edge
+                entry_price = market.yes_ask if side == "yes" else market.no_ask
+                edge = model_prob - entry_price - self.cfg.fee_pct
                 if edge < self.cfg.min_edge:
                     continue
 
-                size = self.sizer.size(model_prob, current_price, self.cfg.max_position_usd)
+                size = self.sizer.size(model_prob, entry_price, self.cfg.max_position_usd)
 
                 results.append(AggregatedSignal(
                     market_id=market.market_id,
@@ -99,7 +101,7 @@ class OracleSqueezeDetector:
                         f"closed {hours_past:.1f}h ago "
                         f"yes={yes_price:.2f} "
                         f"target={'1.00' if side == 'yes' else '0.00'} "
-                        f"gap={abs(model_prob - current_price):.2f}"
+                        f"gap={abs(model_prob - entry_price):.2f}"
                     ),
                     recommended_size_usd=size,
                 ))

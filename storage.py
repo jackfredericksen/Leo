@@ -200,7 +200,7 @@ class Storage:
         """Return all trades (live and paper) still marked pending."""
         with self._connect() as conn:
             return conn.execute(
-                "SELECT id, market_id, arb_type, side, yes_price, no_price "
+                "SELECT id, market_id, question, arb_type, side, yes_price, no_price "
                 "FROM trades WHERE outcome = 'pending' "
                 "AND status IN ('placed', 'simulated') ORDER BY created_at DESC LIMIT 200"
             ).fetchall()

@@ -646,7 +646,8 @@ def _json_field(raw: dict, key: str, default):
 
 
 def _parse_date(raw) -> datetime:
-    default = datetime.now(timezone.utc).replace(year=datetime.now().year + 1)
+    _now = datetime.now(timezone.utc)
+    default = _now.replace(year=_now.year + 1)
     if not raw:
         return default
     try:

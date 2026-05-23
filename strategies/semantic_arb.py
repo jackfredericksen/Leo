@@ -157,23 +157,23 @@ class SemanticArbDetector:
                     continue
 
                 # Trade the CHEAPER side on Polymarket
+                # model_prob always stores YES probability (AggregatedSignal convention)
+                model_prob = ext_price  # external platform's YES probability
                 if poly_yes < ext_price:
                     # Polymarket YES is cheaper → buy YES on Polymarket
                     side = "yes"
                     entry = market.yes_ask
-                    model_prob = ext_price
                 else:
                     # Polymarket NO is cheaper → buy NO on Polymarket
                     side = "no"
                     entry = market.no_ask
-                    model_prob = 1.0 - ext_price
 
-                edge = model_prob - entry - self.cfg.fee_pct
+                win_prob = model_prob if side == "yes" else (1.0 - model_prob)
+                edge = win_prob - entry - self.cfg.fee_pct
                 if edge < self.cfg.min_price_gap:
                     continue
 
-                trade_prob = model_prob if side == "yes" else (1.0 - model_prob)
-                size = self.sizer.size(trade_prob, entry, self.cfg.max_position_usd)
+                size = self.sizer.size(win_prob, entry, self.cfg.max_position_usd)
 
                 results.append(AggregatedSignal(
                     market_id=market.market_id,

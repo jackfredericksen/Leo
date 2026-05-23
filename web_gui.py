@@ -235,11 +235,97 @@ def _serialise_state() -> dict:
         for o in state.btc5min_opps[:20]
     ]
 
+    range_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "source": getattr(o, "source", "range"),
+            "market_prob": round(o.market_prob * 100, 1),
+            "model_prob": round(o.model_prob * 100, 1),
+            "edge_pct": round(o.edge * 100, 2),
+            "side": o.recommended_side,
+            "size": round(o.recommended_size_usd, 2),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.range_opps[:20]
+    ]
+
+    fade_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "market_prob": round(o.market_prob * 100, 1),
+            "side": o.recommended_side,
+            "edge_pct": round(o.edge * 100, 2),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.fade_opps[:20]
+    ]
+
+    forecast_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "source": getattr(o, "source", "forecast"),
+            "market_prob": round(o.market_prob * 100, 1),
+            "model_prob": round(o.model_prob * 100, 1),
+            "edge_pct": round(o.edge * 100, 2),
+            "side": o.recommended_side,
+            "size": round(o.recommended_size_usd, 2),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.forecast_opps[:20]
+    ]
+
+    llm_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "market_prob": round(o.market_prob * 100, 1),
+            "model_prob": round(o.model_prob * 100, 1),
+            "edge_pct": round(o.edge * 100, 2),
+            "side": o.recommended_side,
+            "size": round(o.recommended_size_usd, 2),
+            "confidence": round(getattr(o, "confidence", 0) * 100, 1),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.llm_opps[:20]
+    ]
+
+    weather_opps = [
+        {
+            "market_id": o.market_id,
+            "slug": slug_map.get(o.market_id, ""),
+            "question": o.question[:60],
+            "market_prob": round(o.market_prob * 100, 1),
+            "model_prob": round(o.model_prob * 100, 1),
+            "edge_pct": round(o.edge * 100, 2),
+            "side": o.recommended_side,
+            "size": round(o.recommended_size_usd, 2),
+            "reasoning": getattr(o, "reasoning", ""),
+            "detected_at": getattr(o, "detected_at", None),
+        }
+        for o in state.weather_opps[:20]
+    ]
+
     # Best single opportunity across all strategy types
     all_edge_opps = (
-        [(o["net_pct"],  "arb",     o) for o in arb_opps]
+        [(o["net_pct"],  "arb",      o) for o in arb_opps]
         + [(o["edge_pct"], "corr",    o) for o in corr_opps]
         + [(o["edge_pct"], "signal",  o) for o in signal_opps]
+        + [(o["edge_pct"], "range",   o) for o in range_opps]
+        + [(o["edge_pct"], "fade",    o) for o in fade_opps]
+        + [(o["edge_pct"], "forecast",o) for o in forecast_opps]
+        + [(o["edge_pct"], "llm",     o) for o in llm_opps]
+        + [(o["edge_pct"], "weather", o) for o in weather_opps]
         + [(o["edge_pct"], "fav",     o) for o in fav_opps]
         + [(o["edge_pct"], "squeeze", o) for o in squeeze_opps]
         + [(o["edge_pct"], "semarg",  o) for o in semarg_opps]
@@ -347,6 +433,11 @@ def _serialise_state() -> dict:
         "arb_opps": arb_opps,
         "corr_opps": corr_opps,
         "signal_opps": signal_opps,
+        "range_opps": range_opps,
+        "fade_opps": fade_opps,
+        "forecast_opps": forecast_opps,
+        "llm_opps": llm_opps,
+        "weather_opps": weather_opps,
         "cross_opps": cross_opps,
         "fav_opps": fav_opps,
         "squeeze_opps": squeeze_opps,

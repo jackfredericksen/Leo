@@ -505,6 +505,12 @@ async def market_refresh_loop(client: PolymarketClient):
             state.market_map = {m.market_id: m for m in markets}
             _bot_state._last_gamma_at = datetime.now(timezone.utc).isoformat()
             logger.debug(f"Market refresh: {len(markets)} markets loaded")
+            # Feed current mid-prices into the Hurst regime tracker
+            hurst = _bot_state._hurst_ref
+            if hurst:
+                for m in markets:
+                    if m.yes_price > 0:
+                        hurst.update(m.market_id, m.yes_price)
         except Exception as e:
             logger.error(f"Market refresh: {e}")
         finally:
@@ -1301,6 +1307,7 @@ async def outcome_tracker_loop(
                 if not market or market.status != "settled" or not market.result:
                     continue
                 our_side = row["side"]
+                question_label = row["question"] or row["market_id"]
                 if our_side == "both":
                     # Overround arb: we hold YES + NO; guaranteed $1 payout at settlement
                     storage.update_trade_outcome(row["id"], "won")
@@ -1310,7 +1317,7 @@ async def outcome_tracker_loop(
                     )
                     if alerter:
                         _alert_task_standalone(alerter.outcome_resolved(
-                            row["id"], row["market_id"], "won", row["arb_type"] or "arb"
+                            row["id"], question_label, "won", row["arb_type"] or "arb"
                         ))
                     continue
                 if not our_side:
@@ -1323,7 +1330,7 @@ async def outcome_tracker_loop(
                 )
                 if alerter:
                     _alert_task_standalone(alerter.outcome_resolved(
-                        row["id"], row["market_id"], outcome, row["arb_type"] or "signal"
+                        row["id"], question_label, outcome, row["arb_type"] or "signal"
                     ))
         except Exception as e:
             logger.error(f"Outcome tracker: {e}")

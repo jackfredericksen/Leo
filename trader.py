@@ -133,6 +133,8 @@ class Trader:
         """
         if self._in_cooldown(opp.market_id):
             return False
+        if self.confluence:
+            self.confluence.update(opp.market_id, "arb", "both")
         if self.confluence and not self.confluence.passes(opp.market_id, "both"):
             logger.debug(f"Confluence gate: {opp.market_id[:16]} skipped (arb)")
             return False
@@ -234,6 +236,8 @@ class Trader:
         """Buy one side on a signal opportunity."""
         if self._in_cooldown(sig.market_id):
             return False
+        if self.confluence:
+            self.confluence.update(sig.market_id, sig.source or "signal", sig.recommended_side)
         if self.confluence and not self.confluence.passes(sig.market_id, sig.recommended_side):
             logger.debug(f"Confluence gate: {sig.market_id[:16]} {sig.recommended_side} skipped")
             return False
@@ -347,6 +351,12 @@ class Trader:
         """Buy the mispriced side on a correlated-arb opportunity."""
         if self._in_cooldown(opp.market_id_mispriced):
             return False
+        if self.confluence:
+            self.confluence.update(
+                opp.market_id_mispriced,
+                f"corr:{opp.relation.value}",
+                opp.recommended_side.lower(),
+            )
         if self.confluence and not self.confluence.passes(opp.market_id_mispriced, opp.recommended_side):
             logger.debug(f"Confluence gate: {opp.market_id_mispriced[:16]} corr skipped")
             return False

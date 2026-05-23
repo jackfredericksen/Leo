@@ -75,13 +75,3 @@ def ask_edge(
         return edge_no, "no", no_ask
     return None
 
-
-def _norm_cdf(x: float) -> float:
-    a1, a2, a3, a4, a5 = (
-        0.319381530, -0.356563782, 1.781477937, -1.821255978, 1.330274429
-    )
-    p = 0.2316419
-    k = 1.0 / (1.0 + p * abs(x))
-    poly = k * (a1 + k * (a2 + k * (a3 + k * (a4 + k * a5))))
-    cdf = 1.0 - (1.0 / (2 * math.pi) ** 0.5) * math.exp(-0.5 * x ** 2) * poly
-    return float(cdf if x >= 0 else 1.0 - cdf)

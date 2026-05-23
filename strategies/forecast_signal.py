@@ -14,6 +14,7 @@ Edge is computed as: (weighted_forecast_prob - kalshi_prob) - fee
 """
 
 import logging
+import math
 from datetime import datetime, timezone
 
 from api_clients.forecast_client import ForecastClient, ForecastQuestion
@@ -76,7 +77,6 @@ class ForecastSignalDetector:
 
                 # Weighted average of forecast probabilities
                 # weight = similarity × log(forecasters)
-                import math
                 total_weight = 0.0
                 weighted_prob = 0.0
                 sources = set()
