@@ -164,6 +164,10 @@ class CryptoSignalDetector:
                 if floor is None and cap is None:
                     continue
 
+                # Skip markets where one side is at near-zero — likely resolved already
+                if market.yes_ask < 0.02 or market.no_ask < 0.02:
+                    continue
+
                 hours = (
                     market.close_time - datetime.now(timezone.utc)
                 ).total_seconds() / 3600
@@ -216,6 +220,10 @@ class CryptoSignalDetector:
                 if not result:
                     continue
                 edge, side, entry_price = result
+
+                # Sanity check: very cheap entry vs high model prob → stale/resolved market
+                if entry_price < 0.02:
+                    continue
 
                 trade_prob = adj_prob if side == "yes" else (1 - adj_prob)
                 size = self.sizer.size(

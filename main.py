@@ -1216,8 +1216,9 @@ async def exit_loop(
         try:
             snap = pos_manager.snapshot
             if snap and snap.open_positions:
+                m_map = state.extended_market_map if state.extended_market_map else state.market_map
                 exits = await strategy.scan_and_exit(
-                    snap.open_positions, state.market_map, dry_run=config.dry_run
+                    snap.open_positions, m_map, dry_run=config.dry_run
                 )
                 if exits:
                     logger.info(f"Exit strategy: closed {len(exits)} position(s)")

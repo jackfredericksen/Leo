@@ -16,7 +16,7 @@ timestamp; fades are only opened after min_hours_old have elapsed.
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from api_clients.polymarket_client import Market
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig, _MAX_SPREAD
@@ -66,6 +66,13 @@ class NewsFadeDetector:
         results = []
         now = datetime.now(timezone.utc)
         new_prices: dict[str, float] = {}
+
+        # Purge spike_log entries that expired regardless of whether the market
+        # is still in the current scan list (prevents unbounded growth)
+        cutoff = now - timedelta(hours=self.fade.max_hours_old)
+        expired = [mid for mid, (t, _, _) in self._spike_log.items() if t < cutoff]
+        for mid in expired:
+            del self._spike_log[mid]
 
         for market in markets:
             try:

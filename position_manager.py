@@ -148,14 +148,24 @@ class PositionManager:
                     else (market.no_bid + market.no_ask) / 2
                 )
             elif condition_id and condition_id in market_map:
-                # Fallback: use condition_id + guess side from price
+                # Fallback: use condition_id when token_id isn't in our reverse lookup
                 market = market_map[condition_id]
-                # Guess side: if avg_price closer to yes_price → YES
-                side = (
-                    "yes"
-                    if abs(avg_price - market.yes_price) <= abs(avg_price - market.no_price)
-                    else "no"
-                )
+                # Prefer explicit "outcome" field from Polymarket Data API
+                outcome_field = str(rp.get("outcome", "") or "").lower()
+                if outcome_field in ("yes", "no"):
+                    side = outcome_field
+                else:
+                    # Last resort: guess from avg_price proximity (unreliable near 0.50)
+                    side = (
+                        "yes"
+                        if abs(avg_price - market.yes_price) <= abs(avg_price - market.no_price)
+                        else "no"
+                    )
+                    logger.warning(
+                        f"Side-guessing for {condition_id[:12]}: "
+                        f"avg_price={avg_price:.3f} yes={market.yes_price:.3f} "
+                        f"no={market.no_price:.3f} → guessed {side}"
+                    )
                 market_id   = condition_id
                 question    = market.question
                 close_time  = market.close_time

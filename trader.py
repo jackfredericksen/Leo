@@ -90,9 +90,32 @@ class Trader:
             self._today_usd_deployed = 0.0
             self._total_exposure = 0.0
 
-    def _track_deploy(self, size_usd: float, strategy: str) -> None:
+    def _check_and_reserve_exposure(self, size_usd: float) -> bool:
+        """Atomically check AND reserve exposure before any await point."""
+        self._reset_daily_if_needed()
+        if self._today_usd_deployed + size_usd > self.risk_cfg.max_daily_usd_deployed:
+            logger.warning(
+                f"Daily deployment limit reached: "
+                f"${self._today_usd_deployed:.0f}/${self.risk_cfg.max_daily_usd_deployed:.0f}"
+            )
+            if self.alerter:
+                self._alert_task(self.alerter.daily_limit_hit(
+                    self._today_usd_deployed, self.risk_cfg.max_daily_usd_deployed
+                ))
+            return False
+        if self._total_exposure + size_usd > self.arb_cfg.max_total_exposure_usd:
+            logger.warning(
+                f"Total exposure limit reached: "
+                f"${self._total_exposure:.0f}/${self.arb_cfg.max_total_exposure_usd:.0f}"
+            )
+            return False
         self._today_usd_deployed += size_usd
         self._total_exposure += size_usd
+        return True
+
+    def _release_exposure(self, size_usd: float) -> None:
+        self._today_usd_deployed = max(0.0, self._today_usd_deployed - size_usd)
+        self._total_exposure = max(0.0, self._total_exposure - size_usd)
 
     def _alert_task(self, coro) -> None:
         """Fire-and-forget an alerter coroutine (only if coroutine is not None)."""
@@ -113,11 +136,11 @@ class Trader:
         if self.confluence and not self.confluence.passes(opp.market_id, "both"):
             logger.debug(f"Confluence gate: {opp.market_id[:16]} skipped (arb)")
             return False
-        if not self._check_exposure(opp.max_size_usd):
-            logger.warning(f"Skipping {opp.market_id}: exposure limit reached")
-            return False
 
         size_usd = min(opp.max_size_usd, self.arb_cfg.max_position_usd)
+        if not self._check_and_reserve_exposure(size_usd):
+            return False
+
         # We buy YES at yes_ask and NO at no_ask
         yes_ask = opp.yes_ask
         no_ask  = opp.no_ask
@@ -125,6 +148,7 @@ class Trader:
         shares = PolymarketClient.usdc_to_shares(size_usd / 2, yes_ask)
 
         if shares < 1.0:
+            self._release_exposure(size_usd)
             return False
 
         if self.cfg.dry_run:
@@ -146,10 +170,12 @@ class Trader:
                 status="simulated",
                 size_usd=size_usd,
             )
-            self._track_deploy(size_usd, "overround")
+            self._release_exposure(size_usd)  # dry-run doesn't consume real limits
             self._mark_cooldown(opp.market_id)
             return True
 
+        # Mark cooldown before any await so concurrent tasks respect it immediately
+        self._mark_cooldown(opp.market_id)
         try:
             yes_order, no_order = await asyncio.gather(
                 self._place_leg(
@@ -162,11 +188,10 @@ class Trader:
 
             if not yes_order or not no_order:
                 logger.error(f"One leg failed for {opp.market_id}, cancelling")
+                self._release_exposure(size_usd)
                 await self._cancel_if_placed(yes_order, no_order)
                 return False
 
-            self._track_deploy(size_usd, "overround")
-            self._mark_cooldown(opp.market_id)
             self.storage.log_trade(
                 market_id=opp.market_id,
                 question=opp.question,
@@ -193,6 +218,7 @@ class Trader:
             return True
 
         except Exception as e:
+            self._release_exposure(size_usd)
             logger.error(f"Arb execution error for {opp.market_id}: {e}")
             return False
 
@@ -211,8 +237,6 @@ class Trader:
         if self.confluence and not self.confluence.passes(sig.market_id, sig.recommended_side):
             logger.debug(f"Confluence gate: {sig.market_id[:16]} {sig.recommended_side} skipped")
             return False
-        if not self._check_exposure(sig.recommended_size_usd):
-            return False
         if self._has_position(sig.market_id):
             logger.debug(f"Skipping {sig.market_id}: already holding a position")
             return False
@@ -223,22 +247,27 @@ class Trader:
 
         side = sig.recommended_side.lower()
         if side == "yes":
-            token_id    = market.yes_token_id
+            token_id      = market.yes_token_id
             price_dollars = market.yes_ask
         else:
-            token_id    = market.no_token_id
+            token_id      = market.no_token_id
             price_dollars = market.no_ask
 
         if price_dollars <= 0 or not token_id:
             return False
 
         size_usd = min(sig.recommended_size_usd, self.arb_cfg.max_position_usd)
-        shares   = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
-        if shares < 1.0:
+        if not self._check_and_reserve_exposure(size_usd):
             return False
 
-        yes_p = price_dollars if side == "yes" else (1 - price_dollars)
-        no_p  = price_dollars if side == "no"  else (1 - price_dollars)
+        shares = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
+        if shares < 1.0:
+            self._release_exposure(size_usd)
+            return False
+
+        # Use actual market prices for storage (not a complement approximation)
+        yes_p = market.yes_ask
+        no_p  = market.no_ask
 
         if self.cfg.dry_run:
             logger.info(
@@ -259,7 +288,7 @@ class Trader:
                 status="simulated",
                 size_usd=size_usd,
             )
-            self._track_deploy(size_usd, sig.source or "signal")
+            self._release_exposure(size_usd)  # dry-run doesn't consume real limits
             self._mark_cooldown(sig.market_id)
             if self.alerter and sig.edge * 100 >= self.alert_cfg.big_edge_threshold_pct:
                 self._alert_task(self.alerter.big_edge(
@@ -268,14 +297,15 @@ class Trader:
                 ))
             return True
 
+        # Mark cooldown before any await so concurrent tasks respect it immediately
+        self._mark_cooldown(sig.market_id)
         try:
             order = await self._place_leg(
                 token_id, side, "buy", price_dollars, shares
             )
             if not order:
+                self._release_exposure(size_usd)
                 return False
-            self._track_deploy(size_usd, sig.source or "signal")
-            self._mark_cooldown(sig.market_id)
             self.storage.log_trade(
                 market_id=sig.market_id,
                 question=sig.question,
@@ -301,6 +331,7 @@ class Trader:
                 ))
             return True
         except Exception as e:
+            self._release_exposure(size_usd)
             logger.error(f"Signal execution error for {sig.market_id}: {e}")
             return False
 
@@ -319,8 +350,6 @@ class Trader:
         if self.confluence and not self.confluence.passes(opp.market_id_mispriced, opp.recommended_side):
             logger.debug(f"Confluence gate: {opp.market_id_mispriced[:16]} corr skipped")
             return False
-        if not self._check_exposure(opp.max_size_usd):
-            return False
         if self._has_position(opp.market_id_mispriced):
             logger.debug(f"Skipping {opp.market_id_mispriced}: already holding")
             return False
@@ -331,22 +360,27 @@ class Trader:
 
         side = opp.recommended_side.lower()
         if side == "yes":
-            token_id    = market.yes_token_id
+            token_id      = market.yes_token_id
             price_dollars = market.yes_ask
         else:
-            token_id    = market.no_token_id
+            token_id      = market.no_token_id
             price_dollars = market.no_ask
 
         if price_dollars <= 0 or not token_id:
             return False
 
         size_usd = min(opp.max_size_usd, self.arb_cfg.max_position_usd)
-        shares   = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
-        if shares < 1.0:
+        if not self._check_and_reserve_exposure(size_usd):
             return False
 
-        yes_p = price_dollars if side == "yes" else (1 - price_dollars)
-        no_p  = price_dollars if side == "no"  else (1 - price_dollars)
+        shares = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
+        if shares < 1.0:
+            self._release_exposure(size_usd)
+            return False
+
+        # Use actual market prices for storage (not a complement approximation)
+        yes_p = market.yes_ask
+        no_p  = market.no_ask
 
         if self.cfg.dry_run:
             logger.info(
@@ -368,18 +402,19 @@ class Trader:
                 status="simulated",
                 size_usd=size_usd,
             )
-            self._track_deploy(size_usd, f"corr:{opp.relation.value}")
+            self._release_exposure(size_usd)  # dry-run doesn't consume real limits
             self._mark_cooldown(opp.market_id_mispriced)
             return True
 
+        # Mark cooldown before any await so concurrent tasks respect it immediately
+        self._mark_cooldown(opp.market_id_mispriced)
         try:
             order = await self._place_leg(
                 token_id, side, "buy", price_dollars, shares
             )
             if not order:
+                self._release_exposure(size_usd)
                 return False
-            self._track_deploy(size_usd, f"corr:{opp.relation.value}")
-            self._mark_cooldown(opp.market_id_mispriced)
             self.storage.log_trade(
                 market_id=opp.market_id_mispriced,
                 question=opp.question_mispriced,
@@ -406,6 +441,7 @@ class Trader:
                 ))
             return True
         except Exception as e:
+            self._release_exposure(size_usd)
             logger.error(f"Corr execution error for {opp.market_id_mispriced}: {e}")
             return False
 
@@ -446,22 +482,3 @@ class Trader:
         pos = self.pos_manager.get_position(market_id)
         return pos is not None and pos.contracts > 0
 
-    def _check_exposure(self, size: float) -> bool:
-        self._reset_daily_if_needed()
-        if self._today_usd_deployed + size > self.risk_cfg.max_daily_usd_deployed:
-            logger.warning(
-                f"Daily deployment limit reached: "
-                f"${self._today_usd_deployed:.0f}/${self.risk_cfg.max_daily_usd_deployed:.0f}"
-            )
-            if self.alerter:
-                self._alert_task(self.alerter.daily_limit_hit(
-                    self._today_usd_deployed, self.risk_cfg.max_daily_usd_deployed
-                ))
-            return False
-        if self._total_exposure + size > self.arb_cfg.max_total_exposure_usd:
-            logger.warning(
-                f"Total exposure limit reached: "
-                f"${self._total_exposure:.0f}/${self.arb_cfg.max_total_exposure_usd:.0f}"
-            )
-            return False
-        return True

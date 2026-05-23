@@ -72,8 +72,8 @@ class Storage:
             ]:
                 try:
                     conn.execute(migration)
-                except sqlite3.OperationalError:
-                    pass  # column already exists
+                except sqlite3.OperationalError as e:
+                    logger.debug(f"Migration skipped: {e}")
 
     def log_trade(
         self,
