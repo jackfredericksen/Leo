@@ -384,6 +384,7 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
 <nav>
   <div class="tab active" data-page="overview">Overview <span class="badge-count" id="tc-overview">0</span></div>
   <div class="tab" data-page="signals">Signals <span class="badge-count" id="tc-signals">0</span></div>
+  <div class="tab" data-page="btc5min">BTC 5-Min <span class="badge-count" id="tc-btc5min">0</span></div>
   <div class="tab" data-page="arb">Arb + MM <span class="badge-count" id="tc-arb">0</span></div>
   <div class="tab" data-page="portfolio">Portfolio <span class="badge-count" id="tc-portfolio">0</span></div>
   <div class="tab" data-page="trades">Trades <span class="badge-count" id="tc-trades">0</span></div>
@@ -455,7 +456,6 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
       <span>Arb: <strong id="sc-arb">0</strong></span>
       <span>Crypto: <strong id="sc-crypto">0</strong></span>
       <span>Cross: <strong id="sc-cross">0</strong></span>
-      <span>Range: <strong id="sc-range">0</strong></span>
       <span>Corr: <strong id="sc-corr">0</strong></span>
       <span>Fade: <strong id="sc-fade">0</strong></span>
       <span>Forecast: <strong id="sc-forecast">0</strong></span>
@@ -466,6 +466,7 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
       <span>SemArb: <strong id="sc-semarg">0</strong></span>
       <span>OFI: <strong id="sc-ofi">0</strong></span>
       <span>BTC5m: <strong id="sc-btc5min">0</strong></span>
+      <span>MM: <strong id="sc-mm">0</strong></span>
     </div>
   </div>
 
@@ -595,7 +596,7 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
   <div class="panel">
     <div class="panel-header">
       <span class="panel-title" style="color:var(--yellow)">BTC 5-Min Scalp</span>
-      <span class="panel-sub">Coinbase OBI + momentum + RSI — 5-minute BTC up/down markets</span>
+      <span class="panel-sub">Pyth oracle + MTF momentum + OBI + RSI — 5-minute BTC up/down markets</span>
     </div>
     <div class="table-scroll"><table>
       <thead><tr><th>Question</th><th>Mkt%</th><th>Model%</th><th>Side</th><th>Edge</th><th>Signals</th><th>Age</th></tr></thead>
@@ -682,6 +683,129 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
       <tbody id="tb-cross"></tbody>
     </table></div>
   </div>
+</div>
+
+<!-- ═══════════════════════ BTC 5-MIN ═══════════════════════ -->
+<div class="page" id="page-btc5min">
+
+  <!-- Composite probability meter -->
+  <div class="panel" style="margin-bottom:12px">
+    <div class="panel-header">
+      <span class="panel-title" style="color:var(--yellow)">BTC 5-Min — Live Signal Composite</span>
+      <span class="panel-sub" id="btc-page-sig-age">last update: —</span>
+    </div>
+    <div style="padding:12px 16px">
+      <!-- Gauge bar -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <span style="font-size:11px;color:var(--red);white-space:nowrap">0% DOWN</span>
+        <div style="flex:1;position:relative;height:12px;background:linear-gradient(to right,#f85149 0%,#30363d 45%,#30363d 55%,#3fb950 100%);border-radius:6px">
+          <div id="btc-page-needle" style="position:absolute;top:-5px;width:22px;height:22px;border-radius:50%;background:var(--text);border:3px solid var(--bg);left:50%;transform:translateX(-50%);transition:left .5s ease;box-shadow:0 0 8px rgba(0,0,0,.6)"></div>
+        </div>
+        <span style="font-size:11px;color:var(--green);white-space:nowrap">100% UP</span>
+      </div>
+      <!-- Prob / composite / active markets -->
+      <div style="display:flex;justify-content:center;gap:40px;margin-bottom:14px">
+        <div style="text-align:center">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:2px">P(Up)</div>
+          <div id="btc-page-prob-up" style="font-size:30px;font-weight:700;color:var(--text)">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:2px">Composite</div>
+          <div id="btc-page-composite" style="font-size:30px;font-weight:700;color:var(--text)">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:2px">Active Mkts</div>
+          <div id="btc-page-active-mkts" style="font-size:30px;font-weight:700;color:var(--cyan)">—</div>
+        </div>
+      </div>
+      <!-- Component signal bars (4-col: Window Delta is dominant at 55%) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+        <div style="background:rgba(57,208,216,.06);border:1px solid rgba(57,208,216,.2);border-radius:6px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--cyan);margin-bottom:4px">Window Delta — wt 55% ★</div>
+          <div id="btc-page-wd" style="font-size:20px;font-weight:700;color:var(--cyan)">—</div>
+          <div style="margin-top:6px;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div id="btc-page-wd-bar" style="height:100%;border-radius:3px;width:50%;background:var(--cyan);transition:width .4s,background .4s"></div>
+          </div>
+          <div id="btc-page-wd-label" style="font-size:10px;color:var(--muted);margin-top:4px">% from window open</div>
+        </div>
+        <div style="background:rgba(0,0,0,.2);border-radius:6px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">MTF Momentum — wt 55%</div>
+          <div id="btc-page-mom" style="font-size:20px;font-weight:700;color:var(--green)">—</div>
+          <div style="margin-top:6px;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div id="btc-page-mom-bar" style="height:100%;border-radius:3px;width:50%;background:var(--green);transition:width .4s,background .4s"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">1/2/3/5-candle weighted</div>
+        </div>
+        <div style="background:rgba(0,0,0,.2);border-radius:6px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">OBI — wt 25% (final 60s)</div>
+          <div id="btc-page-obi" style="font-size:20px;font-weight:700;color:var(--cyan)">—</div>
+          <div style="margin-top:6px;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div id="btc-page-obi-bar" style="height:100%;border-radius:3px;width:50%;background:var(--cyan);transition:width .4s,background .4s"></div>
+          </div>
+          <div id="btc-page-obi-label" style="font-size:10px;color:var(--muted);margin-top:4px">Order Book Imbalance</div>
+        </div>
+        <div style="background:rgba(0,0,0,.2);border-radius:6px;padding:10px 12px">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px">RSI(9) — wt 20% (extremes)</div>
+          <div id="btc-page-rsi" style="font-size:20px;font-weight:700;color:var(--purple)">—</div>
+          <div style="margin-top:6px;height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+            <div id="btc-page-rsi-bar" style="height:100%;border-radius:3px;width:50%;background:var(--purple);transition:width .4s,background .4s"></div>
+          </div>
+          <div id="btc-page-rsi-label" style="font-size:10px;color:var(--muted);margin-top:4px">RSI(9)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market window + active signal -->
+  <div class="two-col" style="margin-bottom:12px">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Market Window</span>
+        <span class="panel-sub">entry window: 1.5 – 4.0 min to close</span>
+      </div>
+      <div style="padding:10px 14px">
+        <div class="stat-row" style="gap:8px;flex-wrap:wrap">
+          <div class="stat-card" style="flex:1;min-width:80px">
+            <div class="label">Active Markets</div>
+            <div class="value cyan" id="btc-page-mkt-count">—</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:80px">
+            <div class="label">Scans (total)</div>
+            <div class="value" id="btc-page-scans" style="color:var(--muted)">—</div>
+          </div>
+          <div class="stat-card" style="flex:1;min-width:80px">
+            <div class="label">Opportunities</div>
+            <div class="value" id="btc-page-opps" style="color:var(--green)">—</div>
+          </div>
+        </div>
+        <div id="btc-page-mkt-detail" style="margin-top:10px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);padding-top:8px">
+          No 5-min market in entry window
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" id="btc-page-sig-title" style="color:var(--muted)">Active Signal</span>
+        <span class="panel-sub">best current opportunity</span>
+      </div>
+      <div style="padding:12px 14px" id="btc-page-sig-body">
+        <div style="color:var(--muted);text-align:center;padding:16px 0;font-size:11px">No signal — waiting for entry window</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full opportunities table -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title" style="color:var(--yellow)">BTC 5-Min Opportunities</span>
+      <span class="panel-sub">Pyth oracle B-S model · MTF momentum (55%) · OBI (25%) · RSI (20%) — 5-minute BTC up/down markets</span>
+    </div>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Question</th><th>Mkt%</th><th>Model%</th><th>Side</th><th>Edge</th><th>Signals</th><th>Age</th></tr></thead>
+      <tbody id="tb-btc5min-full"></tbody>
+    </table></div>
+  </div>
+
 </div>
 
 <!-- ═══════════════════════ ARB + MM ═══════════════════════ -->
@@ -995,7 +1119,6 @@ const _td = {}; // table-key → current data array
 const STRATEGIES = [
   {key:'arbitrage',         name:'Overround Arb',         desc:'Buy YES + NO when asks total < $1.00. Guaranteed profit at resolution.',           scan:'sc-arb',      color:'var(--cyan)'},
   {key:'crypto_signal',     name:'Crypto Signal',          desc:'Binance spot + log-normal model vs Polymarket price on BTC/ETH/SOL markets.',      scan:'sc-crypto',   color:'var(--purple)'},
-  {key:'range_straddle',    name:'Range / Straddle',       desc:'Logical arb on bracket + range markets where probabilities violate monotonicity.',  scan:'sc-range',    color:'var(--purple)'},
   {key:'cross_arb',         name:'Cross-Platform Signal',  desc:'Kalshi public prices as signal source; trade the mispricing on Polymarket.',        scan:'sc-cross',    color:'var(--blue)'},
   {key:'correlated',        name:'Correlated Arb',         desc:'Exploit logically impossible pricing between related markets (MUTEX, MONOTONE).',   scan:'sc-corr',     color:'var(--purple)'},
   {key:'news_fade',         name:'News Fade',              desc:'Fade overreactions 1.5–4 hours after a sharp price spike.',                         scan:'sc-fade',     color:'var(--orange)'},
@@ -1007,7 +1130,7 @@ const STRATEGIES = [
   {key:'semantic_arb',      name:'Semantic Arb',           desc:'Exact cross-platform price gaps using number-aware keyword matching.',               scan:'sc-semarg',   color:'var(--blue)'},
   {key:'orderbook_momentum',name:'OFI Momentum',           desc:'Order flow imbalance from live CLOB depth. Follow in info regimes, fade in quiet.', scan:'sc-ofi',      color:'var(--blue)'},
   {key:'market_maker',      name:'Market Maker',           desc:'Post resting limit orders on both sides. Earns spread + CLOB v2 maker rebates.',     scan:'sc-mm',       color:'var(--cyan)'},
-  {key:'btc_5min',          name:'BTC 5-Min Scalp',        desc:'Coinbase OBI (50%) + 3-min momentum (30%) + RSI correction (20%) on BTC 5-minute markets.', scan:'sc-btc5min', color:'var(--yellow)'},
+  {key:'btc_5min',          name:'BTC 5-Min Scalp',        desc:'Pyth oracle B-S model (window delta) + MTF momentum (55%) + OBI (25%) + RSI (20%) on BTC 5-minute markets.', scan:'sc-btc5min', color:'var(--yellow)'},
 ];
 
 // ─────────────────────────────────────────────────────
@@ -1105,7 +1228,9 @@ function polyLink(market_id, embedded_slug) {
 }
 function _extractSlugs(data) {
   const lists = ['arb_opps','corr_opps','signal_opps','btc5min_opps',
-                 'fav_opps','squeeze_opps','semarg_opps','ofi_opps'];
+                 'fav_opps','squeeze_opps','semarg_opps','ofi_opps',
+                 'range_opps','fade_opps','forecast_opps','llm_opps',
+                 'weather_opps','cross_opps'];
   for (const key of lists) {
     if (data[key]) for (const o of data[key])
       if (o.slug && o.market_id) _slugs[o.market_id] = o.slug;
@@ -1201,6 +1326,7 @@ function _rerenderTable(key) {
     semarg: () => renderSemArg(_td.semarg),
     ofi: () => renderOFI(_td.ofi),
     btc5min: () => renderBTC5Min(_td.btc5min),
+    'btc5min-full': () => renderBTC5MinFull(_td.btc5min),
     arb: () => renderArb('tb-arb', _td.arb),
     arb2: () => renderArb('tb-arb2', _td.arb),
     corr: () => renderCorr('tb-corr', _td.corr),
@@ -1327,10 +1453,25 @@ function renderOFI(opps) {
   }).join('');
 }
 
+function _btc5minRows(data, key, cols) {
+  const rows = sortData(data, key, cols);
+  if (!rows?.length) return empty(7, 'No BTC 5-min opportunities — waiting for entry window');
+  return rows.slice(0, 10).map((o, i) => `<tr ${clickRow(key, i)}>
+    <td class="q">${trunc(o.question, 36)}</td>
+    <td class="mid">${o.market_prob?.toFixed(1)}%</td>
+    <td>${o.model_prob?.toFixed(1)}%</td>
+    <td class="${sideCls(o.side)}">${(o.side||'').toUpperCase()}</td>
+    <td><span class="${edgeCls(o.edge_pct)}">${fmtPct(o.edge_pct)}</span></td>
+    <td style="font-size:10px;color:var(--muted)">${trunc(o.reasoning, 32)}</td>
+    <td>${ageCell(o.detected_at)}</td>
+  </tr>`).join('');
+}
+
 function renderBTC5Min(opps) {
   _td.btc5min = opps || [];
   const tb = document.getElementById('tb-btc5min');
   if (!tb) return;
+  const cols = ['question','market_prob','model_prob','side','edge_pct','reasoning'];
   const thead = tb.closest('table')?.querySelector('thead tr');
   if (thead) thead.innerHTML = `
     <th>Question</th>
@@ -1339,17 +1480,23 @@ function renderBTC5Min(opps) {
     <th>Side</th>
     <th class="sortable${_sortState.btc5min?.col===4?' sort-desc':''}" onclick="sortBy('btc5min',4,true)">Edge</th>
     <th>Signals</th><th>Age</th>`;
-  const data = sortData(opps, 'btc5min', ['question','market_prob','model_prob','side','edge_pct','reasoning']);
-  if (!data?.length) { tb.innerHTML = empty(7,'No BTC 5-min opportunities — waiting for entry window'); return; }
-  tb.innerHTML = data.slice(0,10).map((o,i) => `<tr ${clickRow('btc5min',i)}>
-    <td class="q">${trunc(o.question,36)}</td>
-    <td class="mid">${o.market_prob?.toFixed(1)}%</td>
-    <td>${o.model_prob?.toFixed(1)}%</td>
-    <td class="${sideCls(o.side)}">${(o.side||'').toUpperCase()}</td>
-    <td><span class="${edgeCls(o.edge_pct)}">${fmtPct(o.edge_pct)}</span></td>
-    <td style="font-size:10px;color:var(--muted)">${trunc(o.reasoning,32)}</td>
-    <td>${ageCell(o.detected_at)}</td>
-  </tr>`).join('');
+  tb.innerHTML = _btc5minRows(_td.btc5min, 'btc5min', cols);
+}
+
+function renderBTC5MinFull(opps) {
+  _td['btc5min-full'] = opps || [];
+  const tb = document.getElementById('tb-btc5min-full');
+  if (!tb) return;
+  const cols = ['question','market_prob','model_prob','side','edge_pct','reasoning'];
+  const thead = tb.closest('table')?.querySelector('thead tr');
+  if (thead) thead.innerHTML = `
+    <th>Question</th>
+    <th class="sortable${_sortState['btc5min-full']?.col===1?' sort-desc':''}" onclick="sortBy('btc5min-full',1,true)">Mkt%</th>
+    <th class="sortable${_sortState['btc5min-full']?.col===2?' sort-desc':''}" onclick="sortBy('btc5min-full',2,true)">Model%</th>
+    <th>Side</th>
+    <th class="sortable${_sortState['btc5min-full']?.col===4?' sort-desc':''}" onclick="sortBy('btc5min-full',4,true)">Edge</th>
+    <th>Signals</th><th>Age</th>`;
+  tb.innerHTML = _btc5minRows(_td['btc5min-full'], 'btc5min-full', cols);
 }
 
 function renderArb(id, opps) {
@@ -1499,14 +1646,17 @@ function renderRange(opps) {
 function renderCross(opps) {
   _td.cross = opps || [];
   const tb = document.getElementById('tb-cross');
-  const data = sortData(opps, 'cross', ['question','buy_price','sell_price','net_pct','side']);
+  if (!tb) return;
+  const thead = tb.closest('table')?.querySelector('thead tr');
+  if (thead) thead.innerHTML = `<th>Question / Market</th><th>Buy@</th><th>Ref@</th><th>Net%</th><th>Platform</th>`;
+  const data = sortData(opps, 'cross', ['question','buy_price','sell_price','net_pct','buy_platform']);
   if (!data?.length) { tb.innerHTML = empty(5,'No cross-platform signals'); return; }
   tb.innerHTML = data.slice(0,10).map((o,i) => `<tr ${clickRow('cross',i)}>
     <td class="q">${trunc(o.question,40)}</td>
     <td style="color:var(--cyan)">${o.buy_price?.toFixed(1)}%</td>
     <td style="color:var(--muted)">${o.sell_price?.toFixed(1)}%</td>
     <td><span class="${edgeCls(o.net_pct)}">${fmtPct(o.net_pct)}</span></td>
-    <td class="${sideCls(o.side)}">${(o.side||'').toUpperCase()}</td>
+    <td style="font-size:10px;color:var(--blue)">${o.buy_platform || '—'}</td>
   </tr>`).join('');
 }
 
@@ -1617,7 +1767,6 @@ function applyData(data) {
   setEl('sc-arb', sc.arb);
   setEl('sc-crypto', sc.crypto || sc.signal || 0);
   setEl('sc-cross', sc.cross);
-  setEl('sc-range', sc.range);
   setEl('sc-corr', sc.corr);
   setEl('sc-fade', sc.fade);
   setEl('sc-forecast', sc.forecast);
@@ -1634,7 +1783,7 @@ function applyData(data) {
 
   // Strategy toggles on controls page
   const STRATEGY_AGE_KEYS = {
-    arbitrage: 'arb', crypto_signal: 'crypto', range_straddle: 'range_straddle',
+    arbitrage: 'arb', crypto_signal: 'crypto',
     cross_arb: 'cross_arb', correlated: 'correlated', news_fade: 'news_fade',
     forecast: 'forecast', llm: 'llm', weather: 'weather',
     favorite_short: 'favorite_short', oracle_squeeze: 'oracle_squeeze',
@@ -1678,11 +1827,18 @@ function applyData(data) {
   const totalOpps = (data.arb_opps?.length||0) + (data.corr_opps?.length||0)
     + (data.fav_opps?.length||0) + (data.squeeze_opps?.length||0)
     + (data.semarg_opps?.length||0) + (data.ofi_opps?.length||0)
-    + (data.btc5min_opps?.length||0);
+    + (data.btc5min_opps?.length||0) + (data.signal_opps?.length||0)
+    + (data.fade_opps?.length||0) + (data.forecast_opps?.length||0)
+    + (data.llm_opps?.length||0) + (data.weather_opps?.length||0)
+    + (data.range_opps?.length||0) + (data.cross_opps?.length||0);
   setEl('tc-overview', totalOpps);
 
   const sigOpps = (data.signal_opps?.length||0) + (data.cross_opps?.length||0)
-    + (data.fav_opps?.length||0);
+    + (data.fav_opps?.length||0) + (data.squeeze_opps?.length||0)
+    + (data.semarg_opps?.length||0) + (data.ofi_opps?.length||0)
+    + (data.btc5min_opps?.length||0) + (data.fade_opps?.length||0)
+    + (data.forecast_opps?.length||0) + (data.llm_opps?.length||0)
+    + (data.weather_opps?.length||0) + (data.range_opps?.length||0);
   setEl('tc-signals', sigOpps);
 
   const arbOpps = (data.arb_opps?.length||0) + (data.corr_opps?.length||0)
@@ -1704,13 +1860,13 @@ function applyData(data) {
   renderCorr('tb-corr2', data.corr_opps);
   renderMM(data.mm_quotes);
 
-  if (data.signal_opps?.length) renderCryptoSignal(data.signal_opps);
-  if (data.crypto_opps?.length) renderCryptoSignal(data.crypto_opps);
-  if (data.fade_opps?.length)    renderFade(data.fade_opps);
-  if (data.forecast_opps?.length) renderForecast(data.forecast_opps);
-  if (data.llm_opps?.length)     renderLLM(data.llm_opps);
-  if (data.weather_opps?.length) renderWeather(data.weather_opps);
-  if (data.range_opps?.length)   renderRange(data.range_opps);
+  // Always call renderers unconditionally so tables clear when lists go empty
+  renderCryptoSignal(data.signal_opps || data.crypto_opps || []);
+  renderFade(data.fade_opps);
+  renderForecast(data.forecast_opps);
+  renderLLM(data.llm_opps);
+  renderWeather(data.weather_opps);
+  renderRange(data.range_opps);
   renderCross(data.cross_opps);
   if (data.portfolio) renderPortfolio(data.portfolio);
   if (data.trades)    renderTrades(data.trades);
@@ -1721,6 +1877,7 @@ function applyData(data) {
   // Health, BTC signals, edge histogram
   updateHealthStrip(data.health);
   updateBtcSignals(data.btc5min_signals);
+  updateBTC5MinPage(data);
   updateEdgeHistogram(data);
 
   // Confluence (sent every tick in state)
@@ -1899,14 +2056,14 @@ async function loadPnlChart() {
     if (!data?.length) {
       if (emptyEl) emptyEl.style.display = 'flex';
       if (sub) sub.textContent = 'no data yet';
+      if (_pnlChart) { _pnlChart.destroy(); _pnlChart = null; }
       return;
     }
     if (emptyEl) emptyEl.style.display = 'none';
 
-    // Label format: time-only for 1D, date+time for longer ranges
     const multiDay = _pnlHours > 24;
     const labels = data.map(d => {
-      const dt = new Date(d.taken_at);
+      const dt = new Date(d.taken_at + 'Z');  // treat stored UTC string as UTC
       return multiDay
         ? dt.toLocaleDateString([], {month:'short',day:'numeric'}) + ' ' + dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
         : dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
@@ -1915,17 +2072,28 @@ async function loadPnlChart() {
     const lastVal = values[values.length - 1] ?? 0;
     const lineColor = lastVal >= 0 ? '#3fb950' : '#f85149';
 
-    const rangeLabel = _pnlHours <= 24 ? '1-min snapshots' : _pnlHours <= 168 ? '7-day window' : _pnlHours <= 720 ? '30-day window' : 'all time';
+    const rangeLabel = _pnlHours <= 24 ? 'est. P&L · 1-min buckets' : _pnlHours <= 168 ? 'est. P&L · 7-day window' : _pnlHours <= 720 ? 'est. P&L · 30-day window' : 'est. P&L · all time';
     if (sub) sub.textContent = `${data.length} pts · ${rangeLabel}`;
 
-    if (_pnlChart) _pnlChart.destroy();
+    // Update in-place if chart exists (avoids flicker on 30s refresh)
+    if (_pnlChart) {
+      _pnlChart.data.labels = labels;
+      _pnlChart.data.datasets[0].data = values;
+      _pnlChart.data.datasets[0].borderColor = lineColor;
+      _pnlChart.data.datasets[0].backgroundColor = lineColor + '18';
+      _pnlChart.data.datasets[0].pointRadius = data.length > 200 ? 0 : 1;
+      _pnlChart.options.scales.x.ticks.maxTicksLimit = multiDay ? 10 : 8;
+      _pnlChart.update('none');
+      return;
+    }
+
     const ctx = document.getElementById('pnl-chart').getContext('2d');
     _pnlChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
         datasets: [{
-          label: 'Total P&L',
+          label: 'Est. P&L',
           data: values,
           borderColor: lineColor,
           backgroundColor: lineColor + '18',
@@ -2087,13 +2255,207 @@ function updateBtcSignals(sigs) {
 }
 
 // ─────────────────────────────────────────────────────
+//  BTC 5-Min Full Page Visualizer
+// ─────────────────────────────────────────────────────
+function updateBTC5MinPage(data) {
+  const sigs = data.btc5min_signals || {};
+  const opps = data.btc5min_opps || [];
+
+  const _tcBtc = document.getElementById('tc-btc5min');
+  if (_tcBtc) _tcBtc.textContent = opps.length;
+
+  const ageEl = document.getElementById('btc-page-sig-age');
+  if (ageEl) ageEl.textContent = sigs.updated_at ? (ageStr(sigs.updated_at) || 'now') + ' ago' : '—';
+
+  // Probability needle
+  const probUp = sigs.prob_up;
+  const composite = sigs.composite;
+  const needle = document.getElementById('btc-page-needle');
+  const probEl = document.getElementById('btc-page-prob-up');
+  const compEl = document.getElementById('btc-page-composite');
+  const activeMktsEl = document.getElementById('btc-page-active-mkts');
+  if (needle && probUp != null) needle.style.left = (probUp * 100) + '%';
+  if (probEl) {
+    if (probUp == null) { probEl.textContent = '—'; probEl.style.color = 'var(--muted)'; }
+    else {
+      probEl.textContent = (probUp * 100).toFixed(1) + '%';
+      probEl.style.color = probUp > 0.55 ? 'var(--green)' : probUp < 0.45 ? 'var(--red)' : 'var(--cyan)';
+    }
+  }
+  if (compEl) {
+    if (composite == null) { compEl.textContent = '—'; compEl.style.color = 'var(--muted)'; }
+    else {
+      compEl.textContent = (composite > 0 ? '+' : '') + composite.toFixed(3);
+      compEl.style.color = composite > 0.05 ? 'var(--green)' : composite < -0.05 ? 'var(--red)' : 'var(--muted)';
+    }
+  }
+  if (activeMktsEl) {
+    const am = sigs.active_markets ?? 0;
+    activeMktsEl.textContent = am;
+    activeMktsEl.style.color = am > 0 ? 'var(--green)' : 'var(--muted)';
+  }
+
+  // Window delta (dominant signal — % from window open, stored as percentage e.g. 0.08 = +0.08%)
+  const wd = sigs.window_delta;
+  const wdEl = document.getElementById('btc-page-wd');
+  const wdBar = document.getElementById('btc-page-wd-bar');
+  const wdLbl = document.getElementById('btc-page-wd-label');
+  if (wdEl) {
+    if (wd == null) {
+      wdEl.textContent = '—'; wdEl.style.color = 'var(--muted)';
+      if (wdBar) { wdBar.style.width = '50%'; wdBar.style.background = 'var(--muted)'; }
+      if (wdLbl) wdLbl.textContent = 'awaiting candle data';
+    } else {
+      const wdColor = wd > 0.02 ? 'var(--green)' : wd < -0.02 ? 'var(--red)' : 'var(--cyan)';
+      wdEl.textContent = (wd > 0 ? '+' : '') + wd.toFixed(3) + '%';
+      wdEl.style.color = wdColor;
+      // Bar: ±1% = full bar width; 0% = centre
+      if (wdBar) { wdBar.style.width = (50 + Math.max(-50, Math.min(50, wd * 50))) + '%'; wdBar.style.background = wdColor; }
+      if (wdLbl) wdLbl.textContent = wd > 0.05 ? 'bullish — above open' : wd < -0.05 ? 'bearish — below open' : 'near window open';
+    }
+  }
+
+  // OBI
+  const obi = sigs.obi;
+  const obiEl = document.getElementById('btc-page-obi');
+  const obiBar = document.getElementById('btc-page-obi-bar');
+  const obiLbl = document.getElementById('btc-page-obi-label');
+  if (obiEl) {
+    if (obi == null) {
+      obiEl.textContent = '—'; obiEl.style.color = 'var(--muted)';
+      if (obiBar) { obiBar.style.width = '50%'; obiBar.style.background = 'var(--muted)'; }
+      if (obiLbl) obiLbl.textContent = 'unavailable — weights redistributed';
+    } else {
+      const obiColor = obi > 0.05 ? 'var(--green)' : obi < -0.05 ? 'var(--red)' : 'var(--cyan)';
+      obiEl.textContent = (obi > 0 ? '+' : '') + obi.toFixed(3);
+      obiEl.style.color = obiColor;
+      if (obiBar) { obiBar.style.width = (50 + obi * 50) + '%'; obiBar.style.background = obiColor; }
+      if (obiLbl) obiLbl.textContent = obi > 0.1 ? 'bid-heavy (bullish)' : obi < -0.1 ? 'ask-heavy (bearish)' : 'balanced';
+    }
+  }
+
+  // MTF Momentum (stored as [-1,1] normalized score in "momentum" key)
+  const mom = sigs.momentum;
+  const momEl = document.getElementById('btc-page-mom');
+  const momBar = document.getElementById('btc-page-mom-bar');
+  if (momEl) {
+    if (mom == null) {
+      momEl.textContent = '—'; momEl.style.color = 'var(--muted)';
+      if (momBar) { momBar.style.width = '50%'; momBar.style.background = 'var(--muted)'; }
+    } else {
+      const momColor = mom > 0.05 ? 'var(--green)' : mom < -0.05 ? 'var(--red)' : 'var(--muted)';
+      momEl.textContent = (mom > 0 ? '+' : '') + mom.toFixed(3);
+      momEl.style.color = momColor;
+      if (momBar) {
+        momBar.style.width = (50 + Math.max(-50, Math.min(50, mom * 50))) + '%';
+        momBar.style.background = momColor;
+      }
+    }
+  }
+
+  // RSI
+  const rsi = sigs.rsi;
+  const rsiEl = document.getElementById('btc-page-rsi');
+  const rsiBar = document.getElementById('btc-page-rsi-bar');
+  const rsiLbl = document.getElementById('btc-page-rsi-label');
+  if (rsiEl) {
+    if (rsi == null) {
+      rsiEl.textContent = '—'; rsiEl.style.color = 'var(--muted)';
+      if (rsiBar) { rsiBar.style.width = '50%'; rsiBar.style.background = 'var(--muted)'; }
+      if (rsiLbl) rsiLbl.textContent = 'unavailable';
+    } else {
+      const rsiColor = rsi > 60 ? 'var(--red)' : rsi < 40 ? 'var(--green)' : 'var(--purple)';
+      rsiEl.textContent = rsi.toFixed(1);
+      rsiEl.style.color = rsiColor;
+      if (rsiBar) { rsiBar.style.width = rsi + '%'; rsiBar.style.background = rsiColor; }
+      if (rsiLbl) rsiLbl.textContent = rsi > 70 ? 'overbought (bearish)' : rsi < 30 ? 'oversold (bullish)'
+        : rsi > 60 ? 'slightly overbought' : rsi < 40 ? 'slightly oversold' : 'neutral';
+    }
+  }
+
+  // Market window stats
+  const mktCountEl = document.getElementById('btc-page-mkt-count');
+  if (mktCountEl) {
+    const am = sigs.active_markets ?? 0;
+    mktCountEl.textContent = am;
+    mktCountEl.style.color = am > 0 ? 'var(--cyan)' : 'var(--muted)';
+  }
+  const scansEl = document.getElementById('btc-page-scans');
+  if (scansEl) scansEl.textContent = data.scans?.btc5min ?? '—';
+  const oppsEl = document.getElementById('btc-page-opps');
+  if (oppsEl) {
+    oppsEl.textContent = opps.length;
+    oppsEl.style.color = opps.length > 0 ? 'var(--green)' : 'var(--muted)';
+  }
+
+  // Market detail line
+  const mktDetail = document.getElementById('btc-page-mkt-detail');
+  if (mktDetail) {
+    if (!opps.length) {
+      const am = sigs.active_markets ?? 0;
+      mktDetail.innerHTML = am > 0
+        ? `${am} market(s) in window — signals below edge threshold`
+        : 'No 5-min market in entry window (0.2–1.5 min to close)';
+      mktDetail.style.color = 'var(--muted)';
+    } else {
+      mktDetail.innerHTML = `<span style="color:var(--text)">${opps[0].question}</span>`;
+      mktDetail.style.color = 'var(--text)';
+    }
+  }
+
+  // Active signal panel
+  const sigTitle = document.getElementById('btc-page-sig-title');
+  const sigBody = document.getElementById('btc-page-sig-body');
+  if (sigBody) {
+    if (!opps.length) {
+      if (sigTitle) { sigTitle.textContent = 'Active Signal'; sigTitle.style.color = 'var(--muted)'; }
+      sigBody.innerHTML = '<div style="color:var(--muted);text-align:center;padding:16px 0;font-size:11px">No signal — waiting for entry window</div>';
+    } else {
+      const o = opps[0];
+      const sideColor = o.side === 'yes' ? 'var(--green)' : 'var(--red)';
+      if (sigTitle) { sigTitle.textContent = 'Active Signal'; sigTitle.style.color = 'var(--green)'; }
+      const wdDisp = sigs.window_delta != null
+        ? (sigs.window_delta > 0 ? '+' : '') + sigs.window_delta.toFixed(3) + '% from open'
+        : '— awaiting ref price';
+      const volDisp = sigs.annual_vol != null ? (sigs.annual_vol * 100).toFixed(0) + '% σ ann.' : '';
+      sigBody.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:var(--muted)">Side</div>
+            <div style="font-size:22px;font-weight:700;color:${sideColor}">${(o.side||'').toUpperCase()}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted)">Edge</div>
+            <div style="font-size:22px;font-weight:700;color:var(--green)">${fmtPct(o.edge_pct)}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted)">Market P(YES)</div>
+            <div style="font-size:16px;font-weight:600">${o.market_prob?.toFixed(1)}%</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted)">B-S P(UP)</div>
+            <div style="font-size:16px;font-weight:600">${o.model_prob?.toFixed(1)}%</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--cyan);margin-bottom:5px">${wdDisp}${volDisp ? ' · ' + volDisp : ''}</div>
+        <div style="font-size:10px;color:var(--muted);border-top:1px solid var(--border);padding-top:6px">${o.reasoning || ''}</div>`;
+    }
+  }
+
+  // Full opportunities table — delegate to renderBTC5MinFull for consistent _td store + sorting
+  renderBTC5MinFull(opps);
+}
+
+// ─────────────────────────────────────────────────────
 //  Edge distribution histogram
 // ─────────────────────────────────────────────────────
 function updateEdgeHistogram(data) {
   // Collect all edges from all opp lists
   const edges = [];
   const lists = ['arb_opps','corr_opps','fav_opps','squeeze_opps',
-                 'semarg_opps','ofi_opps','btc5min_opps','signal_opps'];
+                 'semarg_opps','ofi_opps','btc5min_opps','signal_opps',
+                 'fade_opps','forecast_opps','llm_opps','weather_opps',
+                 'range_opps','cross_opps'];
   for (const k of lists) {
     if (!data[k]) continue;
     for (const o of data[k]) {

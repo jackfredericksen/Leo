@@ -1,8 +1,8 @@
 """
 Strategy 5: News overreaction fade.
 
-When a Kalshi crypto market spikes sharply (e.g. a BTC ETF approval
-pushes a contract from 50% to 80%), fade the move by taking the other side.
+When any Polymarket market spikes sharply (e.g. a breaking news event
+pushes a contract from 50% to 56%+), fade the move by taking the other side.
 
 Research shows ~60% of initial news-driven overreactions revert within
 90-120 minutes. The key is NOT entering in the first 1.5 hours — wait
@@ -23,10 +23,6 @@ from strategies.signal_arb import AggregatedSignal, SignalArbConfig, _MAX_SPREAD
 from strategies.kelly import KellySizer
 
 logger = logging.getLogger(__name__)
-
-_CRYPTO_KEYWORDS = [
-    "btc", "bitcoin", "eth", "ethereum", "sol", "solana", "crypto",
-]
 
 
 @dataclass
@@ -79,10 +75,6 @@ class NewsFadeDetector:
                 if market.liquidity_usd < self.fade.min_liquidity_usd:
                     continue
                 if market.yes_ask - market.yes_bid > _MAX_SPREAD:
-                    continue
-
-                q = market.question.lower()
-                if not any(w in q for w in _CRYPTO_KEYWORDS):
                     continue
 
                 current = market.yes_price

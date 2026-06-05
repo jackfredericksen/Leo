@@ -246,6 +246,48 @@ class BinanceClient:
         blended = 0.30 * short + 0.70 * medium
         return blended if 0.10 < blended < 5.0 else None
 
+    def get_candle_close_at(self, symbol: str, target_dt: datetime) -> Optional[float]:
+        """Return the close price of the 1-min candle closest to target_dt.
+        Returns None if no candle is within 120 seconds of the target."""
+        candles = list(self._candles.get(symbol, []))
+        if not candles:
+            return None
+        best = min(candles, key=lambda c: abs((c.timestamp - target_dt).total_seconds()))
+        if abs((best.timestamp - target_dt).total_seconds()) > 120:
+            return None
+        return best.close
+
+    def compute_mtf_momentum(self, symbol: str) -> Optional[float]:
+        """
+        Multi-timeframe momentum: weighted average of 1/2/3/5-candle lookbacks.
+
+        Weights are the v3 schedule from live-trading research (Jung-Hua Liu),
+        biased toward the 2–3 minute lookback rather than the noisiest 30s horizon:
+          1-candle (~1min): 0.20
+          2-candle (~2min): 0.25
+          3-candle (~3min): 0.30   ← primary signal
+          5-candle (~5min): 0.25
+
+        The original v2 schedule (0.40/0.30/0.20/0.10, short-biased) was found
+        to overfit micro-noise and produced live win rates of ~25% despite strong
+        backtests — the v3 schedule was the fix.
+
+        Returns a score normalized to [-1, 1] where 1% BTC move = ±1.0.
+        Missing lookbacks are skipped and remaining weights are renormalized.
+        """
+        lookbacks = [1, 2, 3, 5]
+        weights   = [0.20, 0.25, 0.30, 0.25]
+        total_w = 0.0
+        score = 0.0
+        for lb, w in zip(lookbacks, weights):
+            m = self.compute_momentum(symbol, lookback=lb)
+            if m is not None:
+                score += w * max(-1.0, min(1.0, m / 0.01))
+                total_w += w
+        if total_w == 0:
+            return None
+        return score / total_w
+
     def compute_momentum(self, symbol: str, lookback: int = 10) -> Optional[float]:
         candles = list(self._candles.get(symbol, []))
         if len(candles) < lookback + 1:

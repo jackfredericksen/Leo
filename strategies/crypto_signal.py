@@ -250,7 +250,7 @@ class CryptoSignalDetector:
                     recommended_size_usd=size,
                 ))
             except Exception as e:
-                logger.debug(
+                logger.warning(
                     f"CryptoSignal error {market.market_id}: {e}"
                 )
 

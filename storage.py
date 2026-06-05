@@ -162,6 +162,43 @@ class Storage:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def get_estimated_pnl_history(self, hours: int = 24) -> list[dict]:
+        """
+        Cumulative estimated P&L from trades over time.
+        Used as a fallback when the position manager returns all-zero snapshots
+        (e.g. dry-run mode or no live Polymarket positions).
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                WITH ordered AS (
+                    SELECT
+                        created_at,
+                        COALESCE(
+                            size_usd,
+                            contracts * CASE
+                                WHEN side = 'both' THEN COALESCE(yes_price,0) + COALESCE(no_price,0)
+                                WHEN side = 'no'   THEN COALESCE(no_price, 0.5)
+                                ELSE                    COALESCE(yes_price, 0.5)
+                            END
+                        ) * net_profit_pct AS est_pnl
+                    FROM trades
+                    WHERE status IN ('placed', 'simulated')
+                      AND created_at > datetime('now', ?)
+                )
+                SELECT
+                    created_at AS taken_at,
+                    SUM(est_pnl) OVER (
+                        ORDER BY created_at
+                        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                    ) AS total_pnl
+                FROM ordered
+                ORDER BY created_at ASC
+                """,
+                (f"-{hours} hours",),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def get_strategy_pnl(self) -> list[dict]:
         with self._connect() as conn:
             rows = conn.execute(

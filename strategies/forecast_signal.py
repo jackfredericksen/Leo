@@ -25,7 +25,7 @@ from strategies.kelly import KellySizer
 logger = logging.getLogger(__name__)
 
 # Forecaster count → confidence weight
-_MIN_FORECASTERS = 10
+_MIN_FORECASTERS = 5
 
 
 def _confidence(fq: ForecastQuestion, similarity: float) -> float:

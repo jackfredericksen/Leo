@@ -35,6 +35,7 @@ from rich.table import Table
 
 from alerting import Alerter
 from api_clients.binance_client import BinanceClient
+from api_clients.pyth_client import PythClient
 from api_clients.forecast_client import ForecastClient
 from api_clients.news_client import NewsClient
 from api_clients.polymarket_client import PolymarketClient, Market
@@ -60,7 +61,6 @@ from strategies.crypto_signal import CryptoSignalDetector
 from strategies.forecast_signal import ForecastSignalDetector
 from strategies.llm_signal import LLMSignalDetector
 from strategies.news_fade import NewsFadeDetector, NewsFadeConfig
-from strategies.range_straddle import RangeStraddleDetector
 from strategies.signal_arb import AggregatedSignal, SignalArbConfig
 from strategies.weather_signal import WeatherSignalDetector
 from strategies.favorite_short import FavoriteShortDetector, FavoriteShortConfig
@@ -642,41 +642,6 @@ async def cross_platform_loop(trader: Trader):
             await asyncio.sleep(config.cross_arb.refresh_interval_sec)
 
 
-async def range_straddle_loop(binance: BinanceClient, trader: Trader):
-    """Strategy: Range straddle + logical arb on Polymarket crypto range markets."""
-    sig_cfg = SignalArbConfig(
-        min_edge=config.range_straddle.min_edge,
-        fee_pct=config.arbitrage.fee_pct,
-        max_position_usd=config.range_straddle.max_position_usd,
-        kelly_fraction=config.range_straddle.kelly_fraction,
-    )
-    try:
-        bankroll = await trader.client.get_balance()
-        if bankroll <= 0:
-            bankroll = config.risk.paper_bankroll
-    except Exception:
-        bankroll = config.risk.paper_bankroll
-
-    detector = RangeStraddleDetector(sig_cfg, binance, bankroll)
-    while True:
-        await _await_resume()
-        if not config.range_straddle.enabled:
-            await asyncio.sleep(5)
-            continue
-        try:
-            await binance.fetch_snapshots()
-            if state.markets:
-                state.range_opps = detector.scan(state.markets)
-                state.range_scans += 1
-                if state.range_opps:
-                    state.last_signal_at["range_straddle"] = _now_iso()
-                if state.range_scans % _BANKROLL_REFRESH_EVERY == 0:
-                    await _refresh_bankroll(trader, detector.sizer)
-                for sig in state.range_opps:
-                    await trader.execute_signal(sig, state.market_map)
-        except Exception as e:
-            logger.error(f"Range straddle loop: {e}")
-        await asyncio.sleep(60)
 
 
 async def corr_loop(trader: Trader):
@@ -1106,31 +1071,28 @@ async def orderbook_momentum_loop(client: PolymarketClient, trader: Trader):
         await asyncio.sleep(cfg.refresh_interval_sec)
 
 
-async def btc_5min_loop(binance: BinanceClient, trader: Trader):
-    """Strategy: 5-minute BTC up/down markets using Coinbase microstructure signals."""
-    cfg = config.btc_5min
-    try:
-        bankroll = await trader.client.get_balance()
-        if bankroll <= 0:
-            bankroll = config.risk.paper_bankroll
-    except Exception:
-        bankroll = config.risk.paper_bankroll
+async def pyth_stream_loop(pyth: PythClient):
+    """Maintain Pyth SSE price stream. Reconnects automatically — runs forever."""
+    await pyth.stream()
 
-    detector = BTC5MinDetector(cfg, binance, bankroll)
+
+async def btc_5min_scan_loop(detector: BTC5MinDetector, binance: BinanceClient, trader: Trader):
+    """Slow scan (every cfg.refresh_interval_sec): candle fetch + market discovery + full B-S signals."""
+    cfg = config.btc_5min
     while True:
         await _await_resume()
         if not cfg.enabled:
             await asyncio.sleep(10)
             continue
         try:
-            # 5-min markets have very low volume and sit at offset ~3400+ in the
-            # volume-sorted list. Fetch recently-opened markets (sorted by startDate
-            # desc) to reliably surface the current 5-min window market.
-            recent = await trader.client.get_recent_markets(limit=200)
-            # Merge: recent markets first, then de-dup against state.markets
+            # 5-min markets sit at offset ~3400+ in the volume-sorted list.
+            # Fetch recent markets (sorted by startDate desc) so new 5-min windows
+            # are detected within the 0.2–1.5 min entry window.
+            await binance.fetch_candles("BTCUSDT", limit=60)
+            await binance.fetch_snapshots()
+            recent = await trader.client.get_recent_markets(limit=200, ttl_sec=0)
             seen_ids = {m.market_id for m in recent}
             combined = recent + [m for m in state.markets if m.market_id not in seen_ids]
-
             state.btc5min_opps = await detector.scan(combined)
             _bot_state._btc5min_signals = {**detector._last_signals}
             state.btc5min_scans += 1
@@ -1138,8 +1100,6 @@ async def btc_5min_loop(binance: BinanceClient, trader: Trader):
                 state.last_signal_at["btc_5min"] = _now_iso()
             if state.btc5min_scans % _BANKROLL_REFRESH_EVERY == 0:
                 await _refresh_bankroll(trader, detector.sizer)
-            # Build a market_map that includes the recent markets for execution
-            # and for position P&L tracking (state.market_map only has volume-sorted markets)
             combined_map = {m.market_id: m for m in combined}
             state.extended_market_map = combined_map
             for sig in state.btc5min_opps:
@@ -1150,8 +1110,31 @@ async def btc_5min_loop(binance: BinanceClient, trader: Trader):
                     f"top edge={state.btc5min_opps[0].edge:.1%}"
                 )
         except Exception as e:
-            logger.error(f"BTC 5-min loop: {e}")
+            logger.error(f"BTC 5-min scan: {e}")
         await asyncio.sleep(cfg.refresh_interval_sec)
+
+
+async def btc_5min_fast_loop(detector: BTC5MinDetector, trader: Trader):
+    """Fast re-evaluation (2s): fresh Pyth price + cached slow signals, no I/O."""
+    cfg = config.btc_5min
+    while True:
+        await _await_resume()
+        if not cfg.enabled:
+            await asyncio.sleep(2)
+            continue
+        try:
+            fast_opps = detector.fast_scan()
+            if fast_opps:
+                m_map = state.extended_market_map or state.market_map
+                for sig in fast_opps:
+                    await trader.execute_signal(sig, m_map)
+                logger.debug(
+                    f"BTC5Min fast: {len(fast_opps)} opps, "
+                    f"top edge={fast_opps[0].edge:.1%}"
+                )
+        except Exception as e:
+            logger.error(f"BTC 5-min fast: {e}")
+        await asyncio.sleep(2)
 
 
 async def market_maker_loop(client: PolymarketClient):
@@ -1440,7 +1423,15 @@ async def run():
         _bot_state._pos_manager_ref = pos_manager
         _bot_state._trader_ref = trader
 
-        async with BinanceClient() as binance:
+        async with BinanceClient() as binance, PythClient() as pyth:
+            try:
+                btc_bankroll = await trader.client.get_balance()
+                if btc_bankroll <= 0:
+                    btc_bankroll = config.risk.paper_bankroll
+            except Exception:
+                btc_bankroll = config.risk.paper_bankroll
+            btc_detector = BTC5MinDetector(config.btc_5min, binance, pyth, btc_bankroll)
+
             tasks = [
                 asyncio.create_task(
                     market_refresh_loop(client), name="market-refresh"
@@ -1454,9 +1445,7 @@ async def run():
                 asyncio.create_task(
                     cross_platform_loop(trader), name="cross"
                 ),
-                asyncio.create_task(
-                    range_straddle_loop(binance, trader), name="range"
-                ),
+
                 asyncio.create_task(corr_loop(trader), name="corr"),
                 asyncio.create_task(
                     news_fade_loop(trader, news_client), name="fade"
@@ -1477,7 +1466,13 @@ async def run():
                     orderbook_momentum_loop(client, trader), name="ofi"
                 ),
                 asyncio.create_task(
-                    btc_5min_loop(binance, trader), name="btc_5min"
+                    pyth_stream_loop(pyth), name="pyth-stream"
+                ),
+                asyncio.create_task(
+                    btc_5min_scan_loop(btc_detector, binance, trader), name="btc_5min_scan"
+                ),
+                asyncio.create_task(
+                    btc_5min_fast_loop(btc_detector, trader), name="btc_5min_fast"
                 ),
                 asyncio.create_task(
                     market_maker_loop(client), name="market_maker"

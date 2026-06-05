@@ -156,7 +156,7 @@ class CrossPlatformArbConfig:
     trade the mispricing on Polymarket.
     """
     enabled: bool = (
-        os.getenv("CROSS_ARB_ENABLED", "true").lower() == "true"
+        os.getenv("CROSS_ARB_ENABLED", "false").lower() == "true"
     )
     min_profit_pct: float = float(
         os.getenv("CROSS_ARB_MIN_PROFIT_PCT", "0.06")
@@ -249,7 +249,7 @@ class NewsFadeConfig:
         os.getenv("NEWS_FADE_ENABLED", "true").lower() == "true"
     )
     min_spike_pct: float = float(
-        os.getenv("NEWS_FADE_MIN_SPIKE", "0.12")
+        os.getenv("NEWS_FADE_MIN_SPIKE", "0.06")
     )
     min_hours_old: float = float(
         os.getenv("NEWS_FADE_MIN_HOURS", "1.5")
@@ -283,9 +283,9 @@ class FavoriteShortConfig:
     enabled: bool = os.getenv("FAV_SHORT_ENABLED", "true").lower() == "true"
     min_yes_price: float = float(os.getenv("FAV_SHORT_MIN_PRICE", "0.88"))
     max_yes_price: float = float(os.getenv("FAV_SHORT_MAX_PRICE", "0.97"))
-    max_volume_usd: float = float(os.getenv("FAV_SHORT_MAX_VOL", "5000.0"))
-    max_open_interest_usd: float = float(os.getenv("FAV_SHORT_MAX_OI", "3000.0"))
-    min_days_to_resolve: float = float(os.getenv("FAV_SHORT_MIN_DAYS", "7.0"))
+    max_volume_usd: float = float(os.getenv("FAV_SHORT_MAX_VOL", "100000.0"))
+    max_open_interest_usd: float = float(os.getenv("FAV_SHORT_MAX_OI", "50000.0"))
+    min_days_to_resolve: float = float(os.getenv("FAV_SHORT_MIN_DAYS", "3.0"))
     discount_factor: float = float(os.getenv("FAV_SHORT_DISCOUNT", "0.06"))
     fee_pct: float = float(os.getenv("FAV_SHORT_FEE", "0.02"))
     min_edge: float = float(os.getenv("FAV_SHORT_MIN_EDGE", "0.03"))
@@ -310,7 +310,7 @@ class OracleSqueezeConfig:
 
 @dataclass
 class SemanticArbConfig:
-    enabled: bool = os.getenv("SEMANTIC_ARB_ENABLED", "true").lower() == "true"
+    enabled: bool = os.getenv("SEMANTIC_ARB_ENABLED", "false").lower() == "true"
     min_price_gap: float = float(os.getenv("SEMANTIC_ARB_MIN_GAP", "0.04"))
     min_jaccard: float = float(os.getenv("SEMANTIC_ARB_MIN_JACCARD", "0.65"))
     number_tolerance: float = float(os.getenv("SEMANTIC_ARB_NUM_TOL", "0.01"))
@@ -323,10 +323,10 @@ class SemanticArbConfig:
 @dataclass
 class OrderbookMomentumConfig:
     enabled: bool = os.getenv("OFI_ENABLED", "true").lower() == "true"
-    ofi_threshold: float = float(os.getenv("OFI_THRESHOLD", "0.45"))
+    ofi_threshold: float = float(os.getenv("OFI_THRESHOLD", "0.20"))
     orderbook_levels: int = int(os.getenv("OFI_LEVELS", "5"))
-    high_activity_ratio: float = float(os.getenv("OFI_HIGH_RATIO", "2.0"))
-    low_activity_ratio: float = float(os.getenv("OFI_LOW_RATIO", "0.3"))
+    high_activity_ratio: float = float(os.getenv("OFI_HIGH_RATIO", "1.5"))
+    low_activity_ratio: float = float(os.getenv("OFI_LOW_RATIO", "0.5"))
     min_liquidity_usd: float = float(os.getenv("OFI_MIN_LIQ", "500.0"))
     max_spread_cents: float = float(os.getenv("OFI_MAX_SPREAD", "0.12"))
     max_candidate_markets: int = int(os.getenv("OFI_MAX_CANDIDATES", "20"))
@@ -393,15 +393,20 @@ class BTC5MinConfig:
     min_edge: float = float(os.getenv("BTC5MIN_MIN_EDGE", "0.04"))
     max_position_usd: float = float(os.getenv("BTC5MIN_MAX_USD", "50.0"))
     kelly_fraction: float = float(os.getenv("BTC5MIN_KELLY", "0.08"))
-    min_mins_to_close: float = float(os.getenv("BTC5MIN_MIN_MINS", "1.5"))
-    max_mins_to_close: float = float(os.getenv("BTC5MIN_MAX_MINS", "4.0"))
+    min_mins_to_close: float = float(os.getenv("BTC5MIN_MIN_MINS", "0.2"))
+    max_mins_to_close: float = float(os.getenv("BTC5MIN_MAX_MINS", "1.5"))
     fee_pct: float = float(os.getenv("BTC5MIN_FEE", "0.02"))
+    max_taker_entry: float = float(os.getenv("BTC5MIN_MAX_TAKER", "0.88"))
     obi_levels: int = int(os.getenv("BTC5MIN_OBI_LEVELS", "10"))
-    obi_weight: float = float(os.getenv("BTC5MIN_OBI_WEIGHT", "0.50"))
-    momentum_lookback: int = int(os.getenv("BTC5MIN_MOM_LOOKBACK", "3"))
-    momentum_weight: float = float(os.getenv("BTC5MIN_MOM_WEIGHT", "0.30"))
-    rsi_period: int = int(os.getenv("BTC5MIN_RSI_PERIOD", "14"))
+    default_annual_vol: float = float(os.getenv("BTC5MIN_DEFAULT_VOL", "0.80"))
+    mtf_momentum_weight: float = float(os.getenv("BTC5MIN_MTF_WEIGHT", "0.55"))
+    obi_weight: float = float(os.getenv("BTC5MIN_OBI_WEIGHT", "0.25"))
     rsi_weight: float = float(os.getenv("BTC5MIN_RSI_WEIGHT", "0.20"))
+    obi_late_window_mins: float = float(os.getenv("BTC5MIN_OBI_LATE_MINS", "1.0"))
+    obi_min_signal: float = float(os.getenv("BTC5MIN_OBI_MIN_SIGNAL", "0.15"))
+    rsi_period: int = int(os.getenv("BTC5MIN_RSI_PERIOD", "9"))
+    rsi_overbought: float = float(os.getenv("BTC5MIN_RSI_OB", "70.0"))
+    rsi_oversold: float = float(os.getenv("BTC5MIN_RSI_OS", "30.0"))
     refresh_interval_sec: int = int(os.getenv("BTC5MIN_REFRESH_SEC", "20"))
 
 

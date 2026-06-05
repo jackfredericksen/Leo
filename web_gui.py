@@ -149,8 +149,10 @@ def _serialise_state() -> dict:
 
     cross_opps = [
         {
+            "market_id": o.polymarket_market_id,   # normalised key for detail modal
             "polymarket_id": o.polymarket_market_id,
             "ext_id": o.external_market_id,
+            "slug": slug_map.get(o.polymarket_market_id, ""),
             "question": o.question[:60],
             "buy_platform": o.buy_platform,
             "sell_platform": o.sell_platform,
@@ -577,7 +579,12 @@ async def api_pnl_history(hours: int = 24):
     storage = bot_state._storage_ref
     if not storage:
         return []
-    return storage.get_pnl_history(hours)
+    real = storage.get_pnl_history(hours)
+    # Fall back to cumulative estimated P&L from trades when position manager
+    # returns all-zero snapshots (dry-run mode / no live Polymarket positions).
+    if not real or all(r.get("total_pnl", 0) == 0 for r in real):
+        return storage.get_estimated_pnl_history(hours)
+    return real
 
 
 @app.get("/api/strategy-pnl")
@@ -876,14 +883,15 @@ async def broadcast_loop():
                 if tick % 5 == 0:
                     payload["portfolio"] = _serialise_portfolio()
                 if tick % 30 == 0:
+                    import bot_state as _bs30
                     payload["trades"] = _serialise_trades(50)
                     payload["market_slugs"] = _serialise_slugs()
-                    _kl = getattr(bot_state, "_kyle_lambda_ref", None)
+                    _kl = getattr(_bs30, "_kyle_lambda_ref", None)
                     payload["kyle_lambda"] = (
-                        _kl.summary(getattr(bot_state.state, "markets", []))
+                        _kl.summary(getattr(_bs30.state, "markets", []))
                         if _kl else []
                     )
-                    _hu = getattr(bot_state, "_hurst_ref", None)
+                    _hu = getattr(_bs30, "_hurst_ref", None)
                     payload["hurst"] = _hu.summary() if _hu else []
                 await manager.broadcast(payload)
             tick += 1
