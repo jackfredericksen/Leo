@@ -29,6 +29,7 @@ from position_manager import PositionManager
 from storage import Storage
 from strategies.correlated import CorrelatedOpportunity
 from strategies.signal_arb import AggregatedSignal
+from order_gate import live_orders_allowed, trading_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ class Trader:
         self._cooldowns: dict[str, datetime] = {}
         self._today_date: date = datetime.now(timezone.utc).date()
         self._today_usd_deployed: float = 0.0
+        self._strategy_daily: dict[str, float] = {}
 
     # ------------------------------------------------------------------ #
     #  Cooldown helpers                                                    #
@@ -88,11 +90,40 @@ class Trader:
         if today != self._today_date:
             self._today_date = today
             self._today_usd_deployed = 0.0
-            self._total_exposure = 0.0
+            self._strategy_daily.clear()
+            # Do not zero _total_exposure at midnight — open risk persists
 
-    def _check_and_reserve_exposure(self, size_usd: float) -> bool:
+    def _check_strategy_cap(self, strategy_key: str, size_usd: float) -> bool:
+        limit = self.risk_cfg.per_strategy_max_usd
+        if limit <= 0:
+            return True
+        self._reset_daily_if_needed()
+        used = self._strategy_daily.get(strategy_key, 0.0)
+        if used + size_usd > limit:
+            logger.warning(
+                f"Per-strategy cap hit for {strategy_key}: "
+                f"${used:.0f}+${size_usd:.0f} > ${limit:.0f}"
+            )
+            return False
+        return True
+
+    def _reserve_strategy_cap(self, strategy_key: str, size_usd: float) -> None:
+        self._strategy_daily[strategy_key] = (
+            self._strategy_daily.get(strategy_key, 0.0) + size_usd
+        )
+
+    def _release_strategy_cap(self, strategy_key: str, size_usd: float) -> None:
+        self._strategy_daily[strategy_key] = max(
+            0.0, self._strategy_daily.get(strategy_key, 0.0) - size_usd
+        )
+
+    def _check_and_reserve_exposure(
+        self, size_usd: float, strategy_key: str = "unknown"
+    ) -> bool:
         """Atomically check AND reserve exposure before any await point."""
         self._reset_daily_if_needed()
+        if not self._check_strategy_cap(strategy_key, size_usd):
+            return False
         if self._today_usd_deployed + size_usd > self.risk_cfg.max_daily_usd_deployed:
             logger.warning(
                 f"Daily deployment limit reached: "
@@ -111,11 +142,13 @@ class Trader:
             return False
         self._today_usd_deployed += size_usd
         self._total_exposure += size_usd
+        self._reserve_strategy_cap(strategy_key, size_usd)
         return True
 
-    def _release_exposure(self, size_usd: float) -> None:
+    def _release_exposure(self, size_usd: float, strategy_key: str = "unknown") -> None:
         self._today_usd_deployed = max(0.0, self._today_usd_deployed - size_usd)
         self._total_exposure = max(0.0, self._total_exposure - size_usd)
+        self._release_strategy_cap(strategy_key, size_usd)
 
     def _alert_task(self, coro) -> None:
         """Fire-and-forget an alerter coroutine (only if coroutine is not None)."""
@@ -131,6 +164,11 @@ class Trader:
         Buy both YES and NO shares when total ask < $1.00.
         Profit = $1.00 payout - (YES_ask + NO_ask) per share.
         """
+        ok, reason = trading_allowed()
+        if not ok:
+            logger.debug(f"Arb blocked ({reason}): {opp.market_id[:16]}")
+            return False
+        sk = opp.arb_type or "arb"
         if self._in_cooldown(opp.market_id):
             return False
         if self.confluence:
@@ -140,7 +178,7 @@ class Trader:
             return False
 
         size_usd = min(opp.max_size_usd, self.arb_cfg.max_position_usd)
-        if not self._check_and_reserve_exposure(size_usd):
+        if not self._check_and_reserve_exposure(size_usd, sk):
             return False
 
         # We buy YES at yes_ask and NO at no_ask
@@ -150,7 +188,7 @@ class Trader:
         shares = PolymarketClient.usdc_to_shares(size_usd / 2, yes_ask)
 
         if shares < 1.0:
-            self._release_exposure(size_usd)
+            self._release_exposure(size_usd, sk)
             return False
 
         if self.cfg.dry_run:
@@ -172,7 +210,7 @@ class Trader:
                 status="simulated",
                 size_usd=size_usd,
             )
-            self._release_exposure(size_usd)  # dry-run doesn't consume real limits
+            self._release_exposure(size_usd, sk)  # dry-run doesn't consume real limits
             self._mark_cooldown(opp.market_id)
             return True
 
@@ -190,7 +228,7 @@ class Trader:
 
             if not yes_order or not no_order:
                 logger.error(f"One leg failed for {opp.market_id}, cancelling")
-                self._release_exposure(size_usd)
+                self._release_exposure(size_usd, sk)
                 await self._cancel_if_placed(yes_order, no_order)
                 return False
 
@@ -234,6 +272,11 @@ class Trader:
         market_map: dict,
     ) -> bool:
         """Buy one side on a signal opportunity."""
+        ok, reason = trading_allowed()
+        if not ok:
+            logger.debug(f"Signal blocked ({reason}): {sig.market_id[:16]}")
+            return False
+        sk = f"signal:{sig.source or 'signal'}"
         if self._in_cooldown(sig.market_id):
             return False
         if self.confluence:
@@ -261,12 +304,12 @@ class Trader:
             return False
 
         size_usd = min(sig.recommended_size_usd, self.arb_cfg.max_position_usd)
-        if not self._check_and_reserve_exposure(size_usd):
+        if not self._check_and_reserve_exposure(size_usd, sk):
             return False
 
         shares = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
         if shares < 1.0:
-            self._release_exposure(size_usd)
+            self._release_exposure(size_usd, sk)
             return False
 
         # Use actual market prices for storage (not a complement approximation)
@@ -292,7 +335,7 @@ class Trader:
                 status="simulated",
                 size_usd=size_usd,
             )
-            self._release_exposure(size_usd)  # dry-run doesn't consume real limits
+            self._release_exposure(size_usd, sk)  # dry-run doesn't consume real limits
             self._mark_cooldown(sig.market_id)
             if self.alerter and sig.edge * 100 >= self.alert_cfg.big_edge_threshold_pct:
                 self._alert_task(self.alerter.big_edge(
@@ -308,7 +351,7 @@ class Trader:
                 token_id, side, "buy", price_dollars, shares
             )
             if not order:
-                self._release_exposure(size_usd)
+                self._release_exposure(size_usd, sk)
                 return False
             self.storage.log_trade(
                 market_id=sig.market_id,
@@ -335,7 +378,7 @@ class Trader:
                 ))
             return True
         except Exception as e:
-            self._release_exposure(size_usd)
+            self._release_exposure(size_usd, sk)
             logger.error(f"Signal execution error for {sig.market_id}: {e}")
             return False
 
@@ -349,6 +392,11 @@ class Trader:
         market_map: dict,
     ) -> bool:
         """Buy the mispriced side on a correlated-arb opportunity."""
+        ok, reason = trading_allowed()
+        if not ok:
+            logger.debug(f"Corr blocked ({reason}): {opp.market_id_mispriced[:16]}")
+            return False
+        sk = f"corr:{opp.relation.value}"
         if self._in_cooldown(opp.market_id_mispriced):
             return False
         if self.confluence:
@@ -380,12 +428,12 @@ class Trader:
             return False
 
         size_usd = min(opp.max_size_usd, self.arb_cfg.max_position_usd)
-        if not self._check_and_reserve_exposure(size_usd):
+        if not self._check_and_reserve_exposure(size_usd, sk):
             return False
 
         shares = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
         if shares < 1.0:
-            self._release_exposure(size_usd)
+            self._release_exposure(size_usd, sk)
             return False
 
         # Use actual market prices for storage (not a complement approximation)
@@ -412,7 +460,7 @@ class Trader:
                 status="simulated",
                 size_usd=size_usd,
             )
-            self._release_exposure(size_usd)  # dry-run doesn't consume real limits
+            self._release_exposure(size_usd, sk)  # dry-run doesn't consume real limits
             self._mark_cooldown(opp.market_id_mispriced)
             return True
 
@@ -423,7 +471,7 @@ class Trader:
                 token_id, side, "buy", price_dollars, shares
             )
             if not order:
-                self._release_exposure(size_usd)
+                self._release_exposure(size_usd, sk)
                 return False
             self.storage.log_trade(
                 market_id=opp.market_id_mispriced,
@@ -451,7 +499,7 @@ class Trader:
                 ))
             return True
         except Exception as e:
-            self._release_exposure(size_usd)
+            self._release_exposure(size_usd, sk)
             logger.error(f"Corr execution error for {opp.market_id_mispriced}: {e}")
             return False
 
@@ -467,6 +515,10 @@ class Trader:
         price: float,
         shares: float,
     ) -> OrderResult | None:
+        ok, reason = live_orders_allowed()
+        if not ok:
+            logger.warning(f"Live order blocked ({reason}): {action} {side}")
+            return None
         try:
             result = await self.client.place_order(
                 token_id=token_id,

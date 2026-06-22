@@ -26,11 +26,21 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+from order_gate import update_trading_health
+from runtime_config import save_runtime, snapshot_runtime
+from web_auth import WebAuthMiddleware, verify_ws_token
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Leo Dashboard", docs_url=None, redoc_url=None)
+app.add_middleware(WebAuthMiddleware)
+
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.is_dir():
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 # ---------------------------------------------------------------------------
 # WebSocket connection manager
@@ -351,22 +361,17 @@ def _serialise_state() -> dict:
         if cfg and hasattr(cfg, "enabled"):
             strategy_states[name] = cfg.enabled
 
-    # Health indicators
-    _client = getattr(bot_state, "_client_ref", None)
-    _clob_ok = True
-    _clob_errors = 0
-    if _client:
-        _circuit_until = getattr(_client, "_circuit_open_until", None)
-        _clob_errors = getattr(_client, "_clob_errors", 0)
-        _clob_ok = _circuit_until is None or datetime.now(timezone.utc) > _circuit_until
-    _gamma_at = getattr(bot_state, "_last_gamma_at", "") or ""
-    _gamma_age = None
-    if _gamma_at:
+    # Health indicators (recomputed on market refresh; refresh here if stale)
+    health = getattr(bot_state, "last_health", None) or {}
+    if not health:
         try:
-            _gdt = datetime.fromisoformat(_gamma_at)
-            _gamma_age = round((datetime.now(timezone.utc) - _gdt).total_seconds())
+            health = update_trading_health()
         except Exception:
-            pass
+            health = {}
+    _client = getattr(bot_state, "_client_ref", None)
+    _clob_errors = getattr(_client, "_clob_errors", 0) if _client else 0
+    _clob_ok = health.get("clob_ok", True)
+    _gamma_age = health.get("gamma_age_sec")
 
     trader = getattr(bot_state, "_trader_ref", None)
     exposure = {
@@ -396,14 +401,27 @@ def _serialise_state() -> dict:
     _conf = getattr(bot_state, "_confluence_ref", None)
     confluence_opps = _conf.best_opps() if _conf else []
 
+    mm_enabled = bool(
+        getattr(config.market_maker, "enabled", False)
+        if hasattr(config, "market_maker") else False
+    )
+
     return {
         "ts": datetime.now(timezone.utc).isoformat(),
         "dry_run": config.dry_run,
         "paused": getattr(bot_state, "paused", False),
+        "pnl_source": (
+            "resolved_trades_db" if config.dry_run else "position_manager_live"
+        ),
+        "strategy_audit": getattr(bot_state, "strategy_audit", []),
+        "mm_sim_mode": config.dry_run and mm_enabled,
         "health": {
             "clob_ok": _clob_ok,
             "clob_errors": _clob_errors,
             "gamma_age_sec": _gamma_age,
+            "trading_blocked": health.get("trading_blocked", False),
+            "block_reason": health.get("block_reason", ""),
+            "markets_count": health.get("markets_count", len(state.markets)),
         },
         "btc5min_signals": getattr(bot_state, "_btc5min_signals", {}),
         "signal_ages": signal_ages,
@@ -498,15 +516,25 @@ def _serialise_portfolio() -> dict:
             "position_count": s.position_count,
             "positions": positions,
             "paper": False,
+            "pnl_source": "position_manager_live",
         }
 
     # Paper / dry-run path — derive P&L from simulated trades in DB
     est_pnl = 0.0
     trade_count = 0
+    pending = 0
+    resolved = 0
     if storage:
         summary = storage.get_pnl_summary()
         est_pnl     = round(summary.get("estimated_pnl_usd") or 0.0, 2)
         trade_count = summary.get("total_trades") or 0
+        with storage._connect() as conn:
+            pending = conn.execute(
+                "SELECT COUNT(*) FROM trades WHERE outcome = 'pending'"
+            ).fetchone()[0]
+            resolved = conn.execute(
+                "SELECT COUNT(*) FROM trades WHERE outcome IN ('won','lost')"
+            ).fetchone()[0]
 
     return {
         "balance": round(paper_bankroll + est_pnl, 2),
@@ -514,8 +542,11 @@ def _serialise_portfolio() -> dict:
         "realized_pnl": est_pnl,
         "total_pnl": est_pnl,
         "position_count": trade_count,
+        "pending_trades": pending,
+        "resolved_trades": resolved,
         "positions": [],
         "paper": True,
+        "pnl_source": "resolved_trades_db",
     }
 
 
@@ -552,10 +583,13 @@ def _serialise_trades(limit: int = 50) -> list:
 # HTTP routes
 # ---------------------------------------------------------------------------
 
+_NO_CACHE = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
     html_path = Path(__file__).parent / "templates" / "dashboard.html"
-    return HTMLResponse(content=html_path.read_text())
+    return HTMLResponse(content=html_path.read_text(), headers=_NO_CACHE)
 
 
 @app.get("/api/state")
@@ -603,6 +637,23 @@ async def api_win_rates():
     if not storage:
         return {}
     return storage.get_strategy_win_rates()
+
+
+@app.get("/api/calibration")
+async def api_calibration():
+    import bot_state
+    storage = bot_state._storage_ref
+    if not storage:
+        return {"strategies": [], "summary": {}}
+    return storage.get_calibration_report()
+
+
+@app.get("/api/runtime")
+async def api_runtime():
+    import bot_state
+    if bot_state.config is None:
+        raise HTTPException(503, "Bot not running")
+    return snapshot_runtime(bot_state.config)
 
 
 @app.get("/api/evolution")
@@ -653,6 +704,7 @@ async def toggle_dry_run(body: _BoolBody):
     try:
         import bot_state
         bot_state.config.dry_run = body.enabled
+        save_runtime(dry_run=body.enabled)
         return {"dry_run": body.enabled}
     except Exception as e:
         return {"error": str(e)}
@@ -699,6 +751,7 @@ async def toggle_strategy(name: str, body: _BoolBody):
     if not hasattr(cfg, "enabled"):
         raise HTTPException(400, f"Strategy '{name}' has no enabled flag")
     cfg.enabled = body.enabled
+    save_runtime(strategy=(name, body.enabled))
     return {"strategy": name, "enabled": body.enabled}
 
 
@@ -725,6 +778,7 @@ class _RiskBody(BaseModel):
     max_daily_usd: Optional[float] = None
     min_edge_pct: Optional[float] = None
     total_limit_usd: Optional[float] = None
+    per_strategy_max_usd: Optional[float] = None
 
 
 @app.post("/api/control/risk")
@@ -762,37 +816,44 @@ async def update_risk(body: _RiskBody):
             cfg.semantic_arb.min_price_gap = edge
     if body.total_limit_usd is not None:
         cfg.arbitrage.max_total_exposure_usd = body.total_limit_usd
+    if body.per_strategy_max_usd is not None:
+        cfg.risk.per_strategy_max_usd = body.per_strategy_max_usd
+    risk_patch = {}
+    if body.max_daily_usd is not None:
+        risk_patch["max_daily_usd"] = body.max_daily_usd
+    if body.max_position_usd is not None:
+        risk_patch["max_position_usd"] = body.max_position_usd
+    if body.total_limit_usd is not None:
+        risk_patch["max_total_exposure_usd"] = body.total_limit_usd
+    if body.min_edge_pct is not None:
+        risk_patch["min_edge_pct"] = body.min_edge_pct
+    if body.per_strategy_max_usd is not None:
+        risk_patch["per_strategy_max_usd"] = body.per_strategy_max_usd
+    if risk_patch:
+        save_runtime(risk=risk_patch)
     return {
         "max_position_usd": cfg.arbitrage.max_position_usd,
         "max_daily_usd":    cfg.risk.max_daily_usd_deployed,
         "min_edge_pct":     round(cfg.arbitrage.min_profit_pct * 100, 2),
         "total_limit_usd":  cfg.arbitrage.max_total_exposure_usd,
+        "per_strategy_max_usd": cfg.risk.per_strategy_max_usd,
     }
 
 
 @app.get("/api/health")
 async def api_health():
     import bot_state
+    health = update_trading_health()
     client = getattr(bot_state, "_client_ref", None)
-    clob_ok = True
-    clob_errors = 0
-    if client:
-        circuit_until = getattr(client, "_circuit_open_until", None)
-        clob_errors = getattr(client, "_clob_errors", 0)
-        clob_ok = circuit_until is None or datetime.now(timezone.utc) > circuit_until
+    clob_errors = getattr(client, "_clob_errors", 0) if client else 0
     gamma_at = getattr(bot_state, "_last_gamma_at", "") or ""
-    gamma_age = None
-    if gamma_at:
-        try:
-            gdt = datetime.fromisoformat(gamma_at)
-            gamma_age = round((datetime.now(timezone.utc) - gdt).total_seconds())
-        except Exception:
-            pass
     return {
-        "clob_ok": clob_ok,
+        "clob_ok": health.get("clob_ok", True),
         "clob_errors": clob_errors,
-        "gamma_age_sec": gamma_age,
+        "gamma_age_sec": health.get("gamma_age_sec"),
         "gamma_at": gamma_at or None,
+        "trading_blocked": health.get("trading_blocked", False),
+        "block_reason": health.get("block_reason", ""),
         "btc5min_signals": getattr(bot_state, "_btc5min_signals", {}),
     }
 
@@ -840,6 +901,8 @@ async def api_log_feed(n: int = 50):
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
+    if not await verify_ws_token(ws):
+        return
     await manager.connect(ws)
     try:
         # Send initial full state immediately on connect
@@ -879,13 +942,14 @@ async def broadcast_loop():
         try:
             if manager._clients:
                 payload = _serialise_state()
-                # Send portfolio + trades every 5 ticks (5 seconds)
-                if tick % 5 == 0:
+                # Portfolio + trades every 2s so trade log / positions feel live
+                if tick % 2 == 0:
                     payload["portfolio"] = _serialise_portfolio()
+                    payload["trades"] = _serialise_trades(40)
+                if tick % 15 == 0:
+                    payload["market_slugs"] = _serialise_slugs()
                 if tick % 30 == 0:
                     import bot_state as _bs30
-                    payload["trades"] = _serialise_trades(50)
-                    payload["market_slugs"] = _serialise_slugs()
                     _kl = getattr(_bs30, "_kyle_lambda_ref", None)
                     payload["kyle_lambda"] = (
                         _kl.summary(getattr(_bs30.state, "markets", []))

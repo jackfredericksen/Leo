@@ -30,11 +30,13 @@ A home Mac mini is fully adequate.
 
 import asyncio
 import logging
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
 from api_clients.polymarket_client import Market, PolymarketClient
+from order_gate import live_orders_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -317,6 +319,16 @@ async def _place_limit(
     price: float,
     shares: float,
 ) -> Optional[str]:
+    ok, reason = live_orders_allowed()
+    if not ok:
+        if reason == "dry_run":
+            logger.debug(
+                f"[DRY RUN] MM {action} @ {price:.3f} x {shares:.1f} "
+                f"({token_id[:8]}…)"
+            )
+            return f"dry-{uuid.uuid4().hex[:12]}"
+        logger.debug(f"MM place blocked: {reason}")
+        return None
     try:
         result = await client.place_order(
             token_id=token_id, action=action, price=price, size=shares

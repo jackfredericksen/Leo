@@ -3,119 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leo — Polymarket Bot</title>
+<title>Leo — Polymarket Terminal</title>
+<!-- leo-quant-ui build 2026-06-17 -->
+<link rel="stylesheet" href="/static/leo-theme.css?v=4">
+<link rel="stylesheet" href="/static/leo-quant.css?v=3">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg:      #0d1117;
-  --surface: #161b22;
-  --surf2:   #1c2128;
-  --border:  #30363d;
-  --text:    #e6edf3;
-  --muted:   #8b949e;
-  --cyan:    #39d0d8;
-  --green:   #3fb950;
-  --red:     #f85149;
-  --yellow:  #d29922;
-  --blue:    #58a6ff;
-  --purple:  #bc8cff;
-  --orange:  #ffa657;
-  --pink:    #f778ba;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{
-  font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
-  background:var(--bg);color:var(--text);font-size:13px;
-  display:flex;flex-direction:column;min-height:100vh;
-}
-
-/* ── Header ── */
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 20px;border-bottom:1px solid var(--border);
-  background:var(--surface);position:sticky;top:0;z-index:200;
-  gap:12px;flex-wrap:wrap;
-}
-.header-left{display:flex;align-items:center;gap:10px}
-.logo{font-size:15px;font-weight:700;color:var(--cyan);letter-spacing:.4px}
-.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.badge{
-  padding:3px 10px;border-radius:12px;font-size:11px;
-  font-weight:700;letter-spacing:.5px;white-space:nowrap;
-}
-.badge-live{background:#1a0000;color:var(--red);border:1px solid var(--red)}
-.badge-dry{background:#1a1200;color:var(--yellow);border:1px solid var(--yellow)}
-.badge-conn{background:#001a0a;color:var(--green);border:1px solid var(--green)}
-.badge-disc{background:#1a0000;color:var(--red);border:1px solid var(--red)}
-.badge-pause{background:#0a0a1a;color:var(--purple);border:1px solid var(--purple)}
-#last-update{color:var(--muted);font-size:11px}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
-.dot-green{background:var(--green);box-shadow:0 0 5px var(--green)}
-.dot-yellow{background:var(--yellow)}
-.dot-red{background:var(--red)}
-
-/* ── Nav ── */
-nav{
-  display:flex;gap:2px;padding:8px 20px 0;
-  border-bottom:1px solid var(--border);background:var(--surface);
-  overflow-x:auto;flex-shrink:0;
-}
-.tab{
-  padding:7px 14px;border-radius:6px 6px 0 0;cursor:pointer;
-  color:var(--muted);font-size:12px;font-weight:500;
-  transition:color .12s,background .12s;border:1px solid transparent;
-  border-bottom:none;position:relative;bottom:-1px;white-space:nowrap;
-}
-.tab:hover{color:var(--text);background:var(--bg)}
-.tab.active{color:var(--text);background:var(--bg);border-color:var(--border)}
-.badge-count{
-  display:inline-block;background:var(--border);color:var(--muted);
-  border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;
-}
-.tab.active .badge-count{background:var(--cyan);color:var(--bg)}
-
-/* ── Layout ── */
-main{padding:14px 20px;flex:1}
-.page{display:none}.page.active{display:block}
-
-/* ── Cards ── */
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
-.stat-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:8px;padding:11px 13px;
-}
-.stat-card .label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
-.stat-card .value{font-size:19px;font-weight:700;line-height:1.1}
-.stat-card .sub{color:var(--muted);font-size:10px;margin-top:2px}
-.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--text)}.cyan{color:var(--cyan)}
-
-/* ── Panel ── */
-.panel{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:8px;overflow:hidden;margin-bottom:12px;
-}
-.panel-header{
-  padding:9px 13px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-}
-.panel-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
-.panel-sub{color:var(--muted);font-size:11px}
-.table-scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th{
-  text-align:left;padding:7px 11px;color:var(--muted);font-size:10px;
-  text-transform:uppercase;letter-spacing:.6px;font-weight:500;
-  border-bottom:1px solid var(--border);background:rgba(0,0,0,.2);white-space:nowrap;
-}
-td{padding:8px 11px;border-bottom:1px solid rgba(48,54,61,.45);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.02)}
-.mid{color:var(--muted);font-size:11px}
-.mono{font-family:monospace;font-size:11px;color:var(--cyan)}
-.q{color:var(--muted);font-size:11px}
-.empty td{color:var(--muted);font-style:italic;text-align:center;padding:18px}
-
+/* Component-only rules — layout/colors live in /static/leo-theme.css */
 /* ── Edge pills ── */
 .edge{display:inline-block;padding:2px 7px;border-radius:10px;font-weight:700;font-size:11px}
 .edge-pos{background:rgba(63,185,80,.12);color:var(--green)}
@@ -366,14 +260,70 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
 .filter-btn.active{background:var(--surface);color:var(--cyan);border-color:var(--cyan)}
 </style>
 </head>
-<body>
+<body class="quant-mode">
 
+<!-- Auth gate (shown when LEO_WEB_TOKEN is set) -->
+<div id="auth-gate" class="auth-gate hidden">
+  <div class="auth-card">
+    <h1>Leo Terminal</h1>
+    <p>Enter your dashboard token to connect. Set <code>LEO_WEB_TOKEN</code> in your <code>.env</code> file.</p>
+    <input type="password" id="auth-token-input" class="auth-input" placeholder="Dashboard token" autocomplete="off">
+    <button class="btn btn-cyan" style="width:100%" onclick="submitAuth()">Connect</button>
+    <p id="auth-error" style="color:var(--red);font-size:11px;margin-top:10px;display:none"></p>
+  </div>
+</div>
+
+<!-- Command palette (⌘K) -->
+<div id="cmd-palette" class="cmd-palette" onclick="if(event.target===this)closeCmdPalette()">
+  <div class="cmd-box">
+    <input class="cmd-input" id="cmd-input" placeholder="Jump to page or run action…" autocomplete="off">
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
+
+<div class="app-shell" id="app-shell">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">L</div>
+    <div>
+      <div class="sidebar-title">Leo</div>
+      <div class="sidebar-sub">Polymarket Terminal</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="tab active" data-page="overview">Overview <span class="badge-count" id="tc-overview">0</span></div>
+    <div class="tab" data-page="signals">Signals <span class="badge-count" id="tc-signals">0</span></div>
+    <div class="tab" data-page="btc5min">BTC 5-Min <span class="badge-count" id="tc-btc5min">0</span></div>
+    <div class="tab" data-page="arb">Arb + MM <span class="badge-count" id="tc-arb">0</span></div>
+    <div class="tab" data-page="portfolio">Portfolio <span class="badge-count" id="tc-portfolio">0</span></div>
+    <div class="tab" data-page="analytics">Analytics</div>
+    <div class="tab" data-page="trades">Trades <span class="badge-count" id="tc-trades">0</span></div>
+    <div class="tab" data-page="controls">Controls</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="margin-bottom:6px"><kbd>⌘K</kbd> command palette</div>
+    <div id="sidebar-status">Connecting…</div>
+  </div>
+</aside>
+
+<div class="main-area">
 <header>
   <div class="header-left">
+    <div class="qt-brand-block" id="qt-brand-block">
+      <div class="qt-logo-mark">L</div>
+      <div>
+        <div class="qt-brand-text">LEO × QUANT</div>
+        <div class="qt-brand-sub">Polymarket Autopilot</div>
+      </div>
+      <div class="qt-strat-pills" id="qt-pills"></div>
+    </div>
     <span class="dot dot-green" id="conn-dot"></span>
-    <span class="logo">Leo — Polymarket Bot</span>
+    <span class="page-title" id="page-title">Overview</span>
   </div>
   <div class="header-right">
+    <span class="qt-agent-tag" id="qt-agent-tag" style="display:none;font-family:var(--qt-mono,monospace);font-size:9px;letter-spacing:.12em;color:var(--muted)">POLYMARKET AGENT</span>
+    <span class="qt-clock" id="qt-utc-clock">UTC —</span>
+    <button class="btn btn-cyan" style="padding:5px 12px;font-size:11px" onclick="openCmdPalette()">⌘K</button>
     <span id="mode-badge" class="badge badge-dry">DRY RUN</span>
     <span id="pause-badge" class="badge badge-pause" style="display:none">PAUSED</span>
     <span id="conn-badge" class="badge badge-disc">CONNECTING</span>
@@ -381,121 +331,138 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
   </div>
 </header>
 
-<nav>
-  <div class="tab active" data-page="overview">Overview <span class="badge-count" id="tc-overview">0</span></div>
-  <div class="tab" data-page="signals">Signals <span class="badge-count" id="tc-signals">0</span></div>
-  <div class="tab" data-page="btc5min">BTC 5-Min <span class="badge-count" id="tc-btc5min">0</span></div>
-  <div class="tab" data-page="arb">Arb + MM <span class="badge-count" id="tc-arb">0</span></div>
-  <div class="tab" data-page="portfolio">Portfolio <span class="badge-count" id="tc-portfolio">0</span></div>
-  <div class="tab" data-page="trades">Trades <span class="badge-count" id="tc-trades">0</span></div>
-  <div class="tab" data-page="controls">Controls</div>
-</nav>
-
 <main>
 
-<!-- ═══════════════════════ OVERVIEW ═══════════════════════ -->
+<!-- ═══════════════════════ OVERVIEW — Quant Terminal ═══════════════════════ -->
 <div class="page active" id="page-overview">
+<div class="qt-terminal">
 
-  <!-- Health strip -->
-  <div class="health-strip" id="health-strip">
-    <div class="health-pill health-warn" id="h-clob">
-      <div class="health-dot"></div><span>CLOB</span>
-    </div>
-    <div class="health-pill health-warn" id="h-gamma">
-      <div class="health-dot"></div><span>Gamma</span>
+  <div class="qt-badge-row" id="qt-badge-row">
+    <span class="qt-badge live-pill">● LIVE</span>
+    <span class="qt-badge green" id="qt-badge-opps">0 OPPS</span>
+    <span class="qt-badge gold" id="qt-badge-edge">EDGE —</span>
+    <span class="qt-badge" id="qt-badge-trades">0 TRADES</span>
+    <span class="qt-badge green" id="qt-badge-wr">WR —</span>
+    <span class="qt-badge" id="qt-badge-mkts">MKTS —</span>
+  </div>
+
+  <div class="qt-ticker-wrap">
+    <div class="qt-ticker" id="qt-ticker">
+      <span>LEO QUANT · scanning Polymarket · waiting for data…</span>
+      <span>LEO QUANT · scanning Polymarket · waiting for data…</span>
     </div>
   </div>
 
-  <div class="best-opp-card" id="best-opp-card" style="display:none">
-    <div class="best-opp-label">Best Opportunity Now</div>
-    <div class="best-opp-question" id="best-q">—</div>
-    <div class="best-opp-meta">
-      <span class="best-opp-edge pos" id="best-edge">—</span>
-      <span class="best-opp-pill" id="best-strategy-pill" style="background:rgba(57,208,216,.15);color:var(--cyan)">—</span>
-      <span class="best-opp-pill" id="best-side-pill">—</span>
-      <span style="color:var(--muted);font-size:11px" id="best-age"></span>
-      <a id="best-poly-link" href="#" target="_blank" class="btn btn-cyan" style="padding:3px 10px;font-size:11px;margin-left:auto">Open ↗</a>
-    </div>
-  </div>
-
-  <div class="stat-row">
-    <div class="stat-card">
-      <div class="label">Balance</div>
-      <div class="value cyan" id="s-balance">—</div>
-      <div class="sub">USDC</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Unrealized P&amp;L</div>
-      <div class="value" id="s-unreal">—</div>
-      <div class="sub">mark-to-market</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Realized P&amp;L</div>
-      <div class="value" id="s-real">—</div>
-      <div class="sub">settled</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Positions</div>
-      <div class="value neu" id="s-positions">—</div>
-      <div class="sub">open</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Markets</div>
-      <div class="value neu" id="s-markets">—</div>
-      <div class="sub">on Polymarket</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">MM Active</div>
-      <div class="value" id="s-mm" style="color:var(--cyan)">—</div>
-      <div class="sub">quoted markets</div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="scan-strip" id="scan-strip">
-      <span>Arb: <strong id="sc-arb">0</strong></span>
-      <span>Crypto: <strong id="sc-crypto">0</strong></span>
-      <span>Cross: <strong id="sc-cross">0</strong></span>
-      <span>Corr: <strong id="sc-corr">0</strong></span>
-      <span>Fade: <strong id="sc-fade">0</strong></span>
-      <span>Forecast: <strong id="sc-forecast">0</strong></span>
-      <span>LLM: <strong id="sc-llm">0</strong></span>
-      <span>Weather: <strong id="sc-weather">0</strong></span>
-      <span>FavShort: <strong id="sc-fav">0</strong></span>
-      <span>Squeeze: <strong id="sc-squeeze">0</strong></span>
-      <span>SemArb: <strong id="sc-semarg">0</strong></span>
-      <span>OFI: <strong id="sc-ofi">0</strong></span>
-      <span>BTC5m: <strong id="sc-btc5min">0</strong></span>
-      <span>MM: <strong id="sc-mm">0</strong></span>
-    </div>
-  </div>
-
-  <!-- Edge histogram + BTC signal widget -->
-  <div class="two-col" style="margin-bottom:12px">
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Edge Distribution</span>
-        <span class="panel-sub" id="edge-hist-sub">detected opportunities by edge %</span>
+  <div class="qt-row qt-row-top">
+    <section class="qt-panel">
+      <div class="qt-panel-hdr">Biggest Win <span style="color:var(--qt-green)">✓</span></div>
+      <div class="qt-win-amount pos" id="qt-biggest-amt">—</div>
+      <div class="qt-win-meta">
+        <span id="qt-biggest-strat">—</span>
+        <span class="q" id="qt-biggest-q">No resolved wins yet</span>
       </div>
-      <div style="padding:10px 14px 4px">
-        <div class="edge-hist" id="edge-hist"></div>
-        <div id="edge-hist-labels" style="display:flex;gap:3px;padding:0 4px"></div>
+    </section>
+
+    <section class="qt-panel qt-hero">
+      <div class="qt-hero-title">LEO <span class="verified">✓ VERIFIED</span></div>
+      <div class="qt-hero-chain">POLYGON · ON-CHAIN · POLYMARKET AGENT</div>
+      <div class="qt-hero-pnl neu" id="qt-hero-pnl">$0.00</div>
+      <div class="qt-hero-grid">
+        <div class="qt-hero-stat">
+          <span class="lbl">Win Rate</span>
+          <span class="val" id="qt-winrate">—</span>
+        </div>
+        <div class="qt-hero-stat">
+          <span class="lbl">Trades</span>
+          <span class="val" id="qt-trade-count">0</span>
+        </div>
+        <div class="qt-hero-stat">
+          <span class="lbl">Balance</span>
+          <span class="val cyan" id="s-balance">—</span>
+        </div>
+        <div class="qt-hero-stat">
+          <span class="lbl">Resolved</span>
+          <span class="val" id="s-real">—</span>
+        </div>
       </div>
-    </div>
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title" style="color:var(--yellow)">BTC 5-Min Signals</span>
-        <span class="panel-sub" id="btc-sig-age">live microstructure</span>
+      <span id="s-unreal" style="display:none">—</span>
+      <span id="s-positions" style="display:none">—</span>
+    </section>
+
+    <section class="qt-panel">
+      <div class="qt-panel-hdr">Open Positions <span class="qt-live-tag">● LIVE</span></div>
+      <div class="qt-table-scroll">
+        <table>
+          <thead><tr><th>Market</th><th>Side</th><th>Size</th><th>P&amp;L</th></tr></thead>
+          <tbody id="tb-positions-live"><tr class="empty"><td colspan="4">No open positions</td></tr></tbody>
+        </table>
       </div>
-      <div style="padding:10px 14px">
-        <div class="btc-widget">
+    </section>
+  </div>
+
+  <div class="qt-strat-fires" id="qt-strat-fires">
+    <span class="lbl">LIVE SIGNALS</span>
+    <span style="color:var(--qt-muted);font-size:9px">scanning…</span>
+  </div>
+
+  <div class="qt-pipeline" id="qt-pipeline">
+    <div class="qt-pipe-step active" data-step="scan">#1 SCAN</div>
+    <div class="qt-pipe-step" data-step="detect">DETECT</div>
+    <div class="qt-pipe-step" data-step="validate">VALIDATE</div>
+    <div class="qt-pipe-step" data-step="size">SIZE</div>
+    <div class="qt-pipe-step" data-step="fill">FILL</div>
+    <div class="qt-pipe-step" data-step="settle">SETTLE</div>
+    <span class="qt-pipeline-fill" id="qt-fill-count">FILL 0</span>
+  </div>
+
+  <div class="qt-last-fired idle" id="qt-last-fired">
+    <span class="tag sim">WAIT</span>
+    <span id="qt-last-fired-text">Watching for signals and simulated fills…</span>
+  </div>
+
+  <div class="qt-row qt-row-mid">
+    <section class="qt-panel qt-graph-panel">
+      <div class="qt-graph-overlay">FORCE GRAPH · V4</div>
+      <div class="qt-graph-legend" id="qt-graph-legend">
+        <div class="bull" id="qt-leg-bull">BULL —</div>
+        <div class="bear" id="qt-leg-bear">BEAR —</div>
+        <div id="qt-leg-hub">HUB LEO</div>
+      </div>
+      <div class="qt-graph-hud" id="qt-graph-hud">
+        <div>PATHS <strong id="qt-paths">0</strong> · TRADE <strong id="qt-trade-num">#0</strong></div>
+        <div>CONV <strong id="qt-conv">—</strong></div>
+        <div id="qt-signal-str">SIGNAL —</div>
+      </div>
+      <canvas id="qt-force-canvas"></canvas>
+      <div class="qt-graph-signals" id="qt-graph-signals"></div>
+      <div class="qt-graph-pace" id="qt-pace">PACE —/HR</div>
+      <div class="best-opp-card" id="best-opp-card" style="display:none">
+        <div class="best-opp-label">Best Signal</div>
+        <div class="best-opp-question" id="best-q">—</div>
+        <div class="best-opp-meta">
+          <span class="best-opp-edge pos" id="best-edge">—</span>
+          <span class="best-opp-pill" id="best-strategy-pill" style="background:rgba(245,197,24,.12);color:var(--qt-accent,#f5c518)">—</span>
+          <span class="best-opp-pill" id="best-side-pill">—</span>
+          <span style="color:var(--muted);font-size:10px" id="best-age"></span>
+          <a id="best-poly-link" href="#" target="_blank" class="btn btn-cyan" style="padding:2px 8px;font-size:10px;margin-left:auto">↗</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="qt-row qt-row-bottom">
+    <section class="qt-panel">
+      <div class="qt-panel-hdr">BTC 5-Min <span id="btc-sig-age" style="font-weight:400;letter-spacing:.06em">—</span></div>
+      <div class="qt-btc-body">
+        <canvas id="qt-btc-mini"></canvas>
+        <div class="qt-btc-sigs btc-widget">
           <div class="btc-signal">
             <div class="sig-label">OBI</div>
             <div class="sig-val" id="btc-obi" style="color:var(--cyan)">—</div>
             <div class="sig-bar" id="btc-obi-bar" style="background:var(--cyan);width:50%"></div>
           </div>
           <div class="btc-signal">
-            <div class="sig-label">Momentum</div>
+            <div class="sig-label">MOM</div>
             <div class="sig-val" id="btc-mom" style="color:var(--green)">—</div>
             <div class="sig-bar" id="btc-mom-bar" style="background:var(--green);width:50%"></div>
           </div>
@@ -506,29 +473,69 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <section class="qt-panel">
+      <div class="qt-panel-hdr">Trade Log <span id="feed-sub" style="font-weight:400">live</span></div>
+      <div class="activity-feed" id="activity-feed">
+        <div class="log-row"><span class="log-ts">—</span><span style="color:var(--muted)">Waiting for connection…</span></div>
+      </div>
+    </section>
+
+    <section class="qt-panel">
+      <div class="qt-panel-hdr">Live Analytics <span id="edge-hist-sub" style="font-weight:400">edge dist</span></div>
+      <div class="qt-analytics-body">
+        <div class="qt-spark-row">
+          <div class="qt-spark-box">
+            <div class="qt-spark-lbl">Total PnL</div>
+            <div class="qt-spark-val pos" id="qt-spark-pnl-val">—</div>
+            <canvas id="qt-pnl-spark" height="28"></canvas>
+          </div>
+          <div class="qt-spark-box">
+            <div class="qt-spark-lbl">Win Rate</div>
+            <div class="qt-spark-val" id="qt-spark-wr-val">—</div>
+            <canvas id="qt-wr-spark" height="28"></canvas>
+          </div>
+          <div class="qt-spark-box">
+            <div class="qt-spark-lbl">Edge</div>
+            <div class="qt-spark-val" id="qt-spark-edge-val">—</div>
+            <canvas id="qt-edge-spark" height="28"></canvas>
+          </div>
+        </div>
+        <div class="edge-hist" id="edge-hist"></div>
+        <div id="edge-hist-labels" style="display:none"></div>
+        <div class="qt-panel-hdr" style="border-top:1px solid var(--qt-border);margin-top:2px">Top Strategies</div>
+        <div class="qt-leaderboard" id="qt-leaderboard"></div>
+        <table class="qt-conf-table" style="display:none"><tbody id="tb-confluence"></tbody></table>
+      </div>
+    </section>
   </div>
 
-  <div class="panel">
-    <div class="panel-header">
-      <span class="panel-title" style="color:var(--cyan)">Confluence — Top Opportunities</span>
-      <span class="panel-sub">markets where multiple strategies agree</span>
+  <footer class="qt-footer">
+    <span id="qt-runtime">RUNTIME —</span>
+    <span class="sep">|</span>
+    <span>POLYGON</span>
+    <span class="sep">|</span>
+    <span>MKTS <strong id="s-markets">—</strong></span>
+    <span class="sep">|</span>
+    <span>MM <strong id="s-mm">—</strong></span>
+    <span class="sep">|</span>
+    <div class="health-strip" id="health-strip" style="display:inline-flex;margin:0">
+      <div class="health-pill health-warn" id="h-clob"><div class="health-dot"></div><span>CLOB</span></div>
+      <div class="health-pill health-warn" id="h-gamma"><div class="health-dot"></div><span>Gamma</span></div>
+      <div class="health-pill health-ok" id="h-trade" style="display:none"><div class="health-dot"></div><span>Trade</span></div>
+      <div class="health-pill health-warn" id="h-mm" style="display:none"><div class="health-dot"></div><span>MM SIM</span></div>
     </div>
-    <div class="table-scroll"><table>
-      <thead><tr><th>Question / Market</th><th>Side</th><th>Strategies</th><th>Count</th></tr></thead>
-      <tbody id="tb-confluence"></tbody>
-    </table></div>
-  </div>
+  </footer>
 
-  <div class="panel" style="margin-top:4px">
-    <div class="panel-header">
-      <span class="panel-title">Activity Feed</span>
-      <span class="panel-sub" id="feed-sub">live log</span>
-    </div>
-    <div class="activity-feed" id="activity-feed">
-      <div class="log-row"><span class="log-ts">—</span><span style="color:var(--muted)">Waiting for connection…</span></div>
-    </div>
+  <div class="qt-scan-hidden" id="scan-strip">
+    <span id="sc-arb">0</span><span id="sc-crypto">0</span><span id="sc-range">0</span>
+    <span id="sc-cross">0</span><span id="sc-corr">0</span><span id="sc-fade">0</span>
+    <span id="sc-forecast">0</span><span id="sc-llm">0</span><span id="sc-weather">0</span>
+    <span id="sc-fav">0</span><span id="sc-squeeze">0</span><span id="sc-semarg">0</span>
+    <span id="sc-ofi">0</span><span id="sc-btc5min">0</span><span id="sc-mm">0</span>
   </div>
+</div>
 </div>
 
 <!-- ═══════════════════════ SIGNALS ═══════════════════════ -->
@@ -935,6 +942,46 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
   </div>
 </div>
 
+<!-- ═══════════════════════ ANALYTICS ═══════════════════════ -->
+<div class="page" id="page-analytics">
+  <div class="cal-hero" id="cal-hero">
+    <div class="cal-metric"><div class="label">Total Trades</div><div class="val neu" id="cal-total">—</div></div>
+    <div class="cal-metric"><div class="label">Resolved</div><div class="val neu" id="cal-resolved">—</div></div>
+    <div class="cal-metric"><div class="label">Overall Win Rate</div><div class="val" id="cal-winrate">—</div></div>
+    <div class="cal-metric"><div class="label">Avg Predicted Edge</div><div class="val cyan" id="cal-avgedge">—</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Strategy Calibration</span>
+      <span class="panel-sub">predicted edge vs realized win rate — dry-run validation</span>
+    </div>
+    <div class="table-scroll"><table>
+      <thead><tr>
+        <th>Strategy</th><th>Trades</th><th>Resolved</th><th>Win Rate</th>
+        <th>Avg Edge</th><th>Calibration Gap</th><th>Est P&amp;L</th>
+      </tr></thead>
+      <tbody id="tb-calibration"></tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Edge Bucket Accuracy</span>
+      <span class="panel-sub">win rate by predicted edge band</span>
+    </div>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Strategy</th><th>Edge Band</th><th>Count</th><th>Win Rate</th><th>Avg Edge</th></tr></thead>
+      <tbody id="tb-edge-buckets"></tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Calibration Chart</span>
+      <span class="panel-sub">predicted edge (x) vs actual win rate (y)</span>
+    </div>
+    <div style="padding:16px;height:280px"><canvas id="cal-chart"></canvas></div>
+  </div>
+</div>
+
 <!-- ═══════════════════════ TRADES ═══════════════════════ -->
 <div class="page" id="page-trades">
   <div class="panel">
@@ -1104,6 +1151,9 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
   </div>
 </div>
 
+</div><!-- /.main-area -->
+</div><!-- /.app-shell -->
+
 <!-- ── Toast area ── -->
 <div id="toast-area"></div>
 
@@ -1112,6 +1162,109 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
 //  Global data store for clickable rows
 // ─────────────────────────────────────────────────────
 const _td = {}; // table-key → current data array
+let _authToken = sessionStorage.getItem('leo_token') || '';
+let _calChart = null;
+
+const PAGE_TITLES = {
+  overview:'Overview', signals:'Signals', btc5min:'BTC 5-Min',
+  arb:'Arb + MM', portfolio:'Portfolio', analytics:'Analytics',
+  trades:'Trades', controls:'Controls',
+};
+
+function authHeaders() {
+  const h = {'Content-Type':'application/json'};
+  if (_authToken) h['X-Leo-Token'] = _authToken;
+  return h;
+}
+
+async function initAuth() {
+  try {
+    const st = await fetch('/api/auth-status').then(r => r.json());
+    if (!st.auth_required) {
+      document.getElementById('auth-gate').classList.add('hidden');
+      return true;
+    }
+    if (_authToken) {
+      const probe = await fetch('/api/health', {headers: authHeaders()});
+      if (probe.ok) {
+        document.getElementById('auth-gate').classList.add('hidden');
+        return true;
+      }
+      _authToken = '';
+      sessionStorage.removeItem('leo_token');
+    }
+    document.getElementById('auth-gate').classList.remove('hidden');
+    return false;
+  } catch(e) { return true; }
+}
+
+async function submitAuth() {
+  const val = document.getElementById('auth-token-input').value.trim();
+  const err = document.getElementById('auth-error');
+  if (!val) return;
+  _authToken = val;
+  const probe = await fetch('/api/health', {headers: authHeaders()});
+  if (!probe.ok) {
+    _authToken = '';
+    err.textContent = 'Invalid token';
+    err.style.display = 'block';
+    return;
+  }
+  sessionStorage.setItem('leo_token', val);
+  err.style.display = 'none';
+  document.getElementById('auth-gate').classList.add('hidden');
+  connect();
+}
+
+// ─────────────────────────────────────────────────────
+//  Command palette
+// ─────────────────────────────────────────────────────
+const CMD_ACTIONS = [
+  {label:'Go to Overview', action:()=>goPage('overview'), keys:'overview'},
+  {label:'Go to Signals', action:()=>goPage('signals'), keys:'signals'},
+  {label:'Go to BTC 5-Min', action:()=>goPage('btc5min'), keys:'btc'},
+  {label:'Go to Analytics', action:()=>goPage('analytics'), keys:'calibration'},
+  {label:'Go to Controls', action:()=>goPage('controls'), keys:'settings'},
+  {label:'Pause bot', action:()=>togglePause(), keys:'pause'},
+  {label:'Refresh markets', action:()=>refreshMarkets(), keys:'refresh'},
+  {label:'Clear cooldowns', action:()=>clearCooldowns(), keys:'cooldown'},
+];
+
+function openCmdPalette() {
+  const p = document.getElementById('cmd-palette');
+  p.classList.add('open');
+  const inp = document.getElementById('cmd-input');
+  inp.value = '';
+  renderCmdList('');
+  inp.focus();
+}
+function closeCmdPalette() {
+  document.getElementById('cmd-palette').classList.remove('open');
+}
+let _cmdFiltered = [];
+function renderCmdList(q) {
+  const ql = (q||'').toLowerCase();
+  _cmdFiltered = CMD_ACTIONS.filter(a => !ql || a.label.toLowerCase().includes(ql) || a.keys.includes(ql));
+  document.getElementById('cmd-list').innerHTML = _cmdFiltered.map((a,i) =>
+    `<div class="cmd-item${i===0?' focused':''}" data-cmd-idx="${i}">${a.label}<span>${a.keys}</span></div>`
+  ).join('') || '<div class="cmd-item" style="color:var(--muted)">No matches</div>';
+}
+document.getElementById('cmd-list')?.addEventListener('click', e => {
+  const el = e.target.closest('[data-cmd-idx]');
+  if (!el) return;
+  closeCmdPalette();
+  _cmdFiltered[+el.dataset.cmdIdx]?.action();
+});
+function goPage(page) {
+  const tab = document.querySelector(`.tab[data-page="${page}"]`);
+  if (tab) tab.click();
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCmdPalette(); }
+  if (e.key === 'Escape') closeCmdPalette();
+});
+document.getElementById('cmd-input')?.addEventListener('input', e => renderCmdList(e.target.value));
 
 // ─────────────────────────────────────────────────────
 //  Strategy metadata for the controls page
@@ -1119,6 +1272,7 @@ const _td = {}; // table-key → current data array
 const STRATEGIES = [
   {key:'arbitrage',         name:'Overround Arb',         desc:'Buy YES + NO when asks total < $1.00. Guaranteed profit at resolution.',           scan:'sc-arb',      color:'var(--cyan)'},
   {key:'crypto_signal',     name:'Crypto Signal',          desc:'Binance spot + log-normal model vs Polymarket price on BTC/ETH/SOL markets.',      scan:'sc-crypto',   color:'var(--purple)'},
+  {key:'range_straddle',    name:'Range Straddle',         desc:'BTC/ETH/SOL range bracket pricing vs log-normal model.',                           scan:'sc-range',    color:'var(--magenta)'},
   {key:'cross_arb',         name:'Cross-Platform Signal',  desc:'Kalshi public prices as signal source; trade the mispricing on Polymarket.',        scan:'sc-cross',    color:'var(--blue)'},
   {key:'correlated',        name:'Correlated Arb',         desc:'Exploit logically impossible pricing between related markets (MUTEX, MONOTONE).',   scan:'sc-corr',     color:'var(--purple)'},
   {key:'news_fade',         name:'News Fade',              desc:'Fade overreactions 1.5–4 hours after a sharp price spike.',                         scan:'sc-fade',     color:'var(--orange)'},
@@ -1177,14 +1331,21 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     _activeTab = tab.dataset.page;
     document.getElementById('page-' + _activeTab).classList.add('active');
+    const pt = document.getElementById('page-title');
+    if (pt) pt.textContent = PAGE_TITLES[_activeTab] || _activeTab;
+    setQuantMode(_activeTab === 'overview');
 
     clearInterval(_pnlTimer);
     clearInterval(_feedTimer);
     clearInterval(_cooldownTimer);
+    clearInterval(_qtLbTimer);
 
     if (_activeTab === 'overview') {
       pollLogFeed();
+      loadQtLeaderboard();
+      loadQtWinRate();
       _feedTimer = setInterval(pollLogFeed, 3000);
+      _qtLbTimer = setInterval(loadQtLeaderboard, 30000);
     } else if (_activeTab === 'portfolio') {
       loadPnlChart();
       renderStrategyCards();
@@ -1193,6 +1354,8 @@ document.querySelectorAll('.tab').forEach(tab => {
       _pnlTimer = setInterval(() => {
         loadPnlChart(); renderStrategyCards(); loadKyleLambda(); loadHurst();
       }, 30000);
+    } else if (_activeTab === 'analytics') {
+      loadCalibration();
     } else if (_activeTab === 'controls') {
       loadControlsPerf();
       loadEvolution();
@@ -1687,17 +1850,30 @@ function renderPortfolio(p) {
     rEl.className = 'value ' + pnlCls(p.realized_pnl);
     // Relabel "Realized" → "Est. P&L" in paper mode
     const lbl = rEl.previousElementSibling;
-    if (lbl && lbl.classList.contains('label')) lbl.textContent = p.paper ? 'Est. P&L' : 'Realized P&L';
+    if (lbl && lbl.classList.contains('label')) {
+      lbl.textContent = p.paper
+        ? `Resolved P&L (${p.resolved_trades ?? 0} settled)`
+        : 'Realized P&L';
+    }
   }
 
   // Portfolio page labels
   const realLbl = document.querySelector('#p-real')?.previousElementSibling;
-  if (realLbl && realLbl.classList.contains('label')) realLbl.textContent = p.paper ? 'Est. P&L' : 'Realized P&L';
+  if (realLbl && realLbl.classList.contains('label')) {
+    realLbl.textContent = p.paper
+      ? `Resolved P&L (${p.resolved_trades ?? 0} settled, ${p.pending_trades ?? 0} pending)`
+      : 'Realized P&L';
+  }
 
-  document.getElementById('s-positions').textContent = p.paper ? '—' : (p.position_count ?? '—');
+  document.getElementById('s-positions').textContent = p.paper
+    ? `${p.pending_trades ?? 0} pending`
+    : (p.position_count ?? '—');
   document.getElementById('tc-portfolio').textContent = p.position_count ?? 0;
 
+  renderPositionsLive(p, _allTrades);
+
   const tb = document.getElementById('tb-positions');
+  if (!tb) return;
   if (!p.positions?.length) { tb.innerHTML = empty(7,'No open positions'); return; }
   tb.innerHTML = p.positions.map(pos => `<tr>
     <td class="q">${trunc(pos.question,44)}</td>
@@ -1766,6 +1942,7 @@ function applyData(data) {
   const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? 0; };
   setEl('sc-arb', sc.arb);
   setEl('sc-crypto', sc.crypto || sc.signal || 0);
+  setEl('sc-range', sc.range || 0);
   setEl('sc-cross', sc.cross);
   setEl('sc-corr', sc.corr);
   setEl('sc-fade', sc.fade);
@@ -1788,7 +1965,7 @@ function applyData(data) {
     forecast: 'forecast', llm: 'llm', weather: 'weather',
     favorite_short: 'favorite_short', oracle_squeeze: 'oracle_squeeze',
     semantic_arb: 'semantic_arb', orderbook_momentum: 'orderbook_momentum',
-    btc_5min: 'btc_5min',
+    btc_5min: 'btc_5min', range_straddle: 'range_straddle',
   };
   if (data.strategy_states) {
     STRATEGIES.forEach(s => {
@@ -1875,7 +2052,7 @@ function applyData(data) {
   renderBestOpp(data.best_opp);
 
   // Health, BTC signals, edge histogram
-  updateHealthStrip(data.health);
+  updateHealthStrip(data.health, null, data);
   updateBtcSignals(data.btc5min_signals);
   updateBTC5MinPage(data);
   updateEdgeHistogram(data);
@@ -1888,6 +2065,602 @@ function applyData(data) {
   if (data.hurst != null) renderHurst(data.hurst);
 
   document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+  updateQuantTerminal(data);
+}
+
+// ─────────────────────────────────────────────────────
+//  Quant Terminal UI
+// ─────────────────────────────────────────────────────
+let _qtStart = Date.now();
+let _qtGraphNodes = [];
+let _qtGraphAnim = null;
+let _qtBtcHistory = [];
+let _qtPnlSpark = [];
+let _qtWrSpark = [];
+let _qtEdgeSpark = [];
+let _qtWinRate = null;
+let _qtPrevTopTrade = null;
+let _qtLastScanSig = '';
+let _qtFillTotal = 0;
+let _qtPipeFlashStep = null;
+
+const QT_STRAT_KEYS = [
+  {key:'squeeze_opps', label:'SQUEEZE', sc:'sc-squeeze'},
+  {key:'fav_opps', label:'FAV', sc:'sc-fav'},
+  {key:'btc5min_opps', label:'BTC5M', sc:'sc-btc5min'},
+  {key:'arb_opps', label:'ARB', sc:'sc-arb'},
+  {key:'signal_opps', label:'CRYPTO', sc:'sc-crypto'},
+  {key:'corr_opps', label:'CORR', sc:'sc-corr'},
+  {key:'ofi_opps', label:'OFI', sc:'sc-ofi'},
+  {key:'fade_opps', label:'FADE', sc:'sc-fade'},
+  {key:'weather_opps', label:'WEATHER', sc:'sc-weather'},
+  {key:'forecast_opps', label:'FORECAST', sc:'sc-forecast'},
+  {key:'llm_opps', label:'LLM', sc:'sc-llm'},
+  {key:'range_opps', label:'RANGE', sc:'sc-range'},
+];
+
+const QT_PILLS = [
+  {key:'kelly', label:'KELLY', match:'kelly'},
+  {key:'bs', label:'B-S', match:'btc'},
+  {key:'markov', label:'MARKOV', match:'corr'},
+  {key:'ofi', label:'OFI', match:'ofi'},
+  {key:'weather', label:'METEO', match:'weather'},
+  {key:'arb', label:'ARB', match:'arb'},
+];
+
+function setQuantMode(on) {
+  document.body.classList.toggle('quant-mode', on);
+}
+
+function tickUtcClock() {
+  const el = document.getElementById('qt-utc-clock');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = 'UTC ' + now.toUTCString().slice(17, 25);
+}
+
+function updateQtRuntime() {
+  const el = document.getElementById('qt-runtime');
+  if (!el) return;
+  const secs = Math.floor((Date.now() - _qtStart) / 1000);
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  el.textContent = 'RUNTIME ' + (h ? h + 'h ' : '') + m + 'm ' + s + 's';
+}
+
+function updateQtPills(strategyStates) {
+  const box = document.getElementById('qt-pills');
+  if (!box) return;
+  const states = strategyStates || {};
+  box.innerHTML = QT_PILLS.map(p => {
+    const on = Object.keys(states).some(k => k.includes(p.match) && states[k]);
+    return `<span class="qt-pill${on ? ' on' : ''}">${p.label}</span>`;
+  }).join('');
+}
+
+function updateQtTicker(data) {
+  const el = document.getElementById('qt-ticker');
+  if (!el) return;
+  const sc = data.scans || {};
+  const parts = [];
+  if (data.best_opp?.question) {
+    const e = data.best_opp.edge_pct ?? data.best_opp.net_pct ?? 0;
+    parts.push(`<strong>BEST</strong> ${trunc(data.best_opp.question, 42)} <span class="pos">${fmtPct(e)}</span>`);
+  }
+  const scanBits = [
+    ['ARB', sc.arb], ['BTC', sc.btc5min], ['WEATHER', sc.weather],
+    ['OFI', sc.ofi], ['RANGE', sc.range], ['MM', sc.mm_active || sc.mm],
+  ].filter(([,v]) => v > 0).map(([k,v]) => `${k} <strong>${v}</strong>`);
+  if (scanBits.length) parts.push('SCANS ' + scanBits.join(' · '));
+  if (data.markets_count) parts.push(`MKTS <strong>${data.markets_count}</strong>`);
+  if (data.portfolio?.total_pnl != null) {
+    const p = data.portfolio.total_pnl;
+    parts.push(`P&amp;L <span class="${pnlCls(p)}">${fmt$(p)}</span>`);
+  }
+  const text = parts.length ? parts.join(' &nbsp;|&nbsp; ') + ' &nbsp;|&nbsp; ' : 'LEO QUANT · scanning Polymarket · ';
+  el.innerHTML = `<span>${text}</span><span>${text}</span>`;
+}
+
+function updateQtPipeline(data) {
+  const pipe = document.getElementById('qt-pipeline');
+  if (!pipe) return;
+  const steps = pipe.querySelectorAll('.qt-pipe-step');
+  const sc = data.scans || {};
+  const totalScans = Object.values(sc).reduce((a, b) => a + (Number(b) || 0), 0);
+  const oppCount = QT_STRAT_KEYS.reduce((n, s) => n + (data[s.key]?.length || 0), 0);
+  const hasBest = !!data.best_opp?.question;
+  const trades = data.trades || [];
+  const pending = data.portfolio?.pending_trades ?? 0;
+  const newest = trades[0];
+
+  if (newest && newest.id !== _qtPrevTopTrade) {
+    _qtFillTotal++;
+    _qtPipeFlashStep = 4;
+    flashQtLastFired(newest);
+    setTimeout(() => { _qtPipeFlashStep = null; }, 800);
+  }
+
+  const scanSig = JSON.stringify(sc);
+  if (scanSig !== _qtLastScanSig && oppCount > 0) {
+    _qtLastScanSig = scanSig;
+    if (!_qtPipeFlashStep) _qtPipeFlashStep = 1;
+  }
+
+  let activeIdx = 0;
+  if (totalScans > 0) activeIdx = 1;
+  if (oppCount > 0) activeIdx = 2;
+  if (hasBest) activeIdx = 3;
+  if (newest) activeIdx = 4;
+  if (pending > 0) activeIdx = 5;
+  else if ((data.portfolio?.resolved_trades ?? 0) > 0) activeIdx = 5;
+
+  steps.forEach((step, i) => {
+    step.classList.remove('active', 'done', 'firing');
+    if (i < activeIdx) step.classList.add('done');
+    else if (i === activeIdx) step.classList.add('active');
+    if (i === _qtPipeFlashStep) step.classList.add('firing');
+  });
+
+  const fillEl = document.getElementById('qt-fill-count');
+  if (fillEl) fillEl.textContent = 'FILL ' + (data.portfolio?.position_count ?? trades.length ?? _qtFillTotal);
+}
+
+function flashQtLastFired(trade) {
+  const box = document.getElementById('qt-last-fired');
+  const txt = document.getElementById('qt-last-fired-text');
+  if (!box || !txt || !trade) return;
+  const side = (trade.side || '').toLowerCase();
+  const act = trade.status === 'simulated' ? 'SIM' : 'FILL';
+  const edge = trade.net_profit_pct != null ? fmtPct(trade.net_profit_pct) : '—';
+  const strat = (trade.arb_type || 'trade').replace(/_/g, ' ').slice(0, 16);
+  box.classList.remove('idle');
+  box.classList.add('flash');
+  setTimeout(() => box.classList.remove('flash'), 700);
+  const tag = box.querySelector('.tag');
+  if (tag) {
+    tag.textContent = act;
+    tag.className = 'tag ' + (act === 'SIM' ? 'sim' : side === 'no' ? 'no' : 'yes');
+  }
+  txt.innerHTML = `<strong>${side.toUpperCase()}</strong> ${fmt$(trade.size_usd)} · <span style="color:var(--qt-cyan)">${strat}</span> · <span class="pos">${edge}</span> · ${trunc(trade.question, 48)}`;
+}
+
+function renderQtStratFires(data) {
+  const box = document.getElementById('qt-strat-fires');
+  if (!box) return;
+  const chips = [];
+  for (const s of QT_STRAT_KEYS) {
+    const opps = data[s.key] || [];
+    if (!opps.length) continue;
+    const best = opps.reduce((a, b) => {
+      const ae = a.edge_pct ?? a.net_pct ?? 0;
+      const be = b.edge_pct ?? b.net_pct ?? 0;
+      return be > ae ? b : a;
+    }, opps[0]);
+    const edge = best.edge_pct ?? best.net_pct ?? 0;
+    const hot = edge >= 10;
+    chips.push({label: s.label, edge, hot, n: opps.length});
+  }
+  chips.sort((a, b) => b.edge - a.edge);
+  if (!chips.length) {
+    box.innerHTML = '<span class="lbl">LIVE SIGNALS</span><span style="color:var(--qt-muted);font-size:9px">no edges above threshold right now — scans still running</span>';
+    return;
+  }
+  box.innerHTML = '<span class="lbl">LIVE SIGNALS</span>' + chips.slice(0, 10).map(c =>
+    `<span class="qt-fire-chip ${c.hot ? 'hot' : 'pos'}">${c.label} ${fmtPct(c.edge)} ×${c.n}</span>`
+  ).join('');
+}
+
+function renderQtTradeStream(trades) {
+  const feed = document.getElementById('activity-feed');
+  const sub = document.getElementById('feed-sub');
+  if (!feed) return;
+  if (!trades?.length) {
+    feed.innerHTML = '<div class="qt-trade-row"><span style="color:var(--qt-muted)">No trades logged yet — signals will SIM here in dry-run</span></div>';
+    if (sub) sub.textContent = '0 events';
+    return;
+  }
+  const isNew = trades[0]?.id != null && trades[0].id !== _qtPrevTopTrade;
+  feed.innerHTML = trades.slice(0, 18).map((t, i) => {
+    const side = (t.side || '').toLowerCase();
+    const act = t.status === 'simulated' ? 'SIM' : t.status === 'placed' ? 'FILL' : (t.status || '—').toUpperCase();
+    const actCls = act === 'SIM' ? 'sim' : side === 'no' ? 'no' : 'yes';
+    const ts = t.created_at ? new Date(t.created_at + (t.created_at.includes('Z') ? '' : 'Z')).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—';
+    const edge = t.net_profit_pct != null ? fmtPct(t.net_profit_pct) : '—';
+    const strat = (t.arb_type || '—').replace(/_/g, ' ').slice(0, 12);
+    const out = t.outcome === 'won' ? ' ✓' : t.outcome === 'lost' ? ' ✗' : '';
+    return `<div class="qt-trade-row${i === 0 && isNew ? ' new' : ''}">
+      <span class="log-ts">${ts}</span>
+      <span class="act ${actCls}">${act}</span>
+      <span class="strat">${strat}</span>
+      <span class="edge ${edgeCls(t.net_profit_pct)}">${edge}</span>
+      <span class="q">${trunc(t.question, 36)}${out}</span>
+    </div>`;
+  }).join('');
+  if (sub) sub.textContent = `${trades.length} trades · ${trades.filter(t => t.outcome === 'pending').length} pending`;
+  if (trades[0]?.id != null) _qtPrevTopTrade = trades[0].id;
+}
+
+function updateQtHero(portfolio, dryRun) {
+  const hero = document.getElementById('qt-hero-pnl');
+  if (!hero || !portfolio) return;
+  const total = portfolio.total_pnl ?? 0;
+  hero.textContent = (total >= 0 ? '+' : '') + fmt$(total);
+  hero.className = 'qt-hero-pnl ' + pnlCls(total);
+
+  const tc = document.getElementById('qt-trade-count');
+  if (tc) tc.textContent = portfolio.position_count ?? (portfolio.pending_trades ?? 0) + (portfolio.resolved_trades ?? 0);
+
+  const wr = document.getElementById('qt-winrate');
+  if (wr) {
+    wr.textContent = _qtWinRate != null ? (_qtWinRate * 100).toFixed(0) + '%' : '—';
+    wr.style.color = _qtWinRate >= 0.5 ? 'var(--qt-green,var(--green))' : _qtWinRate != null ? 'var(--qt-red,var(--red))' : '';
+  }
+}
+
+function updateQtBiggestWin(trades) {
+  const amt = document.getElementById('qt-biggest-amt');
+  const strat = document.getElementById('qt-biggest-strat');
+  const q = document.getElementById('qt-biggest-q');
+  if (!amt) return;
+  const wins = (trades || []).filter(t => t.outcome === 'won');
+  if (!wins.length) {
+    amt.textContent = '—';
+    if (strat) strat.textContent = '—';
+    if (q) q.textContent = 'No resolved wins yet';
+    return;
+  }
+  let best = wins[0];
+  let bestPnl = (best.size_usd || 0) * (best.net_profit_pct || 0) / 100;
+  for (const t of wins) {
+    const p = (t.size_usd || 0) * (t.net_profit_pct || 0) / 100;
+    if (p > bestPnl) { best = t; bestPnl = p; }
+  }
+  amt.textContent = '+' + fmt$(bestPnl);
+  amt.className = 'qt-win-amount pos';
+  if (strat) strat.textContent = (best.arb_type || 'trade').toUpperCase();
+  if (q) q.textContent = trunc(best.question || '—', 52);
+}
+
+function renderPositionsLive(p, trades) {
+  const tb = document.getElementById('tb-positions-live');
+  if (!tb) return;
+  if (p?.paper) {
+    const pending = (trades || []).filter(t => t.outcome === 'pending').slice(0, 10);
+    if (!pending.length) {
+      const n = p.pending_trades ?? 0;
+      tb.innerHTML = n
+        ? `<tr><td colspan="4" style="color:var(--qt-muted)">${n} pending (refreshing…)</td></tr>`
+        : '<tr class="empty"><td colspan="4">No pending trades — waiting for next signal</td></tr>';
+      return;
+    }
+    tb.innerHTML = pending.map(t => `<tr>
+      <td class="q">${trunc(t.question, 26)}</td>
+      <td class="${sideCls(t.side)}">${(t.side||'').toUpperCase()}</td>
+      <td>${fmt$(t.size_usd)}</td>
+      <td class="${edgeCls(t.net_profit_pct)}">${fmtPct(t.net_profit_pct)}</td>
+    </tr>`).join('');
+    return;
+  }
+  if (!p?.positions?.length) {
+    tb.innerHTML = '<tr class="empty"><td colspan="4">No open positions</td></tr>';
+    return;
+  }
+  tb.innerHTML = p.positions.slice(0, 8).map(pos => `<tr>
+    <td class="q">${trunc(pos.question, 28)}</td>
+    <td class="${sideCls(pos.side)}">${(pos.side||'').toUpperCase()}</td>
+    <td>${pos.contracts}@${pos.avg_price}¢</td>
+    <td class="${pnlCls(pos.unrealized_pnl)}">${fmt$(pos.unrealized_pnl)}</td>
+  </tr>`).join('');
+}
+
+function collectGraphNodes(data) {
+  const nodes = [];
+  const add = (o, src) => {
+    if (!o?.question && !o?.market_id) return;
+    const edge = o.edge_pct ?? o.net_pct ?? 0;
+    nodes.push({
+      label: trunc(o.question || o.market_id, 18),
+      side: (o.side || '').toLowerCase(),
+      edge, src,
+      id: o.market_id || o.question,
+    });
+  };
+  (data.confluence_opps || []).slice(0, 6).forEach(o => add(o, 'conf'));
+  if (data.best_opp) add(data.best_opp, 'best');
+  const lists = ['squeeze_opps','fav_opps','signal_opps','btc5min_opps','weather_opps','arb_opps','corr_opps','ofi_opps','fade_opps'];
+  for (const k of lists) {
+    (data[k] || []).slice(0, 3).forEach(o => add(o, k));
+  }
+  const seen = new Set();
+  return nodes.filter(n => { if (seen.has(n.id)) return false; seen.add(n.id); return true; }).slice(0, 14);
+}
+
+function initQtForceGraph() {
+  const canvas = document.getElementById('qt-force-canvas');
+  if (!canvas) return;
+  const resize = () => {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = Math.max(180, rect.height - 4);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  if (_qtGraphAnim) cancelAnimationFrame(_qtGraphAnim);
+  const ctx = canvas.getContext('2d');
+  const colors = { yes:'#3dd68c', no:'#ff5c5c', '':'#4ecdc4' };
+
+  function frame() {
+    const w = canvas.width, h = canvas.height;
+    ctx.fillStyle = '#080b10';
+    ctx.fillRect(0, 0, w, h);
+
+    // grid
+    ctx.strokeStyle = 'rgba(26,35,50,.5)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+    const cx = w / 2, cy = h / 2;
+    const nodes = _qtGraphNodes;
+    if (!nodes.length) {
+      ctx.fillStyle = '#5c6b82';
+      ctx.font = '11px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('awaiting signals…', cx, cy);
+      _qtGraphAnim = requestAnimationFrame(frame);
+      return;
+    }
+
+    const t = Date.now() / 1000;
+    const pts = nodes.map((n, i) => {
+      const angle = (i / nodes.length) * Math.PI * 2 + t * 0.15;
+      const r = 50 + (n.edge || 0) * 8 + Math.sin(t + i) * 12;
+      return {
+        ...n,
+        x: cx + Math.cos(angle) * r * (0.6 + i * 0.04),
+        y: cy + Math.sin(angle) * r * 0.5,
+      };
+    });
+
+    // edges to center
+    ctx.strokeStyle = 'rgba(245,197,24,.15)';
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    });
+
+    // center hub
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(245,197,24,.2)';
+    ctx.fill();
+    ctx.strokeStyle = '#f5c518';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = '#f5c518';
+    ctx.font = 'bold 9px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('LEO', cx, cy + 3);
+
+    pts.forEach(p => {
+      const rad = 6 + Math.min(8, (p.edge || 0) / 2);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+      ctx.fillStyle = (colors[p.side] || colors['']) + '44';
+      ctx.fill();
+      ctx.strokeStyle = colors[p.side] || colors[''];
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = '#e8edf5';
+      ctx.font = '8px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.label.slice(0, 12), p.x, p.y + rad + 10);
+    });
+
+    _qtGraphAnim = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+function updateQtGraphSignals(nodes) {
+  const box = document.getElementById('qt-graph-signals');
+  if (!box) return;
+  box.innerHTML = nodes.slice(0, 5).map(n =>
+    `<span class="qt-sig-chip ${n.side}">${trunc(n.label, 16)} ${fmtPct(n.edge||0)}</span>`
+  ).join('');
+}
+
+function drawQtBtcMini(sigs) {
+  const canvas = document.getElementById('qt-btc-mini');
+  if (!canvas) return;
+  const parent = canvas.parentElement;
+  canvas.width = parent.clientWidth - 16;
+  canvas.height = 70;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+
+  if (sigs?.composite != null) _qtBtcHistory.push(sigs.composite);
+  if (_qtBtcHistory.length > 40) _qtBtcHistory = _qtBtcHistory.slice(-40);
+
+  ctx.fillStyle = '#080b10';
+  ctx.fillRect(0, 0, w, h);
+
+  const data = _qtBtcHistory.length ? _qtBtcHistory : Array.from({length:20}, (_,i) => Math.sin(i/3)*0.1);
+  const min = Math.min(...data, -0.15);
+  const max = Math.max(...data, 0.15);
+  const range = max - min || 0.01;
+  const barW = w / data.length;
+
+  data.forEach((v, i) => {
+    const x = i * barW;
+    const mid = h / 2;
+    const bh = ((v - min) / range) * (h * 0.7);
+    const up = v >= 0;
+    ctx.fillStyle = up ? 'rgba(61,214,140,.75)' : 'rgba(255,92,92,.75)';
+    if (up) ctx.fillRect(x + 1, mid - bh, barW - 2, bh);
+    else ctx.fillRect(x + 1, mid, barW - 2, bh);
+  });
+  ctx.strokeStyle = 'rgba(92,107,130,.4)';
+  ctx.beginPath();
+  ctx.moveTo(0, h/2);
+  ctx.lineTo(w, h/2);
+  ctx.stroke();
+}
+
+function drawQtSpark(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || data.length < 2) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth || 80;
+  const h = canvas.height = 28;
+  ctx.clearRect(0, 0, w, h);
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const pad = Math.max(0.01, (max - min) * 0.15);
+  const lo = min - pad, hi = max + pad;
+  const range = hi - lo || 1;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - lo) / range) * (h - 4) - 2;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function drawQtPnlSpark(totalPnl) {
+  if (totalPnl != null) _qtPnlSpark.push(totalPnl);
+  if (_qtPnlSpark.length > 48) _qtPnlSpark = _qtPnlSpark.slice(-48);
+  const last = _qtPnlSpark[_qtPnlSpark.length - 1];
+  const color = last >= 0 ? '#3dd68c' : '#ff5c5c';
+  const valEl = document.getElementById('qt-spark-pnl-val');
+  if (valEl && last != null) {
+    valEl.textContent = (last >= 0 ? '+' : '') + fmt$(last);
+    valEl.className = 'qt-spark-val ' + pnlCls(last);
+  }
+  drawQtSpark('qt-pnl-spark', _qtPnlSpark, color);
+}
+
+function drawQtWrSpark(wr) {
+  if (wr != null) _qtWrSpark.push(wr);
+  if (_qtWrSpark.length > 48) _qtWrSpark = _qtWrSpark.slice(-48);
+  const last = _qtWrSpark[_qtWrSpark.length - 1];
+  const valEl = document.getElementById('qt-spark-wr-val');
+  if (valEl && last != null) valEl.textContent = (last * 100).toFixed(0) + '%';
+  drawQtSpark('qt-wr-spark', _qtWrSpark, last >= 0.5 ? '#3dd68c' : '#ff5c5c');
+}
+
+function drawQtEdgeSpark(edge) {
+  if (edge != null) _qtEdgeSpark.push(edge);
+  if (_qtEdgeSpark.length > 48) _qtEdgeSpark = _qtEdgeSpark.slice(-48);
+  const last = _qtEdgeSpark[_qtEdgeSpark.length - 1];
+  const valEl = document.getElementById('qt-spark-edge-val');
+  if (valEl && last != null) valEl.textContent = fmtPct(last);
+  drawQtSpark('qt-edge-spark', _qtEdgeSpark, '#f5c518');
+}
+
+async function loadQtLeaderboard() {
+  try {
+    const data = await fetch('/api/strategy-pnl').then(r => r.json());
+    const box = document.getElementById('qt-leaderboard');
+    if (!box || !Array.isArray(data)) return;
+    const top = data.filter(r => r.trades > 0).sort((a,b) => (b.est_pnl||0) - (a.est_pnl||0)).slice(0, 6);
+    box.innerHTML = top.length ? top.map(r => `<div class="qt-lb-row">
+      <span class="name">${trunc(r.arb_type, 22)}</span>
+      <span class="pnl ${pnlCls(r.est_pnl)}">${fmt$(r.est_pnl)} · ${r.trades}t</span>
+    </div>`).join('') : '<div style="color:var(--muted);padding:4px">No trade data yet</div>';
+  } catch(e) {}
+}
+
+async function loadQtWinRate() {
+  try {
+    const wr = await fetch('/api/win-rates').then(r => r.json());
+    if (!wr || typeof wr !== 'object') return;
+    const vals = Object.values(wr).filter(v => v.total > 0);
+    if (!vals.length) return;
+    const wins = vals.reduce((a, v) => a + (v.wins || 0), 0);
+    const total = vals.reduce((a, v) => a + (v.total || 0), 0);
+    _qtWinRate = total ? wins / total : null;
+    const el = document.getElementById('qt-winrate');
+    if (el && _qtWinRate != null) {
+      el.textContent = (_qtWinRate * 100).toFixed(0) + '%';
+      el.style.color = _qtWinRate >= 0.5 ? 'var(--qt-green,var(--green))' : 'var(--qt-red,var(--red))';
+    }
+    drawQtWrSpark(_qtWinRate);
+    const badge = document.getElementById('qt-badge-wr');
+    if (badge && _qtWinRate != null) badge.textContent = 'WR ' + (_qtWinRate * 100).toFixed(0) + '%';
+  } catch(e) {}
+}
+
+let _qtLbTimer = null;
+
+function updateQtBadges(data) {
+  const totalOpps = (data.arb_opps?.length||0) + (data.signal_opps?.length||0)
+    + (data.btc5min_opps?.length||0) + (data.confluence_opps?.length||0);
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set('qt-badge-opps', totalOpps + ' OPPS');
+  const edge = data.best_opp?.edge_pct ?? data.best_opp?.net_pct;
+  set('qt-badge-edge', edge != null ? 'EDGE ' + fmtPct(edge) : 'EDGE —');
+  set('qt-badge-trades', (data.trades?.length || 0) + ' TRADES');
+  set('qt-badge-wr', _qtWinRate != null ? 'WR ' + (_qtWinRate * 100).toFixed(0) + '%' : 'WR —');
+  set('qt-badge-mkts', 'MKTS ' + (data.markets_count ?? '—'));
+}
+
+function updateQtGraphHud(data) {
+  const nodes = _qtGraphNodes;
+  const yes = nodes.filter(n => n.side === 'yes').length;
+  const no = nodes.filter(n => n.side === 'no').length;
+  const total = nodes.length || 1;
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set('qt-leg-bull', 'BULL ' + ((yes / total) * 100).toFixed(0) + '%');
+  set('qt-leg-bear', 'BEAR ' + ((no / total) * 100).toFixed(0) + '%');
+  set('qt-paths', nodes.length);
+  set('qt-trade-num', '#' + (data.trades?.length || 0));
+  const conv = data.confluence_opps?.length
+    ? Math.min(99, 50 + data.confluence_opps.length * 8).toFixed(1) + '%' : '—';
+  set('qt-conv', conv);
+  const sig = data.best_opp?.side
+    ? 'SIGNAL ' + (data.best_opp.side || '').toUpperCase() + ' ' + fmtPct(data.best_opp.edge_pct ?? 0)
+    : 'SIGNAL —';
+  set('qt-signal-str', sig);
+  const pace = document.getElementById('qt-pace');
+  if (pace && data.trades?.length) {
+    const hrs = Math.max(0.1, (Date.now() - _qtStart) / 3600000);
+    const perHr = Math.round(data.trades.length / hrs);
+    pace.textContent = 'PACE $' + perHr + '/HR';
+  }
+}
+
+function updateQuantTerminal(data) {
+  if (_activeTab !== 'overview') return;
+  updateQtPills(data.strategy_states);
+  updateQtTicker(data);
+  renderQtStratFires(data);
+  updateQtPipeline(data);
+  updateQtBadges(data);
+  if (data.portfolio) {
+    updateQtHero(data.portfolio, data.dry_run);
+    renderPositionsLive(data.portfolio, data.trades);
+    drawQtPnlSpark(data.portfolio.total_pnl);
+  }
+  if (data.trades) {
+    updateQtBiggestWin(data.trades);
+    renderQtTradeStream(data.trades);
+  }
+  _qtGraphNodes = collectGraphNodes(data);
+  updateQtGraphSignals(_qtGraphNodes);
+  updateQtGraphHud(data);
+  drawQtBtcMini(data.btc5min_signals);
+  const bestEdge = data.best_opp?.edge_pct ?? data.best_opp?.net_pct;
+  if (bestEdge != null) drawQtEdgeSpark(bestEdge);
+  if (_qtWinRate != null) drawQtWrSpark(_qtWinRate);
+  updateQtRuntime();
 }
 
 function renderBestOpp(best) {
@@ -1918,9 +2691,10 @@ function renderBestOpp(best) {
 // ─────────────────────────────────────────────────────
 async function apiPost(url, body) {
   try {
+    const hdr = authHeaders();
     const res = await fetch(url, {
       method: 'POST',
-      headers: body ? {'Content-Type':'application/json'} : {},
+      headers: body ? hdr : (_authToken ? {'X-Leo-Token': _authToken} : {}),
       body: body ? JSON.stringify(body) : undefined,
     });
     return await res.json();
@@ -2208,11 +2982,12 @@ async function loadHurst() {
 // ─────────────────────────────────────────────────────
 //  Health strip
 // ─────────────────────────────────────────────────────
-function updateHealthStrip(health, gammaAgeSec) {
+function updateHealthStrip(health, gammaAgeSec, data) {
   if (!health) return;
-  const setPill = (id, ok, label) => {
+  const setPill = (id, ok, label, show=true) => {
     const el = document.getElementById(id);
     if (!el) return;
+    el.style.display = show ? '' : 'none';
     el.className = 'health-pill ' + (ok ? 'health-ok' : 'health-err');
     el.querySelector('span').textContent = label;
   };
@@ -2222,6 +2997,12 @@ function updateHealthStrip(health, gammaAgeSec) {
   const gOk  = gAge == null || gAge < 120;
   setPill('h-gamma', gOk,
     gAge == null ? 'Gamma —' : `Gamma ${gAge < 60 ? gAge + 's' : Math.round(gAge/60) + 'm'} ago`);
+  const blocked = !!health.trading_blocked;
+  setPill('h-trade', !blocked,
+    blocked ? (health.block_reason || 'Trading blocked') : 'Trading OK',
+    true);
+  const mmSim = data && data.mm_sim_mode;
+  setPill('h-mm', false, 'MM simulated (dry-run)', !!mmSim);
 }
 
 // ─────────────────────────────────────────────────────
@@ -2502,7 +3283,8 @@ let _feedLastTs = null;
 let _feedTimer = null;
 
 async function pollLogFeed() {
-  if (_activeTab !== 'overview') return;
+  // Trade stream is driven by WebSocket data.trades — skip log overwrite
+  if (_activeTab !== 'overview' || (_allTrades && _allTrades.length)) return;
   try {
     const logs = await fetch('/api/log-feed?n=80').then(r => r.json());
     const feed = document.getElementById('activity-feed');
@@ -2769,10 +3551,12 @@ function setConnState(state) {
 function connect() {
   setConnState('connecting');
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const tok = _authToken ? `?token=${encodeURIComponent(_authToken)}` : '';
+  ws = new WebSocket(`${proto}://${location.host}/ws${tok}`);
 
   ws.onopen = () => {
     setConnState('connected');
+    _qtStart = Date.now();
     reconnectDelay = 1000;
     toast('Connected to Leo', 'success');
     // Heartbeat: send a ping every 25s to keep the connection alive
@@ -2807,11 +3591,101 @@ document.getElementById('stop-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
 });
 
-// Start activity feed polling for the default Overview tab
-pollLogFeed();
-_feedTimer = setInterval(pollLogFeed, 3000);
+// ─────────────────────────────────────────────────────
+//  Calibration / analytics
+// ─────────────────────────────────────────────────────
+async function loadCalibration() {
+  try {
+    const data = await fetch('/api/calibration', {headers: authHeaders()}).then(r => r.json());
+    const sum = data.summary || {};
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('cal-total', sum.total_trades ?? '—');
+    set('cal-resolved', sum.resolved ?? '—');
+    const wr = sum.resolved > 0 ? ((sum.wins / sum.resolved) * 100).toFixed(1) + '%' : '—';
+    set('cal-winrate', wr);
+    set('cal-avgedge', sum.avg_edge != null ? fmtPct(sum.avg_edge * 100) : '—');
 
-connect();
+    const tb = document.getElementById('tb-calibration');
+    const strats = data.strategies || [];
+    if (!tb) return;
+    if (!strats.length) {
+      tb.innerHTML = empty(7, 'No trades yet — run dry-run to build calibration data');
+    } else {
+      tb.innerHTML = strats.map(s => {
+        const wrPct = s.win_rate != null ? (s.win_rate * 100).toFixed(1) + '%' : '—';
+        const gap = s.calibration_gap;
+        const gapStr = gap != null ? (gap >= 0 ? '+' : '') + (gap * 100).toFixed(1) + '%' : '—';
+        const gapCls = gap != null ? (gap >= 0 ? 'cal-gap-pos' : 'cal-gap-neg') : '';
+        return `<tr>
+          <td style="font-weight:600">${trunc(s.arb_type, 28)}</td>
+          <td class="mono">${s.total}</td>
+          <td class="mono">${s.resolved}</td>
+          <td class="mono">${wrPct}</td>
+          <td class="mono">${fmtPct((s.avg_predicted_edge||0)*100)}</td>
+          <td class="mono ${gapCls}">${gapStr}</td>
+          <td class="${pnlCls(s.est_pnl)}">${fmt$(s.est_pnl)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    const btb = document.getElementById('tb-edge-buckets');
+    const buckets = data.edge_buckets || [];
+    if (btb) {
+      btb.innerHTML = buckets.length ? buckets.map(b => `<tr>
+        <td>${trunc(b.arb_type, 24)}</td>
+        <td class="mono">${b.bucket}</td>
+        <td class="mono">${b.count}</td>
+        <td class="mono">${(b.win_rate*100).toFixed(0)}%</td>
+        <td class="mono">${fmtPct((b.avg_edge||0)*100)}</td>
+      </tr>`).join('') : empty(5, 'No resolved trades in edge buckets yet');
+    }
+
+    const canvas = document.getElementById('cal-chart');
+    if (canvas && strats.length) {
+      const pts = strats.filter(s => s.win_rate != null && s.avg_predicted_edge != null);
+      const labels = pts.map(s => trunc(s.arb_type, 16));
+      const predicted = pts.map(s => s.avg_predicted_edge * 100);
+      const actual = pts.map(s => s.win_rate * 100);
+      if (_calChart) _calChart.destroy();
+      _calChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {label:'Predicted edge %', data: predicted, backgroundColor:'rgba(59,130,246,0.6)', borderRadius:4},
+            {label:'Actual win rate %', data: actual, backgroundColor:'rgba(52,211,153,0.6)', borderRadius:4},
+          ],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color:'#7b8aab', font:{family:'Inter'} } } },
+          scales: {
+            x: { ticks:{color:'#7b8aab'}, grid:{color:'rgba(255,255,255,0.04)'} },
+            y: { ticks:{color:'#7b8aab'}, grid:{color:'rgba(255,255,255,0.04)'}, max:100 },
+          },
+        },
+      });
+    }
+  } catch(e) { console.error('Calibration:', e); }
+}
+
+// Start activity feed polling for the default Overview tab
+setQuantMode(true);
+tickUtcClock();
+setInterval(tickUtcClock, 1000);
+initQtForceGraph();
+pollLogFeed();
+loadQtLeaderboard();
+loadQtWinRate();
+_feedTimer = setInterval(pollLogFeed, 3000);
+_qtLbTimer = setInterval(loadQtLeaderboard, 30000);
+
+initAuth().then(ok => {
+  if (ok) connect();
+  else document.getElementById('auth-token-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAuth();
+  });
+});
 </script>
 </body>
 </html>

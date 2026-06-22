@@ -10,6 +10,7 @@ import logging
 from dataclasses import dataclass
 
 from api_clients.polymarket_client import PolymarketClient
+from order_gate import live_orders_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,11 @@ class ExitStrategy:
                         f"Exit: best bid {sell_price:.3f} < min {min_acceptable:.3f}, "
                         f"skipping {pos.market_id[:12]}"
                     )
+                    continue
+
+                ok, reason = live_orders_allowed()
+                if not ok:
+                    logger.debug(f"Exit sell blocked ({reason}): {pos.market_id[:12]}")
                     continue
 
                 result = await self.client.place_order(

@@ -147,6 +147,9 @@ class RangeStraddleConfig:
     kelly_fraction: float = float(
         os.getenv("RANGE_STRADDLE_KELLY", "0.10")
     )
+    refresh_interval_sec: int = int(
+        os.getenv("RANGE_STRADDLE_REFRESH_SEC", "60")
+    )
 
 
 @dataclass
@@ -414,6 +417,7 @@ class BTC5MinConfig:
 class RiskConfig:
     max_daily_usd_deployed: float = float(os.getenv("MAX_DAILY_USD", "1000.0"))
     paper_bankroll: float = float(os.getenv("PAPER_BANKROLL", "1000.0"))
+    per_strategy_max_usd: float = float(os.getenv("PER_STRATEGY_MAX_USD", "200.0"))
 
 
 @dataclass

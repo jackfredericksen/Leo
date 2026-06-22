@@ -209,6 +209,11 @@ class PolymarketClient:
                 f"CLOB circuit breaker OPEN after {self._clob_errors} errors "
                 f"— pausing {_CB_PAUSE_SEC}s"
             )
+            try:
+                from order_gate import on_circuit_breaker_open
+                on_circuit_breaker_open(self._clob_errors, _CB_PAUSE_SEC)
+            except Exception:
+                pass
 
     def _on_clob_success(self) -> None:
         if self._clob_errors > 0:
