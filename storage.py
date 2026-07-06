@@ -65,6 +65,16 @@ def trade_realized_pnl(row: sqlite3.Row) -> float:
     return 0.0
 
 
+def trade_theoretical_pnl(row: sqlite3.Row) -> float:
+    """Optimistic edge×stake for pending paper trades (UI feedback only)."""
+    if row["outcome"] in ("won", "lost"):
+        return 0.0
+    stake = _trade_stake_usd(row)
+    if stake <= 0:
+        return 0.0
+    return stake * float(row["net_profit_pct"] or 0)
+
+
 class Storage:
     def __init__(self, cfg: StorageConfig):
         self.db_path = cfg.db_path
@@ -448,6 +458,7 @@ class Storage:
         total_contracts = sum(float(r["contracts"] or 0) for r in rows)
         edges = [float(r["net_profit_pct"] or 0) for r in rows]
         realized = sum(trade_realized_pnl(r) for r in rows)
+        theoretical = sum(trade_theoretical_pnl(r) for r in rows)
         pending = sum(1 for r in rows if r["outcome"] == "pending")
         resolved = sum(1 for r in rows if r["outcome"] in ("won", "lost"))
 
@@ -456,6 +467,7 @@ class Storage:
             "total_contracts": total_contracts,
             "avg_net_profit_pct": sum(edges) / len(edges) if edges else 0.0,
             "estimated_pnl_usd": round(realized, 2),
+            "theoretical_pnl_usd": round(theoretical, 2),
             "pending_trades": pending,
             "resolved_trades": resolved,
         }

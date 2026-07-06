@@ -81,3 +81,5 @@ health_block_trading: bool = False
 health_block_reason: str = ""
 last_health: dict = {}
 strategy_audit: list = []
+network_online: bool = True
+network_status: dict = {}

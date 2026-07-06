@@ -310,6 +310,11 @@ class Trader:
         shares = PolymarketClient.usdc_to_shares(size_usd, price_dollars)
         if shares < 1.0:
             self._release_exposure(size_usd, sk)
+            if size_usd <= 0:
+                logger.debug(
+                    f"Signal skip $0 size ({sig.source}): "
+                    f"{sig.market_id[:16]} edge={sig.edge:+.1%}"
+                )
             return False
 
         # Use actual market prices for storage (not a complement approximation)

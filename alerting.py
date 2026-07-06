@@ -44,6 +44,15 @@ class Alerter:
             f"— pausing {pause_sec}s"
         )
 
+    async def network_offline(self, reason: str) -> None:
+        await self.send(
+            f"📡 **Network offline** — pausing new trades, using cached data\n"
+            f"_{reason[:120]}_"
+        )
+
+    async def network_restored(self) -> None:
+        await self.send("✅ **Network restored** — connectivity back, trading resumed")
+
     async def big_edge(
         self,
         question: str,

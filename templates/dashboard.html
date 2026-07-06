@@ -523,6 +523,7 @@ th.sort-desc::after{content:' ↓';color:var(--cyan)}
     <div class="health-strip" id="health-strip" style="display:inline-flex;margin:0">
       <div class="health-pill health-warn" id="h-clob"><div class="health-dot"></div><span>CLOB</span></div>
       <div class="health-pill health-warn" id="h-gamma"><div class="health-dot"></div><span>Gamma</span></div>
+      <div class="health-pill health-ok" id="h-net"><div class="health-dot"></div><span>Net</span></div>
       <div class="health-pill health-ok" id="h-trade" style="display:none"><div class="health-dot"></div><span>Trade</span></div>
       <div class="health-pill health-warn" id="h-mm" style="display:none"><div class="health-dot"></div><span>MM SIM</span></div>
     </div>
@@ -1843,7 +1844,16 @@ function renderPortfolio(p) {
     balEl.className = 'value cyan';
   }
   const uEl = document.getElementById('s-unreal');
-  if (uEl) { uEl.textContent = fmt$(p.unrealized_pnl); uEl.className = 'value ' + pnlCls(p.unrealized_pnl); }
+  if (uEl) {
+    uEl.textContent = fmt$(p.unrealized_pnl);
+    uEl.className = 'value ' + pnlCls(p.unrealized_pnl);
+    const uLbl = uEl.previousElementSibling;
+    if (uLbl && uLbl.classList.contains('label')) {
+      uLbl.textContent = p.paper
+        ? `Pending edge (${p.pending_trades ?? 0} open)`
+        : 'Unrealized P&L';
+    }
+  }
   const rEl = document.getElementById('s-real');
   if (rEl) {
     rEl.textContent = fmt$(p.realized_pnl);
@@ -1858,6 +1868,12 @@ function renderPortfolio(p) {
   }
 
   // Portfolio page labels
+  const unrealLbl = document.querySelector('#p-unreal')?.previousElementSibling;
+  if (unrealLbl && unrealLbl.classList.contains('label')) {
+    unrealLbl.textContent = p.paper
+      ? `Pending edge (${p.pending_trades ?? 0} sim trades)`
+      : 'Unrealized P&L';
+  }
   const realLbl = document.querySelector('#p-real')?.previousElementSibling;
   if (realLbl && realLbl.classList.contains('label')) {
     realLbl.textContent = p.paper
@@ -2997,6 +3013,17 @@ function updateHealthStrip(health, gammaAgeSec, data) {
   const gOk  = gAge == null || gAge < 120;
   setPill('h-gamma', gOk,
     gAge == null ? 'Gamma —' : `Gamma ${gAge < 60 ? gAge + 's' : Math.round(gAge/60) + 'm'} ago`);
+  const netOk = health.network_online !== false;
+  const netDeg = !!health.network_degraded;
+  const netEl = document.getElementById('h-net');
+  if (netEl) {
+    netEl.style.display = '';
+    netEl.className = 'health-pill ' + (
+      !netOk ? 'health-err' : (netDeg ? 'health-warn' : 'health-ok')
+    );
+    netEl.querySelector('span').textContent =
+      !netOk ? 'NET OFFLINE' : (netDeg ? 'NET DEGRADED' : 'NET OK');
+  }
   const blocked = !!health.trading_blocked;
   setPill('h-trade', !blocked,
     blocked ? (health.block_reason || 'Trading blocked') : 'Trading OK',

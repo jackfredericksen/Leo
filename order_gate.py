@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import bot_state
+from network_status import get_tracker, is_online
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,14 @@ def update_trading_health() -> dict:
     if markets_count < _MIN_MARKETS:
         reasons.append("No markets loaded")
 
+    net = get_tracker().snapshot()
+    if not is_online():
+        err = net.get("last_error") or "unreachable"
+        reasons.insert(0, f"Network offline ({err[:48]})")
+    elif net.get("degraded"):
+        # Soft flag — trading still allowed on stale cache if gamma is fresh
+        pass
+
     if reasons:
         set_health_block(reasons[0])
     else:
@@ -83,8 +92,12 @@ def update_trading_health() -> dict:
         "markets_count": markets_count,
         "trading_blocked": bot_state.health_block_trading,
         "block_reason": bot_state.health_block_reason,
+        "network_online": is_online(),
+        "network_degraded": net.get("degraded", False),
+        "network": net,
     }
     bot_state.last_health = health
+    bot_state.network_status = net
     return health
 
 

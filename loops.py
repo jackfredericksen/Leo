@@ -54,6 +54,7 @@ from strategies.signal_arb import AggregatedSignal, SignalArbConfig
 from strategies.weather_signal import WeatherSignalDetector
 from terminal_ui import build_ui
 from trader import Trader
+from network_status import network_watchdog_loop, record_failure, record_success
 from order_gate import update_trading_health
 from web_auth import web_host
 
@@ -81,11 +82,16 @@ def _now_iso() -> str:
 
 
 async def _refresh_bankroll(trader: Trader, sizer) -> None:
+    """Keep Kelly sizer funded — live balance is $0 without a wallet key."""
+    paper = config.risk.paper_bankroll
+    if config.dry_run:
+        sizer.update_bankroll(paper)
+        return
     try:
         bal = await trader.client.get_balance()
-        sizer.update_bankroll(bal)
+        sizer.update_bankroll(bal if bal > 0 else paper)
     except Exception:
-        pass
+        sizer.update_bankroll(paper)
 
 
 async def market_refresh_loop(client: PolymarketClient):
@@ -93,18 +99,36 @@ async def market_refresh_loop(client: PolymarketClient):
     while True:
         try:
             markets = await client.get_all_markets()
-            state.markets = markets
-            state.market_map = {m.market_id: m for m in markets}
-            _bot_state._last_gamma_at = datetime.now(timezone.utc).isoformat()
-            logger.debug(f"Market refresh: {len(markets)} markets loaded")
-            # Feed current mid-prices into the Hurst regime tracker
-            hurst = _bot_state._hurst_ref
-            if hurst:
-                for m in markets:
-                    if m.yes_price > 0:
-                        hurst.update(m.market_id, m.yes_price)
+            if markets:
+                state.markets = markets
+                state.market_map = {m.market_id: m for m in markets}
+                _bot_state._last_gamma_at = datetime.now(timezone.utc).isoformat()
+                record_success("gamma")
+                logger.debug(f"Market refresh: {len(markets)} markets loaded")
+                hurst = _bot_state._hurst_ref
+                if hurst:
+                    for m in markets:
+                        if m.yes_price > 0:
+                            hurst.update(m.market_id, m.yes_price)
+            else:
+                cached = len(state.markets)
+                record_failure(
+                    "gamma",
+                    RuntimeError("Gamma returned no data"),
+                    force=True,
+                )
+                logger.warning(
+                    "Market refresh failed — keeping %s cached markets",
+                    cached,
+                )
         except Exception as e:
-            logger.error(f"Market refresh: {e}")
+            record_failure("gamma", e)
+            cached = len(state.markets)
+            logger.warning(
+                "Market refresh error (%s) — keeping %s cached markets",
+                e,
+                cached,
+            )
         finally:
             _bot_state._force_market_refresh = False
             try:
@@ -925,10 +949,25 @@ async def outcome_tracker_loop(
 ):
     """Periodically resolve trade outcomes by checking if the market settled."""
     while True:
-        await asyncio.sleep(300)
+        await asyncio.sleep(120)
         try:
             unresolved = storage.get_unresolved_trades()
-            combined_map = state.extended_market_map if state.extended_market_map else state.market_map
+            if not unresolved:
+                continue
+            combined_map = (
+                state.extended_market_map if state.extended_market_map
+                else state.market_map
+            )
+            client = _bot_state._client_ref
+            missing_ids = [
+                row["market_id"] for row in unresolved
+                if row["market_id"] not in combined_map
+            ]
+            if client and missing_ids:
+                settled_lookup = await client.get_markets_by_condition_ids(
+                    missing_ids[:50]
+                )
+                combined_map = {**combined_map, **settled_lookup}
             for row in unresolved:
                 market = combined_map.get(row["market_id"])
                 if not market or market.status != "settled" or not market.result:
@@ -1044,6 +1083,7 @@ def create_bot_tasks(
 ) -> list[asyncio.Task]:
     """Build the full asyncio task list for the running bot."""
     tasks = [
+        asyncio.create_task(network_watchdog_loop(), name="network-watchdog"),
         asyncio.create_task(market_refresh_loop(client), name="market-refresh"),
         asyncio.create_task(arb_loop(arb_detector, trader, client), name="arb"),
         asyncio.create_task(crypto_signal_loop(binance, trader), name="crypto"),

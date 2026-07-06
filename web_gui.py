@@ -422,6 +422,9 @@ def _serialise_state() -> dict:
             "trading_blocked": health.get("trading_blocked", False),
             "block_reason": health.get("block_reason", ""),
             "markets_count": health.get("markets_count", len(state.markets)),
+            "network_online": health.get("network_online", True),
+            "network_degraded": health.get("network_degraded", False),
+            "network": health.get("network", {}),
         },
         "btc5min_signals": getattr(bot_state, "_btc5min_signals", {}),
         "signal_ages": signal_ages,
@@ -521,12 +524,14 @@ def _serialise_portfolio() -> dict:
 
     # Paper / dry-run path — derive P&L from simulated trades in DB
     est_pnl = 0.0
+    theoretical_pnl = 0.0
     trade_count = 0
     pending = 0
     resolved = 0
     if storage:
         summary = storage.get_pnl_summary()
         est_pnl     = round(summary.get("estimated_pnl_usd") or 0.0, 2)
+        theoretical_pnl = round(summary.get("theoretical_pnl_usd") or 0.0, 2)
         trade_count = summary.get("total_trades") or 0
         with storage._connect() as conn:
             pending = conn.execute(
@@ -537,16 +542,17 @@ def _serialise_portfolio() -> dict:
             ).fetchone()[0]
 
     return {
-        "balance": round(paper_bankroll + est_pnl, 2),
-        "unrealized_pnl": 0.0,
+        "balance": round(paper_bankroll + est_pnl + theoretical_pnl, 2),
+        "unrealized_pnl": theoretical_pnl,
         "realized_pnl": est_pnl,
-        "total_pnl": est_pnl,
+        "total_pnl": round(est_pnl + theoretical_pnl, 2),
         "position_count": trade_count,
         "pending_trades": pending,
         "resolved_trades": resolved,
         "positions": [],
         "paper": True,
         "pnl_source": "resolved_trades_db",
+        "theoretical_pnl_usd": theoretical_pnl,
     }
 
 
@@ -854,6 +860,8 @@ async def api_health():
         "gamma_at": gamma_at or None,
         "trading_blocked": health.get("trading_blocked", False),
         "block_reason": health.get("block_reason", ""),
+        "network_online": health.get("network_online", True),
+        "network": health.get("network", {}),
         "btc5min_signals": getattr(bot_state, "_btc5min_signals", {}),
     }
 

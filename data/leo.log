@@ -6002,3 +6002,311 @@
 2026-06-22 00:34:32,913 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (ETHUSDT): 
 2026-06-22 00:34:32,924 [INFO] leo.loops: Crypto signal: 10 opps, top edge=92.5%
 2026-06-22 00:34:44,242 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1430.26, 0.26, -4.74]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:35:03,824 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:35:06,377 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1429.89, -0.11, -5.11]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:35:07,973 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:35:28,501 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1429.52, -0.48, -5.48]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:35:34,653 [INFO] leo.loops: Crypto signal: 10 opps, top edge=92.5%
+2026-06-22 00:35:43,471 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:35:49,572 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1434.17, -0.83]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:36:05,243 [INFO] leo.loops: Crypto signal: 10 opps, top edge=92.5%
+2026-06-22 00:36:12,316 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1433.79, -1.21]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:36:20,068 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:36:33,891 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1433.44, -1.56, -1.56]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:36:35,831 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:36:55,145 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1433.08, -1.92, -1.92]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:36:56,333 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:37:06,397 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:37:16,443 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1432.73, -2.27, -2.27, 7.73]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:37:32,260 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:37:37,277 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:37:37,451 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1432.38, -2.62, -2.62, 7.38]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:37:59,290 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1432.01, -2.99, -2.99, 7.01]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:38:07,850 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:38:08,907 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:38:20,597 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1431.66, -3.34, -3.34, 6.66]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:38:38,553 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:38:41,994 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1431.3, -3.7, -3.7, 6.3]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:38:46,105 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:39:04,123 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1430.93, -4.07, -4.07, 5.93]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:39:09,135 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:39:21,781 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:39:21,988 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x84a45609bfdb644a15be71d679fbb4f115dea9109d9bac96e1bc049853e002f6 0.15%->0.05%
+2026-06-22 00:39:21,989 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x17c1591393e9bfcaa68c89086af37ffc1b44db673c56c8bebe07480759c6038a 0.70%->0.55%
+2026-06-22 00:39:21,989 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x2cd4df599867b14e835436e67e524cd04bbd67eaa6454c07b294d9dd0470e6b7 1.55%->1.10%
+2026-06-22 00:39:21,989 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x269b4de59b444c57f166f690b1ce8c388bf26167c6a68f7613ab5b05e86375a8 4.75%->4.40%
+2026-06-22 00:39:21,989 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x0b755fb0a049c45843f1384e7467deb70d9c434c24cccb43811c7ca952a73637 0.15%->0.05%
+2026-06-22 00:39:21,991 [INFO] strategies.news_fade: NewsFade: spike down detected on 0xcd8bf532bb57a081d734564d3eee4f1ed6d5f651801173c04255b8018b59bab5 9.00%->8.00%
+2026-06-22 00:39:21,992 [INFO] leo.loops: FavoriteShort: 9 opps, top edge=4.0%
+2026-06-22 00:39:25,616 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1430.57, -4.43, 5.57]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:39:39,756 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:39:46,901 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1430.22, -4.78, 5.22]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:39:58,375 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:40:08,645 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1429.86, -5.14, 4.86]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:40:10,359 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:40:30,790 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1434.49, 1444.49, 1429.49, -5.51, 4.49]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:40:34,973 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:40:41,186 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:40:52,673 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1434.12, 1444.12, 1429.12, -5.88, 4.12]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:41:10,723 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:41:11,764 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:41:13,660 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1433.77, 1443.77, 1428.77, 3.77]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:41:35,436 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1433.41, 1443.41, 1428.41, 3.41]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:41:42,322 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:41:47,199 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:41:56,406 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1433.06, 1443.06, 1428.06, 3.06, 3.06]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:42:12,892 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:42:17,645 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1432.71, 1442.71, 1427.71, 2.71, 2.71]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:42:17,648 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:42:18,651 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:42:19,306 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:42:23,601 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:42:28,191 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:42:29,192 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:42:29,999 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:42:39,397 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1432.34, 1442.34, 1427.34, 2.34]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:42:43,316 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:43:00,163 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:43:01,235 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1431.98, 1441.98, 1426.98, 1.98]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:43:13,969 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:43:22,343 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1431.63, 1441.63, 1426.63, 1.63]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:43:36,361 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:43:43,801 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1431.27, 1441.27, 1426.27, 1.27]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:43:44,249 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:43:44,524 [INFO] leo.loops: BTC5Min: 1 opps, top edge=22.0%
+2026-06-22 00:44:06,336 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1430.89, 1440.89, 1425.89, 0.89]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:44:06,592 [INFO] leo.loops: BTC5Min: 1 opps, top edge=31.1%
+2026-06-22 00:44:12,704 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:44:14,809 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:44:21,995 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x5e082f0b57f47a29044aa35b4c5658393122e659d5feae521c06b57cdd7f905c 14.50%->13.50%
+2026-06-22 00:44:21,995 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x119db6dda44f109bcdc2ec5e1d9cb8c21fa1a7e66489f59b1190fdfb25c0d515 2.25%->2.00%
+2026-06-22 00:44:21,995 [INFO] strategies.news_fade: NewsFade: spike down detected on 0xf594894c1077567713bc88219fd6bcfcec8ea1e0f6e29cbcc9d7688f1c9c11c9 0.55%->0.45%
+2026-06-22 00:44:21,995 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x8b970d23030a3f23243b70cbdcef0a0848e1a20bf2c2bd43081ef65ad504fd6a 0.10%->0.05%
+2026-06-22 00:44:21,996 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x67597b3a44d6d817e6cd21d6e95826edd14063e23600784af750f80df8e9b3d8 0.10%->0.05%
+2026-06-22 00:44:21,996 [INFO] leo.loops: FavoriteShort: 9 opps, top edge=4.0%
+2026-06-22 00:44:27,319 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1430.54, 1440.54, 1425.54, 0.54]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:44:27,572 [INFO] leo.loops: BTC5Min: 1 opps, top edge=51.9%
+2026-06-22 00:44:44,961 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:44:48,316 [INFO] strategies.btc_5min: BTC5Min: 4 BTC markets found (mins-to-close: [1430.19, 1440.19, 1425.19, 0.19]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:44:49,507 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:45:04,331 [INFO] api_clients.weather_client: Weather: refreshed 13 city forecasts
+2026-06-22 00:45:04,335 [INFO] leo.loops: Weather: 1 opps, top edge=9.0%
+2026-06-22 00:45:10,099 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1429.83, 1439.83, 1424.83, -0.17, -0.17]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:45:15,577 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:45:25,673 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:45:31,732 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1434.47, 1429.47, 1439.47, 1424.47, -0.53, -0.53]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:45:45,746 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:45:53,279 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1434.11, 1429.11, 1439.11, 1424.11, -0.89, -0.89]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:46:02,171 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-06-22 00:46:02,193 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:46:14,769 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1433.75, 1428.75, 1438.75, 1423.75, -1.25, -1.25, -1.25]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:46:16,413 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:46:36,755 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1433.39, 1428.39, 1438.39, 1423.39, -1.61, -1.61, -1.61]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:46:39,064 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:46:46,732 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:46:58,343 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1433.03, 1428.03, 1438.03, 1423.03, -1.97, -1.97]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:47:15,295 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:47:17,534 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:47:19,401 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1432.68, 1427.68, 1437.68, 1422.68, -2.32, -2.32]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:47:41,146 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1432.31, 1427.31, 1437.31, 1422.31, -2.69, -2.69]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:47:47,851 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:47:51,680 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:48:02,481 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.96, 1426.96, 1436.96, 1421.96, -3.04, -3.04]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:48:18,425 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:48:23,589 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.61, 1426.61, 1436.61, 1421.61, -3.39, -3.39]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:48:28,603 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:48:45,645 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.24, 1426.24, 1436.24, 1421.24, -3.76, -3.76]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:48:48,996 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:49:04,587 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:49:07,149 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1430.88, 1425.88, 1435.88, 1420.88, -4.12, -4.12]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:49:19,552 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:49:22,024 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xe69b388ee2691abc5a2b4d66d9212053782c88f30e26f3b791111e562d327224 47.50%->56.00%
+2026-06-22 00:49:22,025 [INFO] strategies.news_fade: NewsFade: spike up detected on 0x7be50557f4e2868b4ec442a0fa6cd96d081ab1ef0ddad4e307eef72cf36fae98 0.05%->0.10%
+2026-06-22 00:49:22,026 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xe542284d140ac1fbd9e42afeeca21c04647715620cf84c6867066b801716e6f3 5.00%->5.50%
+2026-06-22 00:49:22,027 [INFO] leo.loops: FavoriteShort: 9 opps, top edge=4.0%
+2026-06-22 00:49:28,482 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1430.53, 1425.53, 1435.53, 1420.53, -4.47, -4.47]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:49:41,165 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:49:49,444 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1430.18, 1425.18, 1435.18, 1420.18, -4.82]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:49:49,954 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:50:11,229 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1429.81, 1424.81, 1434.81, 1419.81, -5.19]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:50:17,687 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:50:20,515 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:50:30,310 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:50:31,312 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:50:31,948 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:50:32,565 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1434.46, 1429.46, -5.54]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:50:51,154 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:50:53,081 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:50:53,585 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1434.11, 1429.11, -5.89]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:50:54,084 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:50:54,581 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:50:54,655 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:50:56,175 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:50:57,230 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:50:57,832 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:51:15,327 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1433.74, 1428.74, -6.26]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:51:22,012 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:51:32,579 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:51:36,574 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1433.39, 1428.39]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:51:52,330 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:51:57,810 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1433.04, 1428.04]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:52:08,291 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:52:19,324 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1432.68, 1427.68]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:52:22,882 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:52:41,119 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1432.31, 1427.31]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:52:44,891 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:52:54,202 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:53:02,703 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1431.95, 1426.95]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:53:20,917 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:53:24,527 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1431.59, 1426.59]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:53:24,772 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:53:35,995 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:53:36,998 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:53:37,469 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:53:39,217 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 00:53:40,219 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 00:53:41,478 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 00:53:46,599 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1431.22, 1426.22]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:53:55,138 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:53:57,211 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:54:07,899 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1430.87, 1425.87]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:54:22,031 [INFO] strategies.news_fade: NewsFade: spike down detected on 0x4ede078cae84a5877ac32d7fb48811e5c23549a1904b7df06ff7935c6d79d831 1.55%->1.45%
+2026-06-22 00:54:22,033 [INFO] leo.loops: FavoriteShort: 9 opps, top edge=4.0%
+2026-06-22 00:54:25,967 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:54:29,098 [INFO] strategies.btc_5min: BTC5Min: 2 BTC markets found (mins-to-close: [1430.52, 1425.52]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:54:34,061 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:54:50,741 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1430.15, 1425.15, 0.15]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:54:56,290 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:55:10,293 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:55:12,082 [INFO] strategies.btc_5min: BTC5Min: 3 BTC markets found (mins-to-close: [1429.8, 1424.8, -0.2]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:55:26,854 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:55:33,436 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1434.44, 1444.44, 1429.44, 1424.44, -0.56]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:55:46,806 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:55:54,784 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1434.09, 1444.09, 1429.09, 1424.09, -0.91]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:55:57,980 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:56:16,993 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1433.72, 1443.72, 1428.72, 1423.72, -1.28]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:57:02,446 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (SOLUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (ETHUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (ETHUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (SOLUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (SOLUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (BTCUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (ETHUSDT): 
+2026-06-22 00:57:02,481 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (SOLUSDT): 
+2026-06-22 00:57:02,482 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 00:57:02,482 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (ETHUSDT): 
+2026-06-22 00:57:02,483 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (BTCUSDT): 
+2026-06-22 00:57:02,544 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:57:13,408 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (ETHUSDT): 
+2026-06-22 00:57:13,428 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (SOLUSDT): 
+2026-06-22 00:57:13,457 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (BTCUSDT): 
+2026-06-22 00:57:43,098 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (SOLUSDT): 
+2026-06-22 00:57:43,107 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (SOLUSDT): 
+2026-06-22 00:57:43,107 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (BTCUSDT): 
+2026-06-22 00:57:43,107 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (ETHUSDT): 
+2026-06-22 00:57:43,107 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 00:57:43,107 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (ETHUSDT): 
+2026-06-22 00:57:43,149 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:57:43,422 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1432.28, 1442.28, 1427.28, 1422.28, -2.72]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:58:07,957 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (SOLUSDT): 
+2026-06-22 00:58:07,986 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (SOLUSDT): 
+2026-06-22 00:58:07,986 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (ETHUSDT): 
+2026-06-22 00:58:07,988 [WARNING] api_clients.binance_client: Coinbase snapshot fetch failed (BTCUSDT): 
+2026-06-22 00:58:07,988 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (ETHUSDT): 
+2026-06-22 00:58:07,988 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 00:58:11,058 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1431.82, 1441.82, 1426.82, 1421.82, -3.18]), 0 in entry window [0.2–1.5 min]
+2026-06-22 00:58:11,691 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:58:14,546 [INFO] leo.loops: Crypto signal: 11 opps, top edge=93.1%
+2026-06-22 00:58:34,257 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1431.43, 1441.43, 1426.43, 1421.43, -3.57, -3.57, 1.43]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:58:47,424 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 00:59:03,047 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 00:59:12,765 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1430.79, 1440.79, 1425.79, 1420.79, -4.21, -4.21, 0.79]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:59:16,799 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 00:59:17,788 [INFO] leo.loops: Crypto signal: 11 opps, top edge=93.1%
+2026-06-22 00:59:22,759 [INFO] strategies.news_fade: NewsFade: spike up detected on 0x4e1c008e15b102dd1a7d4d3981575816e5b0e281285fa22533bd7b415c2f5e2d 1.45%->1.55%
+2026-06-22 00:59:22,763 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xa1b9197a70166b28f64766c468da80dbfced6e64efac9b80d87cac9c0e1540aa 0.30%->0.35%
+2026-06-22 00:59:22,763 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xbb1be4fe1444180e094701f32dc9d39b4fb64063a397b72238b22b9839a9fc3f 0.60%->0.65%
+2026-06-22 00:59:22,764 [INFO] leo.loops: FavoriteShort: 9 opps, top edge=4.0%
+2026-06-22 00:59:38,148 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1430.36, 1440.36, 1425.36, 1420.36, -4.64, 0.36]), 1 in entry window [0.2–1.5 min]
+2026-06-22 00:59:52,640 [INFO] leo.loops: Crypto signal: 11 opps, top edge=93.1%
+2026-06-22 00:59:59,370 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1430.01, 1440.01, 1425.01, 1420.01, -4.99, 0.01]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:00:00,673 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:00:15,815 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 01:00:16,833 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 01:00:20,841 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 01:00:23,682 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1429.61, 1439.61, 1424.61, 1419.61, -5.39, -0.39, -0.39]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:00:23,763 [INFO] leo.loops: Crypto signal: 11 opps, top edge=93.1%
+2026-06-22 01:00:25,433 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 01:00:26,437 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 01:00:27,598 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 01:00:45,630 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:00:45,928 [INFO] strategies.btc_5min: BTC5Min: 8 BTC markets found (mins-to-close: [1434.23, 1429.23, 1439.23, 1424.23, 1419.23, -5.77, -0.77, -0.77]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:00:54,948 [INFO] leo.loops: Crypto signal: 11 opps, top edge=93.1%
+2026-06-22 01:01:07,202 [INFO] api_clients.forecast_client: Forecast: loaded 0 questions (0 meta, 0 manifold)
+2026-06-22 01:01:08,825 [INFO] strategies.btc_5min: BTC5Min: 8 BTC markets found (mins-to-close: [1433.85, 1428.85, 1438.85, 1423.85, 1418.85, -6.15, -1.15, -1.15]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:01:25,538 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:01:29,897 [INFO] strategies.btc_5min: BTC5Min: 8 BTC markets found (mins-to-close: [1433.5, 1428.5, 1438.5, 1423.5, 1418.5, -6.5, -1.5, -1.5]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:01:33,645 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:01:55,045 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1433.08, 1428.08, 1438.08, 1423.08, 1418.08, -1.92]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:01:56,239 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:02:16,864 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:02:17,007 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1432.72, 1427.72, 1437.72, 1422.72, 1417.72, -2.28]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:02:26,618 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:02:39,988 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1432.33, 1427.33, 1437.33, 1422.33, 1417.33, -2.67]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:02:57,084 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:02:57,983 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:03:01,580 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.97, 1426.97, 1436.97, 1421.97, 1416.97, -3.03]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:03:24,299 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.6, 1426.6, 1436.6, 1421.6, 1416.6, -3.4]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:03:28,896 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:03:38,141 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:03:46,822 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.22, 1426.22, 1436.22, 1421.22, 1416.22, -3.78]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:04:00,839 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:04:10,017 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1430.83, 1425.83, 1435.83, 1420.83, 1415.83, -4.17]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:04:18,296 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:04:22,789 [INFO] strategies.news_fade: NewsFade: spike up detected on 0xb248b9dfdd554f6a6507b6addab97228fdbe5ce7f8e4f1abceb5267c6c8ef9ab 2.20%->2.45%
+2026-06-22 01:04:22,791 [INFO] strategies.news_fade: NewsFade: spike down detected on 0xc0e344654e8e780abca7605558842cfae27e4689b80d48f044141f6be8b2d96e 0.15%->0.05%
+2026-06-22 01:04:22,792 [INFO] strategies.news_fade: NewsFade: spike down detected on 0xf594ba6176332f3b96609dfcc858de00ce1c79bda4ad3eb0f2e1ef60cd38ff14 39.25%->35.20%
+2026-06-22 01:04:22,792 [INFO] strategies.news_fade: NewsFade: spike up detected on 0x9608eb2275139a07623d79c2f3877778d8c7dfe50bde7c2f8d48dcee8c84ba7c 0.60%->0.65%
+2026-06-22 01:04:22,797 [INFO] leo.loops: FavoriteShort: 8 opps, top edge=4.0%
+2026-06-22 01:04:32,139 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:04:32,701 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1430.45, 1425.45, 1435.45, 1420.45, 1415.45, 0.45, -4.55]), 1 in entry window [0.2–1.5 min]
+2026-06-22 01:04:56,132 [INFO] strategies.btc_5min: BTC5Min: 7 BTC markets found (mins-to-close: [1430.06, 1425.06, 1435.06, 1420.06, 1415.06, 0.06, -4.94]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:04:59,593 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:05:03,052 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:05:18,016 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1429.7, 1424.7, 1434.7, 1419.7, 1414.7, -0.3]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:05:37,015 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:05:41,008 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1434.32, 1429.32, 1424.32, 1434.32, -0.68]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:05:44,276 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:06:01,035 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 01:06:02,680 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 01:06:06,968 [WARNING] api_clients.binance_client: Coinbase candle fetch failed (BTCUSDT): 
+2026-06-22 01:06:08,046 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:06:08,230 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 01:06:10,954 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 01:06:11,962 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 01:06:13,532 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 01:06:13,915 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1433.77, 1428.77, 1423.77, 1433.77, -1.23]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:06:29,157 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:06:36,749 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1433.39, 1428.39, 1423.39, 1433.39, -1.61]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:06:39,271 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:07:02,492 [INFO] strategies.btc_5min: BTC5Min: 5 BTC markets found (mins-to-close: [1432.96, 1427.96, 1422.96, 1432.96, -2.04]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:07:10,567 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.5%
+2026-06-22 01:07:20,169 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:07:24,295 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1432.6, 1427.6, 1422.6, 1432.6, -2.4, 7.6]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:07:45,784 [INFO] leo.loops: Crypto signal: 11 opps, top edge=93.2%
+2026-06-22 01:07:46,258 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1432.23, 1427.23, 1422.23, 1432.23, -2.77, 7.23]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:08:05,161 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:08:08,618 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.86, 1426.86, 1421.86, 1431.86, -3.14, 6.86]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:08:16,909 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 01:08:17,476 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.7%
+2026-06-22 01:08:17,924 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 01:08:18,567 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 01:08:26,550 [WARNING] api_clients.pyth_client: Pyth SSE disconnected: Response payload is not completed: <TransferEncodingError: 400, message='Not enough data to satisfy transfer length header.'>, retrying in 1s
+2026-06-22 01:08:27,558 [INFO] api_clients.pyth_client: Pyth SSE: connecting…
+2026-06-22 01:08:28,937 [INFO] api_clients.pyth_client: Pyth SSE: stream live
+2026-06-22 01:08:31,038 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.48, 1426.48, 1421.48, 1431.48, -3.52, 6.48]), 0 in entry window [0.2–1.5 min]
+2026-06-22 01:08:48,383 [INFO] api_clients.polymarket_client: Polymarket: loaded 1000 active markets
+2026-06-22 01:08:48,956 [INFO] leo.loops: Crypto signal: 11 opps, top edge=92.7%
+2026-06-22 01:08:57,261 [INFO] strategies.btc_5min: BTC5Min: 6 BTC markets found (mins-to-close: [1431.05, 1426.05, 1421.05, 1431.05, -3.95, 6.05]), 0 in entry window [0.2–1.5 min]

@@ -2,7 +2,7 @@
 
 import sqlite3
 
-from storage import trade_realized_pnl
+from storage import trade_realized_pnl, trade_theoretical_pnl
 
 
 def _row(**kwargs) -> sqlite3.Row:
@@ -50,3 +50,12 @@ class TestTradeRealizedPnl:
             outcome="won", side="both", net_profit_pct=0.05, size_usd=200.0
         ))
         assert abs(pnl - 10.0) < 0.01
+
+
+class TestTradeTheoreticalPnl:
+    def test_pending_uses_edge_times_stake(self):
+        pnl = trade_theoretical_pnl(_row(outcome="pending", net_profit_pct=0.10))
+        assert abs(pnl - 10.0) < 0.01
+
+    def test_resolved_is_zero(self):
+        assert trade_theoretical_pnl(_row(outcome="won")) == 0.0

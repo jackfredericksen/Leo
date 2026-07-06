@@ -108,6 +108,12 @@ class BinanceClient:
                 )
         except Exception as e:
             logger.warning(f"Coinbase snapshot fetch failed ({symbol}): {e}")
+            try:
+                from network_status import is_network_error, record_failure
+                if is_network_error(e):
+                    record_failure("coinbase", e)
+            except Exception:
+                pass
 
     async def fetch_snapshots(self):
         """Fetch latest price for all symbols in parallel."""
@@ -159,6 +165,12 @@ class BinanceClient:
                 ))
         except Exception as e:
             logger.warning(f"Coinbase candle fetch failed ({symbol}): {e}")
+            try:
+                from network_status import is_network_error, record_failure
+                if is_network_error(e):
+                    record_failure("coinbase", e)
+            except Exception:
+                pass
 
     async def refresh_all(self):
         """Refresh prices + candles for all symbols in parallel."""

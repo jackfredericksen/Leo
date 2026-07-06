@@ -227,11 +227,14 @@ class PolymarketClient:
     # Markets
     # ------------------------------------------------------------------
 
-    async def get_all_markets(self, max_pages: int = 10) -> list[Market]:
+    async def get_all_markets(self, max_pages: int = 10) -> Optional[list[Market]]:
         """
         Fetch active binary markets from the Gamma API.
         Ordered by 24h volume descending (most liquid first).
         Retries up to 3 times with exponential backoff on transient errors.
+
+        Returns None when the first page cannot be fetched (network/API down)
+        so callers can keep serving cached markets.
         """
         all_markets: list[Market] = []
         offset = 0
@@ -248,6 +251,8 @@ class PolymarketClient:
             }
             batch = await self._fetch_gamma_page(params)
             if batch is None:
+                if offset == 0:
+                    return None
                 break
 
             for raw in batch:
@@ -302,6 +307,43 @@ class PolymarketClient:
         logger.debug(f"Polymarket: loaded {len(markets)} recent markets")
         return markets
 
+    async def get_markets_by_condition_ids(
+        self, condition_ids: list[str], *, chunk_size: int = 15
+    ) -> dict[str, Market]:
+        """
+        Look up markets by condition ID, including closed/settled markets
+        that are excluded from get_all_markets().
+        """
+        result: dict[str, Market] = {}
+        unique = [cid for cid in dict.fromkeys(condition_ids) if cid]
+        for i in range(0, len(unique), chunk_size):
+            chunk = unique[i : i + chunk_size]
+            params: dict = {"limit": len(chunk)}
+            for cid in chunk:
+                params.setdefault("condition_ids", [])
+                if isinstance(params["condition_ids"], list):
+                    params["condition_ids"].append(cid)
+            # Gamma accepts repeated condition_ids query params
+            flat_params = [("limit", str(len(chunk)))]
+            for cid in chunk:
+                flat_params.append(("condition_ids", cid))
+            try:
+                async with self._session.get(
+                    f"{GAMMA_BASE}/markets", params=flat_params
+                ) as resp:
+                    if resp.status != 200:
+                        continue
+                    data = await resp.json()
+                batch = data if isinstance(data, list) else data.get("markets", [])
+                for raw in batch or []:
+                    m = self._parse_market(raw)
+                    if m:
+                        result[m.market_id] = m
+            except Exception as e:
+                logger.debug(f"Gamma condition lookup: {e}")
+            await asyncio.sleep(0.15)
+        return result
+
     async def _fetch_gamma_page(self, params: dict) -> Optional[list]:
         """Fetch one page from the Gamma API with retry/backoff."""
         for attempt in range(_GAMMA_RETRY_ATTEMPTS):
@@ -326,6 +368,12 @@ class PolymarketClient:
                     await asyncio.sleep(wait)
                 else:
                     logger.warning(f"Gamma page fetch failed: {e}")
+                    try:
+                        from network_status import is_network_error, record_failure
+                        if is_network_error(e):
+                            record_failure("gamma", e)
+                    except Exception:
+                        pass
         return None
 
     async def get_orderbook(self, token_id: str) -> Orderbook:
@@ -349,6 +397,12 @@ class PolymarketClient:
             return Orderbook(token_id=token_id, bids=bids, asks=asks)
         except Exception as e:
             logger.debug(f"Orderbook {token_id[:8]}: {e}")
+            try:
+                from network_status import is_network_error, record_failure
+                if is_network_error(e):
+                    record_failure("clob", e)
+            except Exception:
+                pass
             return Orderbook(token_id, [], [])
 
     # ------------------------------------------------------------------
